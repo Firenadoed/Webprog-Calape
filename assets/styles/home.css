@@ -1,0 +1,61 @@
+/* Page background + text */
+
+body {
+    background-color: #1B1B1D; /* dark background */
+    color: #ffffff; /* default text color */
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Navbar background */
+.navbar {
+    background-color: #1B1B1D !important;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Brand (COLLECTIV) */
+.navbar-brand {
+    color: #d4af37 !important;
+    font-weight: bold;
+    letter-spacing: 2px;
+        font-family: 'Poppins', sans-serif;
+}
+
+/* Navbar links */
+.navbar-nav .nav-link {
+    color: #ffffff !important;
+    transition: color 0.3s ease;
+    
+}
+
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link.active {
+    color: #d4af37 !important;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+    color: #d4af37;
+        font-family: 'Poppins', sans-serif;
+}
+
+/* Custom button */
+.btn-custom {
+    background-color: #d4af37;
+    color: #1B1B1D;
+    border: none;
+}
+
+.btn-custom:hover {
+    background-color: #b8962d; /* darker gold */
+    color: #fff;
+}
+
+.text-gold {
+    color: #d4af37;
+}
+
+.tagline {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400
+    ;
+}
