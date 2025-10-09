@@ -1,0 +1,142 @@
+{% block title %} {% endblock %}
+
+{% block stylesheets %}
+<style>
+html, body {
+    height: 100%;
+    margin: 0;
+}
+body {
+    background-color: #1B1B1D;
+    min-height: 100vh;
+    font-family: Poppins, sans-serif;
+    color: white;
+    padding: 40px;
+}
+
+/* Container */
+.table-container {
+    background: #222;
+    border: 2px solid #d4af37;
+    border-radius: 10px;
+    padding: 30px;
+    max-width: 1000px;
+    margin: auto;
+    box-shadow: 0 0 15px rgba(0,0,0,0.6);
+}
+
+/* Title */
+.table-container h1 {
+    text-align: center;
+    color: #d4af37;
+    margin-bottom: 20px;
+}
+
+/* Table */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.table th, .table td {
+    border: 1px solid #d4af37;
+    padding: 12px 15px;
+    text-align: center;
+}
+
+.table th {
+    background-color: #333;
+    color: #d4af37;
+    font-weight: 600;
+}
+
+.table tr:nth-child(even) {
+    background-color: #2a2a2a;
+}
+
+.table tr:hover {
+    background-color: #3a3a3a;
+}
+
+/* Buttons / links */
+.action-link {
+    display: inline-block;
+    margin: 0 5px;
+    padding: 6px 12px;
+    background: #d4af37;
+    color: #1B1B1D;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.action-link:hover {
+    background: #f1c40f;
+    color: #000;
+}
+
+/* Create button */
+.create-btn {
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+    padding: 12px;
+    background: #d4af37;
+    color: #1B1B1D;
+    font-weight: 600;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: 0.3s;
+}
+.create-btn:hover {
+    background: #f1c40f;
+    color: #000;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="table-container">
+    <h1>Collectible Index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Price</th>
+                <th>Type</th>
+                <th>Quality</th>
+                <th>Availability</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for collectible in collectibles %}
+            <tr>
+                <td>{{ collectible.id }}</td>
+                <td>{{ collectible.name }}</td>
+                <td>{{ collectible.description }}</td>
+                <td>{{ collectible.price }}</td>
+                <td>{{ collectible.type }}</td>
+                <td>{{ collectible.quality }}</td>
+                <td>{{ collectible.availability ? 'Yes' : 'No' }}</td>
+                <td>
+                    <a href="{{ path('app_collectible_show', {'id': collectible.id}) }}" class="action-link">Show</a>
+                    <a href="{{ path('app_collectible_edit', {'id': collectible.id}) }}" class="action-link">Edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="8">No records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_collectible_new') }}" class="create-btn">＋ Create New</a>
+</div>
+{% endblock %}

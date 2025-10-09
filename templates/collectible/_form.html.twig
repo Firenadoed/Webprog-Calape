@@ -1,0 +1,54 @@
+{{ form_start(form) }}
+
+    <div>
+        {{ form_label(form.name, 'Name:', {'label_attr': {'class': 'form-label'}}) }}
+        {{ form_widget(form.name, {
+            'attr': {
+                'class': 'form-control',
+                'placeholder': 'Enter collectible name'
+            }
+        }) }}
+    </div>
+
+    <div>
+        {{ form_label(form.description, 'Description:', {'label_attr': {'class': 'form-label'}}) }}
+        {{ form_widget(form., {
+            'attr': {description
+                'class': 'form-control',
+                'style': 'height:50px;',
+                'placeholder': 'Enter a short description'
+            }
+        }) }}
+    </div>
+
+    <div>
+        {{ form_label(form.price, 'Price:', {'label_attr': {'class': 'form-label'}}) }}
+        {{ form_widget(form.price, {
+            'attr': {
+                'class': 'form-control',
+                'placeholder': 'Enter price in USD'
+            }
+        }) }}
+    </div>
+
+    <div>
+        {{ form_label(form.type, 'Type:', {'label_attr': {'class': 'form-label'}}) }}
+        {{ form_widget(form.type, {   'attr': {'class': 'form-control',  } }) }}
+    </div>
+
+    <div>
+        {{ form_label(form.quality, 'Quality:', {'label_attr': {'class': 'form-label'}}) }}
+        {{ form_widget(form.quality, {'attr': {'class': 'form-control'}}) }}
+    </div>
+
+    <div style="margin-bottom:15px;">
+        <label class="form-label">Availability:</label><br>
+        <label class="switch">
+            {{ form_widget(form.availability, {'attr': {'class': 'form-check-input'}}) }}
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <button class="btn">{{ button_label|default('Save') }}</button>
+
+{{ form_end(form) }}

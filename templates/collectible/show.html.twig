@@ -1,0 +1,140 @@
+{% block title %}{% endblock %}
+
+{% block stylesheets %}
+<style>
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #1B1B1D;
+    min-height: 100vh;
+    font-family: Poppins, sans-serif;
+    color: white;
+    margin: 0;
+}
+
+/* Container */
+.detail-container {
+    background: #222;
+    border: 2px solid #d4af37;
+    border-radius: 10px;
+    padding: 30px;
+    width: 100%;
+    max-width: 650px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.6);
+}
+
+/* Title */
+.detail-container h2 {
+    color: #d4af37;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Info rows */
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #444;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: #d4af37;
+}
+
+.detail-value {
+    color: #fff;
+}
+
+/* Buttons */
+.action-buttons {
+    margin-top: 25px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.btn {
+    flex: 1;
+    padding: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    text-align: center;
+    text-decoration: none;
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+.btn-back {
+    background: #444;
+    color: #d4af37;
+    border: 1px solid #d4af37;
+}
+.btn-back:hover {
+    background: #333;
+}
+
+.btn-edit {
+    background: #d4af37;
+    color: #1B1B1D;
+}
+.btn-edit:hover {
+    background: #f1c40f;
+}
+
+.btn-delete {
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+}
+.btn-delete:hover {
+    background: #c0392b;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="detail-container">
+    <h2>Collectible Details</h2>
+
+    <div class="detail-row">
+        <span class="detail-label">ID:</span>
+        <span class="detail-value">{{ collectible.id }}</span>
+    </div>
+
+    <div class="detail-row">
+        <span class="detail-label">Name:</span>
+        <span class="detail-value">{{ collectible.name }}</span>
+    </div>
+
+    <div class="detail-row">
+        <span class="detail-label">Description:</span>
+        <span class="detail-value">{{ collectible.description }}</span>
+    </div>
+
+    <div class="detail-row">
+        <span class="detail-label">Price:</span>
+        <span class="detail-value">{{ collectible.price }}</span>
+    </div>
+
+    <div class="detail-row">
+        <span class="detail-label">Availability:</span>
+        <span class="detail-value">
+            {{ collectible.availability ? '✅ Yes' : '❌ No' }}
+        </span>
+    </div>
+
+    <div class="action-buttons">
+        <a href="{{ path('app_collectible_index') }}" class="btn btn-back">← Back</a>
+        <a href="{{ path('app_collectible_edit', {'id': collectible.id}) }}" class="btn btn-edit">✏ Edit</a>
+        {{ include('collectible/_delete_form.html.twig', { 'attr': {'class':'btn btn-delete'} }) }}
+    </div>
+</div>
+{% endblock %}

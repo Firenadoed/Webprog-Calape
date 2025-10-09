@@ -1,17 +1,43 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
-        {% block stylesheets %}
-        {% endblock %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}My First Symfony Page{% endblock %}</title>
 
-        {% block javascripts %}
-            {% block importmap %}{{ importmap('app') }}{% endblock %}
-        {% endblock %}
-    </head>
-    <body>
+    {# 🎨 Load your global CSS (compiled via Webpack Encore) #}
+    {{ encore_entry_link_tags('app') }}
+
+    {# Optional: add fonts or other head content #}
+    {% block stylesheets %}{% endblock %}
+</head>
+
+<body>
+    {# 🧭 Navbar block - shared across all pages #}
+    {% block navbar %}
+        <nav>
+            <a href="#">C O L L E C T I V</a>
+            <a href="#">Home</a>
+            <a href="#">Collection</a>
+            <a href="#">Offers</a>
+            <a href="#">Wishlisted</a>
+        </nav>
+    {% endblock %}
+
+    {# 🧩 Main page content from child templates #}
+    <main>
         {% block body %}{% endblock %}
-    </body>
+    </main>
+
+    {# ⚓ Footer block - shared across pages #}
+    {% block footer %}
+        <footer>
+            &copy; 2025 Collectiv. All rights reserved.
+        </footer>
+    {% endblock %}
+
+    {# 🧩 Load JS (also from Webpack Encore) #}
+    {{ encore_entry_script_tags('app') }}
+
+    {% block javascripts %}{% endblock %}
+</body>
 </html>
