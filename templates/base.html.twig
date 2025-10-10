@@ -1,43 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8">
-    <title>{% block title %}My First Symfony Page{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    {# 🎨 Load your global CSS (compiled via Webpack Encore) #}
-    {{ encore_entry_link_tags('app') }}
+    <title>{% block title %}Collectiv{% endblock %}</title>
 
-    {# Optional: add fonts or other head content #}
-    {% block stylesheets %}{% endblock %}
-</head>
+  <link rel="icon" type="image/png" href="{{ asset('images/Collectiv-Logo.png') }}">
 
-<body>
-    {# 🧭 Navbar block - shared across all pages #}
-    {% block navbar %}
-        <nav>
-            <a href="#">C O L L E C T I V</a>
-            <a href="#">Home</a>
-            <a href="#">Collection</a>
-            <a href="#">Offers</a>
-            <a href="#">Wishlisted</a>
-        </nav>
+
+
+    {% block stylesheets %}
+      {{ encore_entry_link_tags('app') }}
     {% endblock %}
 
-    {# 🧩 Main page content from child templates #}
-    <main>
-        {% block body %}{% endblock %}
+
+  </head>
+
+  <body class="bg-[#1B1B1D] text-white min-h-screen flex flex-col">
+
+    {# --- NAVBAR --- #}
+    <nav class="flex justify-between items-center px-8 py-4 border-b border-[#d4af37]/30 bg-[#1B1B1D]">
+      <div class="flex items-center space-x-2">
+      <img src="{{ asset('images/collectiv-logo.png') }}" alt="Collectiv Logo" class="h-8 w-8"/>
+        <h1 class="text-2xl font-semibold text-[#d4af37]">COLLECTIV</h1>
+        
+      </div>
+      <ul class="hidden md:flex space-x-6 text-gray-300">
+        <li><a href="#" class="hover:text-[#d4af37]">Home</a></li>
+        <li><a href="#" class="hover:text-[#d4af37]">Explore</a></li>
+        <li><a href="#" class="hover:text-[#d4af37]">My Collection</a></li>
+        <li><a href="#" class="hover:text-[#d4af37]">Community</a></li>
+      </ul>
+      <a href="#" class="bg-[#d4af37] text-black font-semibold px-4 py-2 rounded-md hover:bg-[#c19b2f] transition">
+        Log In
+      </a>
+    </nav>
+
+    {# --- MAIN CONTENT --- #}
+    <main class="flex-grow">
+      {% block body %}{% endblock %}
     </main>
 
-    {# ⚓ Footer block - shared across pages #}
-    {% block footer %}
-        <footer>
-            &copy; 2025 Collectiv. All rights reserved.
-        </footer>
+    {# --- FOOTER --- #}
+    <footer class="bg-[#0e0e0f] py-8 text-center text-gray-400 text-sm border-t border-[#d4af37]/20">
+      <p>© 2025 <span class="text-[#d4af37]">COLLECTIV</span> — Where Collectors Belong</p>
+      <div class="mt-2 space-x-4">
+        <a href="#" class="hover:text-[#d4af37]">About</a>
+        <a href="#" class="hover:text-[#d4af37]">FAQ</a>
+        <a href="#" class="hover:text-[#d4af37]">Privacy</a>
+        <a href="#" class="hover:text-[#d4af37]">Contact</a>
+      </div>
+    </footer>
+
+    
+    {% block javascripts %}
+      {{ encore_entry_script_tags('app') }}
     {% endblock %}
-
-    {# 🧩 Load JS (also from Webpack Encore) #}
-    {{ encore_entry_script_tags('app') }}
-
-    {% block javascripts %}{% endblock %}
-</body>
+    
+  </body>
 </html>

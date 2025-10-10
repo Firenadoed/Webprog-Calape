@@ -81,4 +81,4 @@ class Product
 }
 // use slugger>
 // uniqid each image
-//gamit data table
+//gamit datatable
