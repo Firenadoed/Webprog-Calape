@@ -3,24 +3,158 @@
 @source not "../../public";
 
 body {
-    font-family: 'Poppins', sans-serif;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.95rem;
 }
 
-/* Custom Button Style */
-.btn-custom {
-    background-color: #FACC15; /* Tailwind’s yellow-400 */
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border-radius: 9999px;
-    font-weight: 600;
-    transition: background-color 0.3s ease;
+::-webkit-scrollbar {
+  width: 10px; /* Width of the vertical scrollbar */
+  height: 10px; /* Height of the horizontal scrollbar */
 }
 
-.btn-custom:hover {
-    background-color: #EAB308; /* Tailwind’s yellow-500 */
+/* Track behind the scrollbar */
+::-webkit-scrollbar-track {
+  background: #1B1B1D; /* Dark background matching your overall theme */
+  border-radius: 5px; /* Slightly rounded track */
 }
 
-.text-gold {
-    color: #FACC15;
+/* Scrollbar handle */
+::-webkit-scrollbar-thumb {
+  background: #d4af37; /* Your gold accent color */
+  border-radius: 5px; /* Rounded handle */
+  border: 2px solid #1B1B1D; /* A border around the thumb to match track color */
+}
+
+/* Scrollbar handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #f1c40f; /* Lighter gold on hover */
+}
+
+/* Corner where horizontal and vertical scrollbars meet (if both are present) */
+::-webkit-scrollbar-corner {
+  background: #1B1B1D; /* Match the track color */
+}
+/* Keep same container width */
+.form-container {
+  background: #222;
+  border: 2px solid #d4af37;
+  border-radius: 10px;
+  padding: 18px;
+  width: 80%;
+  max-width: 80vw; /* ✅ same as before */
+  box-shadow: 0 0 15px rgba(0,0,0,0.6);
+  margin-top: -80px; /* move it up */
+}
+
+
+
+/* Heading */
+.form-container h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 18px;
+  text-align: center;
+  color: #d4af37;
+}
+
+/* Labels */
+.form-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #d4af37;
+}
+
+/* Inputs */
+.form-control {
+  background: #1B1B1D;
+  color: white;
+  border: 1px solid #d4af37;
+  width: 100%;
+  font-size: 0.9rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+.form-control:focus {
+  box-shadow: 0 0 5px #f1c40f;
+  border-color: #f1c40f;
+}
+
+/* Textarea */
+textarea.form-control {
+  min-height: 90px;
+}
+
+/* Button */
+button.btn {
+  font-size: 1rem;
+  width: 100%;
+  padding: 10px;
+  background: #d4af37;
+  color: #1B1B1D;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  transition: 0.3s;
+}
+button.btn:hover {
+  background: #f1c40f;
+}
+
+/* Back link */
+.back-link {
+  display: block;
+  margin-top: 10px;
+  text-align: center;
+  color: #d4af37;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+.back-link:hover {
+  text-decoration: underline;
+}
+
+/* Switch toggle */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 22px;
+  margin-right: 8px;
+}
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #444;
+  transition: .4s;
+  border-radius: 22px;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+input:checked + .slider {
+  background-color: #d4af37;
+}
+input:checked + .slider:before {
+  transform: translateX(22px);
 }
 

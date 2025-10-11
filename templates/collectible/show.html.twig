@@ -1,140 +1,60 @@
-{% block title %}{% endblock %}
-
-{% block stylesheets %}
-<style>
-body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #1B1B1D;
-    min-height: 100vh;
-    font-family: Poppins, sans-serif;
-    color: white;
-    margin: 0;
-}
-
-/* Container */
-.detail-container {
-    background: #222;
-    border: 2px solid #d4af37;
-    border-radius: 10px;
-    padding: 30px;
-    width: 100%;
-    max-width: 650px;
-    box-shadow: 0 0 15px rgba(0,0,0,0.6);
-}
-
-/* Title */
-.detail-container h2 {
-    color: #d4af37;
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-/* Info rows */
-.detail-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 12px 0;
-    border-bottom: 1px solid #444;
-}
-
-.detail-row:last-child {
-    border-bottom: none;
-}
-
-.detail-label {
-    font-weight: 600;
-    color: #d4af37;
-}
-
-.detail-value {
-    color: #fff;
-}
-
-/* Buttons */
-.action-buttons {
-    margin-top: 25px;
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-}
-
-.btn {
-    flex: 1;
-    padding: 12px;
-    font-size: 1rem;
-    font-weight: 600;
-    border-radius: 8px;
-    text-align: center;
-    text-decoration: none;
-    transition: 0.3s;
-    cursor: pointer;
-}
-
-.btn-back {
-    background: #444;
-    color: #d4af37;
-    border: 1px solid #d4af37;
-}
-.btn-back:hover {
-    background: #333;
-}
-
-.btn-edit {
-    background: #d4af37;
-    color: #1B1B1D;
-}
-.btn-edit:hover {
-    background: #f1c40f;
-}
-
-.btn-delete {
-    background: #e74c3c;
-    color: #fff;
-    border: none;
-}
-.btn-delete:hover {
-    background: #c0392b;
-}
-</style>
-{% endblock %}
-
 {% block body %}
-<div class="detail-container">
-    <h2>Collectible Details</h2>
+{# Modal Background Overlay #}
+<div id="collectible-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
 
-    <div class="detail-row">
-        <span class="detail-label">ID:</span>
-        <span class="detail-value">{{ collectible.id }}</span>
-    </div>
+    {# Modal Box #}
+    <div class="bg-gray-900 border-2 border-[#d4af37] rounded-lg shadow-lg w-full max-w-md p-6 relative">
 
-    <div class="detail-row">
-        <span class="detail-label">Name:</span>
-        <span class="detail-value">{{ collectible.name }}</span>
-    </div>
+        {# Close Button #}
+        <button onclick="closeModal()" class="absolute top-3 right-3 text-[#d4af37] hover:text-yellow-400 text-xl font-bold">&times;</button>
 
-    <div class="detail-row">
-        <span class="detail-label">Description:</span>
-        <span class="detail-value">{{ collectible.description }}</span>
-    </div>
+        <h2 class="text-center text-2xl font-bold text-[#d4af37] mb-4">{{ collectible.name }}</h2>
 
-    <div class="detail-row">
-        <span class="detail-label">Price:</span>
-        <span class="detail-value">{{ collectible.price }}</span>
-    </div>
+        <div class="space-y-3 text-white">
+            {# Image #}
+            <div class="flex justify-center">
+                {% if collectible.image %}
+                    <img src="{{ asset('uploads/collectibles/' ~ collectible.image) }}" 
+                         alt="{{ collectible.name }}" 
+                         class="w-48 h-48 object-cover rounded-md border border-gray-600">
+                {% else %}
+                    <span class="text-gray-400">No Image</span>
+                {% endif %}
+            </div>
 
-    <div class="detail-row">
-        <span class="detail-label">Availability:</span>
-        <span class="detail-value">
-            {{ collectible.availability ? '✅ Yes' : '❌ No' }}
-        </span>
-    </div>
+            {# Category #}
+            <div class="flex justify-between border-b border-gray-700 pb-1">
+                <span class="font-semibold text-[#d4af37]">Category:</span>
+                <span>{{ collectible.category ? collectible.category.name : 'No Category' }}</span>
+            </div>
 
-    <div class="action-buttons">
-        <a href="{{ path('app_collectible_index') }}" class="btn btn-back">← Back</a>
-        <a href="{{ path('app_collectible_edit', {'id': collectible.id}) }}" class="btn btn-edit">✏ Edit</a>
-        {{ include('collectible/_delete_form.html.twig', { 'attr': {'class':'btn btn-delete'} }) }}
+            {# Price #}
+            <div class="flex justify-between border-b border-gray-700 pb-1">
+                <span class="font-semibold text-[#d4af37]">Price:</span>
+                <span>₱{{ collectible.price|number_format(2, '.', ',') }}</span>
+            </div>
+        </div>
+
+        {# Action Buttons #}
+        <div class="mt-6 flex justify-between gap-2">
+            <a href="#" onclick="closeModal()" class="flex-1 bg-gray-800 text-[#d4af37] py-2 rounded hover:bg-gray-700 text-center">Close</a>
+            <a href="{{ path('app_collectible_edit', {'id': collectible.id}) }}" class="flex-1 bg-[#d4af37] text-gray-900 py-2 rounded hover:bg-yellow-400 text-center">Edit</a>
+            {{ include('collectible/_delete_form.html.twig', { 'attr': {'class':'flex-1 bg-red-600 text-white py-2 rounded hover:bg-red-700 text-center'} }) }}
+        </div>
     </div>
 </div>
+
+{# Trigger Button (example) #}
+<button onclick="openModal()" class="px-3 py-1 bg-[#d4af37] text-gray-900 font-semibold rounded-md hover:bg-yellow-400 transition">Show</button>
+
+{# JS for opening/closing modal #}
+<script>
+function openModal() {
+    document.getElementById('collectible-modal').classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('collectible-modal').classList.add('hidden');
+}
+</script>
 {% endblock %}

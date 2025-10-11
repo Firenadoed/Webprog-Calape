@@ -1,148 +1,19 @@
-{% block title %}{% endblock %}
-
-{% block stylesheets %}
-<style>
-html, body {
-    height: 100%;
-    margin: 0;
-}
-body {  
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #1B1B1D;
-    min-height: 100vh;
-    font-family: Poppins, sans-serif;
-    color: white;
-}
-
-/* Centered form box */
-.form-container {
-    background: #222;
-    border: 2px solid #d4af37;
-    border-radius: 10px;
-    padding: 30px;
-    width: 100%;
-    max-width: 650px;
-    box-shadow: 0 0 15px rgba(0,0,0,0.6);
-}
-
-/* Labels */
-.form-label {
-    font-size: 1.1rem;
-    font-weight: 500;
-    margin-bottom: 6px;
-    color: #d4af37;
-}
-
-/* Inputs */
-.form-control {
-    background: #1B1B1D;
-    color: white;
-    border: 1px solid #d4af37;
-    width: 100%;
-    font-size: 1rem;
-    padding: 0.75rem 1rem;
-    border-radius: 6px;
-    margin-bottom: 15px;
-}
-.form-control:focus {
-    box-shadow: 0 0 5px #f1c40f;
-    border-color: #f1c40f;
-}
-
-/* Bigger textarea */
-textarea.form-control {
-    min-height: 50px;
-}
-
-/* Button */
-button.btn {
-    font-size: 1.1rem;
-    width: 100%;
-    padding: 12px;
-    background: #d4af37;
-    color: #1B1B1D;
-    font-weight: 600;
-    border-radius: 8px;
-    border: none;
-    transition: 0.3s;
-}
-button.btn:hover {
-    background: #f1c40f;
-}
-
-/* Back link */
-.back-link {
-    display: block;
-    margin-top: 15px;
-    text-align: center;
-    color: #d4af37;
-    font-size: 1.1rem;
-    text-decoration: none;
-}
-.back-link:hover {
-    text-decoration: underline;
-}
-
-/* Switch toggle */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 50px;
-  height: 26px;
-  margin-right: 10px;
-}
-
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #444;
-  transition: .4s;
-  border-radius: 26px;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 18px;
-  width: 18px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  transition: .4s;
-  border-radius: 50%;
-}
-
-input:checked + .slider {
-  background-color: #d4af37;
-}
-
-input:checked + .slider:before {
-  transform: translateX(24px);
-}
-</style>
-{% endblock %}
+{% extends 'admin/base-admin.html.twig' %}
+{% block title %}Edit Collectible{% endblock %}
 
 {% block body %}
-<div class="form-container">
-    <h2 style="color:#d4af37; margin-bottom:20px;">Edit Collectible</h2>
+<div class="flex items-center justify-center min-h-screen bg-[#1B1B1D]">
+    <div class="form-container">
+        <h2 class="text-[#d4af37] text-2xl font-bold mb-6 text-center">Edit Collectible</h2>
 
-    {{ include('collectible/_form.html.twig', {'button_label': 'Update'}) }}
+        {{ include('collectible/_form.html.twig', {'button_label': 'Update'}) }}
 
+        {# Add some spacing before delete button #}
+        <div class="mt-4">
+            {{ include('collectible/_delete_form.html.twig') }}
+        </div>
 
-    {{ include('collectible/_delete_form.html.twig') }}
-
-    <a href="{{ path('app_collectible_index') }}" class="back-link">← Back to list</a>
+        <a href="{{ path('app_collectible_index') }}" class="back-link mt-4 block">← Back to list</a>
+    </div>
 </div>
 {% endblock %}

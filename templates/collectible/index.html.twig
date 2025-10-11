@@ -1,142 +1,137 @@
-{% block title %} {% endblock %}
-
-{% block stylesheets %}
-<style>
-html, body {
-    height: 100%;
-    margin: 0;
-}
-body {
-    background-color: #1B1B1D;
-    min-height: 100vh;
-    font-family: Poppins, sans-serif;
-    color: white;
-    padding: 40px;
-}
-
-/* Container */
-.table-container {
-    background: #222;
-    border: 2px solid #d4af37;
-    border-radius: 10px;
-    padding: 30px;
-    max-width: 1000px;
-    margin: auto;
-    box-shadow: 0 0 15px rgba(0,0,0,0.6);
-}
-
-/* Title */
-.table-container h1 {
-    text-align: center;
-    color: #d4af37;
-    margin-bottom: 20px;
-}
-
-/* Table */
-.table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-}
-
-.table th, .table td {
-    border: 1px solid #d4af37;
-    padding: 12px 15px;
-    text-align: center;
-}
-
-.table th {
-    background-color: #333;
-    color: #d4af37;
-    font-weight: 600;
-}
-
-.table tr:nth-child(even) {
-    background-color: #2a2a2a;
-}
-
-.table tr:hover {
-    background-color: #3a3a3a;
-}
-
-/* Buttons / links */
-.action-link {
-    display: inline-block;
-    margin: 0 5px;
-    padding: 6px 12px;
-    background: #d4af37;
-    color: #1B1B1D;
-    text-decoration: none;
-    border-radius: 6px;
-    font-weight: 600;
-    transition: 0.3s;
-}
-
-.action-link:hover {
-    background: #f1c40f;
-    color: #000;
-}
-
-/* Create button */
-.create-btn {
-    display: block;
-    text-align: center;
-    margin-top: 20px;
-    padding: 12px;
-    background: #d4af37;
-    color: #1B1B1D;
-    font-weight: 600;
-    border-radius: 8px;
-    text-decoration: none;
-    transition: 0.3s;
-}
-.create-btn:hover {
-    background: #f1c40f;
-    color: #000;
-}
-</style>
-{% endblock %}
+{% extends 'admin/base-admin.html.twig' %}
+{% block title %}Collectibles Management{% endblock %}
 
 {% block body %}
-<div class="table-container">
-    <h1>Collectible Index</h1>
+<div class="px-0 sm:px-0 lg:px-0">
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Price</th>
-                <th>Type</th>
-                <th>Quality</th>
-                <th>Availability</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for collectible in collectibles %}
-            <tr>
-                <td>{{ collectible.id }}</td>
-                <td>{{ collectible.name }}</td>
-                <td>{{ collectible.description }}</td>
-                <td>{{ collectible.price }}</td>
-                <td>{{ collectible.type }}</td>
-                <td>{{ collectible.quality }}</td>
-                <td>{{ collectible.availability ? 'Yes' : 'No' }}</td>
-                <td>
-                    <a href="{{ path('app_collectible_show', {'id': collectible.id}) }}" class="action-link">Show</a>
-                    <a href="{{ path('app_collectible_edit', {'id': collectible.id}) }}" class="action-link">Edit</a>
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="8">No records found</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+    <h1 class="text-3xl font-bold text-[#d4af37] mb-6 text-center">Collectibles Management</h1>
 
-    <a href="{{ path('app_collectible_new') }}" class="create-btn">＋ Create New</a>
+    {# === Filter & Search === #}
+    <div class="flex flex-col sm:flex-row items-center justify-between mb-6 space-y-3 sm:space-y-0 sm:space-x-3">
+        <form method="GET" action="{{ path('app_collectible_index') }}" class="w-full sm:w-1/2 flex-grow sm:flex-grow-0 sm:mr-auto">
+            <label for="search" class="sr-only">Search Collectibles</label>
+            <input type="search"
+                   name="search"
+                   id="search"
+                   value="{{ app.request.query.get('search') }}"
+                   placeholder="Search by name or description..."
+                   class="form-control text-white bg-gray-800 border border-gray-700 focus:border-[#d4af37] focus:ring focus:ring-[#d4af37] focus:ring-opacity-50 rounded-md shadow-sm block w-full px-3 py-1.5 text-sm">
+        </form>
+
+        <form method="GET" action="{{ path('app_collectible_index') }}" class="w-full sm:w-1/2 flex items-center justify-end sm:ml-auto">
+            <label for="category" class="sr-only">Filter by Category</label>
+            <select name="category"
+                    id="category"
+                    onchange="this.form.submit()"
+                    class="form-control text-white bg-gray-800 border border-gray-700 focus:border-[#d4af37] focus:ring focus:ring-[#d4af37] focus:ring-opacity-50 rounded-md shadow-sm block w-full py-1.5 pl-3 pr-10 text-sm">
+                <option value="">All Categories</option>
+                {% for category in categories %}
+                    <option value="{{ category.id }}" {% if app.request.query.get('category') == category.id %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+    {# === End Filter & Search === #}
+
+    {# === Collectibles Table === #}
+    <div class="overflow-x-auto border border-gray-700 rounded-md shadow-lg">
+        <div class="max-h-[calc(80vh-180px)] overflow-y-auto">
+            <table class="min-w-full divide-y divide-gray-700">
+                <thead class="bg-gray-800 sticky top-0 z-10">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Image</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Description</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Category</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Price</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-gray-900 divide-y divide-gray-700">
+                    {% for collectible in collectibles %}
+                    <tr class="hover:bg-gray-800 transition">
+                        <td class="px-6 py-4 whitespace-nowrap">{{ collectible.id }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if collectible.image %}
+                                <img src="{{ asset('uploads/collectibles/' ~ collectible.image) }}"
+                                     alt="{{ collectible.name }}"
+                                     class="w-12 h-12 object-cover rounded-md border border-gray-600">
+                            {% else %}
+                                <span class="text-gray-400">No Image</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ collectible.name }}</td>
+                        <td class="px-6 py-4">
+                            {{ collectible.description|length > 50 ? collectible.description|slice(0,50) ~ '...' : collectible.description }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if collectible.category %}
+                                {{ collectible.category.name }}
+                            {% else %}
+                                <span class="text-gray-400">No Category</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">₱{{ collectible.price|number_format(2, '.', ',') }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap flex flex-col sm:flex-row gap-1">
+                            <button
+                                class="px-3 py-1 bg-[#d4af37] text-gray-900 font-semibold rounded-md hover:bg-yellow-400 transition"
+                                data-modal-target="modal-{{ collectible.id }}">
+                                Show
+                            </button>
+                            <a href="{{ path('app_collectible_edit', {'id': collectible.id}) }}"
+                               class="px-3 py-1 bg-[#d4af37] text-gray-900 font-semibold rounded-md hover:bg-yellow-400 transition">
+                               Edit
+                            </a>
+                        </td>
+                    </tr>
+
+                    {# === Server-side Modal === #}
+                    <div id="modal-{{ collectible.id }}" class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-center justify-center z-50 overflow-auto">
+                        <div class="bg-gray-900 p-6 rounded-md w-96 relative max-h-[90vh] overflow-auto">
+                            <span class="absolute top-2 right-3 cursor-pointer text-[#d4af37]" onclick="document.getElementById('modal-{{ collectible.id }}').classList.add('hidden')">✕</span>
+                            {% if collectible.image %}
+                                <img src="{{ asset('uploads/collectibles/' ~ collectible.image) }}" class="w-full h-40 object-cover rounded-md mb-4">
+                            {% endif %}
+                            <h2 class="text-xl font-bold text-[#d4af37] mb-2">{{ collectible.name }}</h2>
+                            <p class="text-gray-300 mb-2">{{ collectible.description }}</p>
+                            <p class="text-gray-400 mb-2">Category: {{ collectible.category ? collectible.category.name : 'No Category' }}</p>
+                            <p class="text-gray-300 font-semibold">₱{{ collectible.price|number_format(2, '.', ',') }}</p>
+
+                            <div class="flex justify-between mt-4 gap-2">
+                                <a href="{{ path('app_collectible_edit', {'id': collectible.id}) }}" class="px-3 py-1 bg-[#d4af37] text-gray-900 rounded hover:bg-yellow-400">Edit</a>
+                                {{ include('collectible/_delete_form.html.twig', {'collectible': collectible}) }}
+                            </div>
+                        </div>
+                    </div>
+
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-4 text-center text-gray-400">No collectibles found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-6 text-center">
+        <a href="{{ path('app_collectible_new') }}"
+           class="inline-block px-6 py-3 bg-[#d4af37] text-gray-900 font-bold rounded-lg hover:bg-yellow-400 transition">
+            ＋ Create New Collectible
+        </a>
+    </div>
 </div>
+
+{# === JS for Modals === #}
+<script>
+document.querySelectorAll('button[data-modal-target]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const target = btn.getAttribute('data-modal-target');
+        document.getElementById(target).classList.remove('hidden');
+    });
+});
+</script>
 {% endblock %}

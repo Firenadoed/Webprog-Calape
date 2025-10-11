@@ -1,20 +1,72 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/base-admin.html.twig' %}
 
-{% block title %}Hello AdminController!{% endblock %}
+{% block title %}Admin Dashboard{% endblock %}
 
 {% block body %}
-<style>
-    .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
-    .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
-</style>
+  <div class="flex items-center justify-between mb-10">
+    <h1 class="text-3xl font-[Poppins] font-bold text-[#d4af37] tracking-tight">Admin Dashboard</h1>
+  </div>
 
-<div class="example-wrapper">
-    <h1>Hello {{ controller_name }}! ✅</h1>
+  <!-- Stats Overview -->
+  <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+    <div class="bg-[#2A2A2C] rounded-xl shadow-lg p-6 border border-[#3A3A3C] hover:border-[#d4af37] transition">
+      <h2 class="text-gray-400 text-sm mb-2">Total Users</h2>
+      <p class="text-3xl font-semibold text-[#d4af37]">{{ totalUsers }}</p>
+    </div>
 
-    This friendly message is coming from:
-    <ul>
-        <li>Your controller at <code>C:/Users/rohan/Desktop/wewb prog/website3/src/Controller/AdminController.php</code></li>
-        <li>Your template at <code>C:/Users/rohan/Desktop/wewb prog/website3/templates/admin/index.html.twig</code></li>
-    </ul>
-</div>
+    <div class="bg-[#2A2A2C] rounded-xl shadow-lg p-6 border border-[#3A3A3C] hover:border-[#d4af37] transition">
+      <h2 class="text-gray-400 text-sm mb-2">Collectibles</h2>
+      <p class="text-3xl font-semibold text-[#d4af37]">{{ totalCollectibles }}</p>
+    </div>
+
+    <div class="bg-[#2A2A2C] rounded-xl shadow-lg p-6 border border-[#3A3A3C] hover:border-[#d4af37] transition">
+      <h2 class="text-gray-400 text-sm mb-2">Listings</h2>
+      <p class="text-3xl font-semibold text-[#d4af37]">{{ totalListings }}</p>
+    </div>
+
+  </div>
+
+  <!-- Extra Insights -->
+  <div class="grid md:grid-cols-2 gap-6 mb-10">
+    <div class="bg-[#2A2A2C] rounded-xl shadow-lg p-6 border border-[#3A3A3C] hover:border-[#d4af37] transition">
+      <h2 class="text-gray-400 text-sm mb-2">Total Listing Value</h2>
+      <p class="text-3xl font-semibold text-[#d4af37]">₱{{ totalValue|number_format(2, '.', ',') }}</p>
+    </div>
+
+    <div class="bg-[#2A2A2C] rounded-xl shadow-lg p-6 border border-[#3A3A3C] hover:border-[#d4af37] transition">
+      <h2 class="text-gray-400 text-sm mb-2">Most Popular Category</h2>
+      {% if mostPopularCategory %}
+        <p class="text-lg font-semibold text-[#d4af37]">
+          {{ mostPopularCategory.name }} ({{ mostPopularCategory.collectibleCount }})
+        </p>
+      {% else %}
+        <p class="text-gray-500">No data yet</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Recent Listings Table -->
+  <div class="bg-[#2A2A2C] rounded-xl shadow-lg p-6 border border-[#3A3A3C]">
+    <h2 class="text-xl font-bold text-[#d4af37] mb-4">Recent Listings</h2>
+    <table class="w-full text-sm text-gray-300">
+      <thead>
+        <tr class="border-b border-[#3A3A3C] text-gray-400">
+          <th class="py-2 text-left">Title</th>
+          <th class="py-2 text-left">Price</th>
+          <th class="py-2 text-left">Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for listing in recentListings %}
+          <tr class="border-b border-[#3A3A3C] hover:bg-[#2F2F31] transition">
+            <td class="py-2">{{ listing.title }}</td>
+            <td class="py-2">₱{{ listing.price|number_format(2, '.', ',') }}</td>
+            <td class="py-2">{{ listing.createdAt|date('M d, Y') }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="3" class="text-center text-gray-500 py-4">No listings available</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 {% endblock %}

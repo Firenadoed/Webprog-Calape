@@ -1,7 +1,9 @@
 {% extends 'base.html.twig' %}
+
 {% block title %}My Collection — Collectiv{% endblock %}
 
 {% block body %}
+
 <section class="py-16 bg-[#1B1B1D] text-center relative">
   <h2 class="text-3xl font-semibold text-[#d4af37] mb-10 tracking-wide">
     Featured Cards
@@ -16,20 +18,25 @@
       &#10094;
     </button>
 
-    <!-- Dynamic Card Container -->
+    <!-- Card Container -->
     <div id="cardContainer" class="flex transition-transform duration-500 ease-out">
+      {% set cards = [
+        {'title': 'Pachirisu', 'image': 'cards/pachirisu.jpg', 'desc': 'Electrified Incisors — Energy card bonus and damage counters.'},
+        {'title': 'Tyrogue', 'image': 'cards/tyrogue.jpg', 'desc': 'Pow-Pow Punching — 10+ damage per coin head.'},
+        {'title': 'Grafaiai', 'image': 'cards/grafaiai.jpg', 'desc': 'Miraculous Paint — Apply a special condition on hit.'},
+        {'title': 'Forest of Vitality', 'image': 'cards/forest.jpg', 'desc': 'Boosts grass Pokémon in the first turn.'},
+        {'title': 'Lillie’s Determination', 'image': 'cards/lillie.jpg', 'desc': 'Shuffle your hand and draw up to 8 cards.'}
+      ] %}
+      
       {% for card in cards %}
         <div class="min-w-[250px] md:min-w-[270px] mx-2 bg-[#1F1F21] border border-[#2a2a2d] rounded-xl overflow-hidden 
                     hover:shadow-[0_0_25px_rgba(212,175,55,0.4)] hover:scale-[1.03] transition duration-300">
-          <img src="{{ asset('images/' ~ card.image) }}" alt="{{ card.name }}" class="w-full h-80 object-cover">
+          <img src="{{ asset('images/' ~ card.image) }}" alt="{{ card.title }}" class="w-full h-80 object-cover">
           <div class="p-4">
-            <h3 class="text-lg font-semibold text-[#d4af37]">{{ card.name }}</h3>
-            <p class="text-gray-400 text-sm mt-1">{{ card.description }}</p>
-            <p class="text-[#d4af37] mt-2 font-semibold">${{ card.price|number_format(2, '.', ',') }}</p>
+            <h3 class="text-lg font-semibold text-[#d4af37]">{{ card.title }}</h3>
+            <p class="text-gray-400 text-sm mt-1">{{ card.desc }}</p>
           </div>
         </div>
-      {% else %}
-        <p class="text-gray-400 text-center w-full">No cards found in the database.</p>
       {% endfor %}
     </div>
 
@@ -47,8 +54,9 @@
   const container = document.getElementById('cardContainer');
   const prevBtn = document.getElementById('prevBtn');
   const nextBtn = document.getElementById('nextBtn');
+
   let index = 0;
-  const cardWidth = 270 + 16;
+  const cardWidth = 270 + 16; // width + margin
   const visibleCount = 4;
 
   nextBtn.addEventListener('click', () => {
@@ -62,4 +70,5 @@
     container.style.transform = `translateX(-${index * cardWidth}px)`;
   });
 </script>
+
 {% endblock %}

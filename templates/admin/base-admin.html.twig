@@ -1,0 +1,43 @@
+{# templates/admin/base-admin.html.twig #}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Panel{% endblock %}</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+      <link rel="icon" type="image/png" href="{{ asset('images/Collectiv-Logo.png') }}">
+    {% block stylesheets %}
+      {{ encore_entry_link_tags('app') }}
+    {% endblock %}
+  </head>
+
+  <body class="bg-[#1B1B1D] text-gray-100 font-[Montserrat] min-h-screen flex">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-[#1B1B1D] border-r border-[#2A2A2C] px-6 py-8">
+      <div class="flex items-center gap-3 mb-10">
+        <img src="{{ asset('images/collectiv-logo.png') }}" alt="Collectiv Logo" class="h-8 w-8">
+        <h2 class="text-2xl font-[Poppins] font-semibold text-[#d4af37] tracking-wide">
+          COLLECTIV
+        </h2>
+      </div>
+
+      <nav class="space-y-3">
+        <a href="{{ path('admin_dashboard') }}" class="block py-2.5 px-3 rounded-lg hover:bg-[#2A2A2C] transition">Dashboard</a>
+        <a href="{{ path('app_collectible_index') }}" class="block py-2.5 px-3 rounded-lg hover:bg-[#2A2A2C] transition">Collectibles</a>
+        <a href="#" class="block py-2.5 px-3 rounded-lg hover:bg-[#2A2A2C] transition">Categories</a>
+        <a href="#" class="block py-2.5 px-3 rounded-lg hover:bg-[#2A2A2C] transition">Listings</a>
+      </nav>
+    </aside>
+
+    <!-- Main content -->
+    <main class="flex-1 pt-6 px-10 pb-10"> {# <--- MODIFIED HERE: Reduced top padding, kept others #}
+      {% block body %}{% endblock %}
+    </main>
+
+    {% block javascripts %}
+      {{ encore_entry_script_tags('app') }}
+    {% endblock %}
+  </body>
+</html>

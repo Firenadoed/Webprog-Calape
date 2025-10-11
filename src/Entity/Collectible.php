@@ -3,8 +3,13 @@
 namespace App\Entity;
 
 use App\Repository\CollectibleRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use App\Entity\Category;
+use App\Entity\User;
+use App\Entity\Listing;
 
 #[ORM\Entity(repositoryClass: CollectibleRepository::class)]
 class Collectible
@@ -23,14 +28,33 @@ class Collectible
     #[ORM\Column]
     private ?float $price = null;
 
-    #[ORM\Column]
-    private ?bool $availability = null;
+    #[ORM\Column(length: 255)]
+    private ?string $image = null;
 
-    #[ORM\Column(length: 100)]
-    private ?string $type = null;
+    // ManyToOne relationship with Category, nullable for migration safety
+    #[ORM\ManyToOne(inversedBy: 'collectibles')]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Category $category = null;
 
-    #[ORM\Column(length: 100)]
-    private ?string $quality = null;
+    // ManyToOne relationship with User, nullable for migration safety
+    #[ORM\ManyToOne(inversedBy: 'collectibles')]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?User $user = null;
+
+    /**
+     * @var Collection<int, Listing>
+     */
+    #[ORM\OneToMany(targetEntity: Listing::class, mappedBy: 'collectible')]
+    private Collection $listings;
+
+    public function __construct()
+    {
+        $this->listings = new ArrayCollection();
+    }
+
+    // -------------------------
+    // Getters and Setters
+    // -------------------------
 
     public function getId(): ?int
     {
@@ -45,7 +69,6 @@ class Collectible
     public function setName(string $name): static
     {
         $this->name = $name;
-
         return $this;
     }
 
@@ -57,7 +80,6 @@ class Collectible
     public function setDescription(string $description): static
     {
         $this->description = $description;
-
         return $this;
     }
 
@@ -69,43 +91,66 @@ class Collectible
     public function setPrice(float $price): static
     {
         $this->price = $price;
-
         return $this;
     }
 
-    public function isAvailability(): ?bool
+    public function getImage(): ?string
     {
-        return $this->availability;
+        return $this->image;
     }
 
-    public function setAvailability(bool $availability): static
+    public function setImage(string $image): static
     {
-        $this->availability = $availability;
-
+        $this->image = $image;
         return $this;
     }
 
-    public function getType(): ?string
+    public function getCategory(): ?Category
     {
-        return $this->type;
+        return $this->category;
     }
 
-    public function setType(string $type): static
+    public function setCategory(?Category $category): static
     {
-        $this->type = $type;
-
+        $this->category = $category;
         return $this;
     }
 
-    public function getQuality(): ?string
+    public function getUser(): ?User
     {
-        return $this->quality;
+        return $this->user;
     }
 
-    public function setQuality(string $quality): static
+    public function setUser(?User $user): static
     {
-        $this->quality = $quality;
+        $this->user = $user;
+        return $this;
+    }
 
+    /**
+     * @return Collection<int, Listing>
+     */
+    public function getListings(): Collection
+    {
+        return $this->listings;
+    }
+
+    public function addListing(Listing $listing): static
+    {
+        if (!$this->listings->contains($listing)) {
+            $this->listings->add($listing);
+            $listing->setCollectible($this);
+        }
+        return $this;
+    }
+
+    public function removeListing(Listing $listing): static
+    {
+        if ($this->listings->removeElement($listing)) {
+            if ($listing->getCollectible() === $this) {
+                $listing->setCollectible(null);
+            }
+        }
         return $this;
     }
 }
