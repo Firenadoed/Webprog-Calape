@@ -3,9 +3,8 @@
 {% block title %}My Collection — Collectiv{% endblock %}
 
 {% block body %}
-{% set listingMap = listingMap|default({}) %}
-
 <section class="bg-gradient-to-b from-[#1B1B1D] to-[#111113] min-h-screen text-gray-200 relative overflow-hidden">
+
   <!-- Background Glow -->
   <div class="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.07),transparent_70%)]"></div>
 
@@ -35,19 +34,16 @@
     </div>
   </div>
 
-  <!-- Flash Messages -->
-  <div class="max-w-7xl mx-auto px-8 mt-4">
-    {% for label, messages in app.flashes %}
-      {% for message in messages %}
-        <div class="p-3 rounded-md mb-2 text-white
-          {% if label == 'success' %}bg-green-600{% elseif label == 'error' %}bg-red-600{% else %}bg-yellow-500 text-black{% endif %}">
-          {{ message }}
-        </div>
-      {% endfor %}
-    {% endfor %}
-  </div>
+  <!-- Flash Messages Container -->
+  <div id="flashContainer" class="max-w-7xl mx-auto px-8 mt-4"></div>
 
-  {% set sections = {'cards': cards, 'figures': figures, 'games': games, 'others': others} %}
+  {% set sections = {
+    'cards': cards,
+    'figures': figures,
+    'games': games,
+    'others': others
+  } %}
+
   {% for key, items in sections %}
     <section class="py-5 text-center relative overflow-hidden">
       <h2 class="text-3xl font-semibold text-[#d4af37] mb-8 tracking-wide capitalize drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]">
@@ -59,19 +55,15 @@
 
         <div id="cardContainer-{{ key }}" class="flex justify-center gap-4 transition-transform duration-500 ease-out">
           {% for item in items %}
-            {% set listed = listingMap[item.id] is defined %}
             <div class="card-float card-item w-[200px] h-[300px] bg-[#1F1F21] border border-[#2a2a2d] rounded-xl overflow-hidden shadow-md flex flex-col cursor-pointer"
                  data-id="{{ item.id }}"
-                 data-listing-id="{{ listed ? listingMap[item.id] : '' }}"
+                 data-listing-id="{{ listingMap[item.id] is defined ? listingMap[item.id] : '' }}"
                  data-name="{{ item.name }}"
                  data-description="{{ item.description }}"
                  data-image="{{ asset('uploads/collectibles/' ~ item.image) }}"
-                 data-price="{{ (item.price ?? 0)|number_format(2, '.', '') }}"
-                 data-listed="{{ listed ? '1' : '0' }}"
-                 data-add-token="{{ csrf_token('add_listing_' ~ item.id) }}"
-                 data-add-url="{{ path('listing_add') }}"
-                 data-delete-token="{% if listed %}{{ csrf_token('delete' ~ listingMap[item.id]) }}{% else '' %}{% endif %}"
-                 data-delete-url="{% if listed %}{{ path('app_listing_delete', {'id': listingMap[item.id]}) }}{% else '' %}{% endif %}">
+                 data-price="{{ item.price ?? '0.00' }}"
+                 data-listed="{{ listingMap[item.id] is defined ? '1' : '0' }}"
+                 data-delete-token="{{ listingMap[item.id] is defined ? csrf_token('delete' ~ listingMap[item.id]) : '' }}">
               <div class="h-[200px] w-full overflow-hidden flex items-center justify-center bg-[#141415]">
                 <img src="{{ asset('uploads/collectibles/' ~ item.image) }}" alt="{{ item.name }}"
                      class="w-full h-full object-cover object-center transition duration-300 brightness-50">
@@ -108,11 +100,11 @@
     <p id="modalDescription" class="text-gray-300 text-sm mb-4 text-center"></p>
     <p id="modalPrice" class="text-gray-400 text-xs mb-4 text-center">Base Price: <span class="font-bold text-[#d4af37]"></span></p>
 
-    <form id="sellForm" method="POST" action="{{ path('listing_add') }}">
+    <form id="sellForm" method="POST" class="w-full flex justify-center mt-4">
       <input type="hidden" name="collectible_id" id="modalCollectibleId">
       <input type="hidden" name="_token" id="modalToken" value="">
       <button id="sellButton" type="submit" class="bg-[#d4af37] text-black px-5 py-2 rounded-md font-semibold hover:bg-[#f0cf57] transition">
-        Put Up for Sale
+          Put Up for Sale
       </button>
     </form>
   </div>
@@ -170,118 +162,82 @@ document.addEventListener('DOMContentLoaded', () => {
   const sellButton = document.getElementById('sellButton');
   const modalToken = document.getElementById('modalToken');
   const closeBtn = document.getElementById('modalClose');
-  const sellForm = document.getElementById('sellForm');
 
-  async function submitSellForm(e) {
-    e.preventDefault();
-    const collectibleId = modalCollectibleIdInput.value;
-    const token = modalToken.value;
-    const card = document.querySelector(`.card-item[data-id="${collectibleId}"]`);
-    if (!card) {
-      alert('Collectible not found.');
-      return;
-    }
-    const isListed = card.dataset.listed === '1';
-    let url = sellForm.action;
-
-    // Safeguard: Ensure URL is valid
-    if (!url || url === '' || url === window.location.pathname) {
-      url = isListed ? `/listing/delete/${card.dataset.listingId}` : '/listing/add';  // Hard fallback (adjust if your routes differ)
-      sellForm.action = url;
-      console.warn('Fallback URL used:', url);  // Debug log
-    }
-
-    console.log('Submitting to URL:', url, 'isListed:', isListed, 'collectibleId:', collectibleId);  // Debug: Check in console
-
-    // Loading state
-    const originalText = sellButton.textContent;
-    sellButton.disabled = true;
-    sellButton.textContent = 'Processing...';
-
-    const formData = new FormData();
-    formData.append('collectible_id', collectibleId);
-    formData.append('_token', token);
-
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        body: formData,
-        credentials: 'same-origin'  // Ensures session/CSRF cookies are included
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log('Response:', data);  // Debug: Check success/error
-
-      if (data.success) {
-        // Update modal
-        sellButton.textContent = data.action === 'added' ? 'Take Out of Sale' : 'Put Up for Sale';
-        modalToken.value = data.action === 'added' ? data.deleteToken : data.addToken;
-        sellForm.action = data.action === 'added' ? data.deleteUrl : data.addUrl;
-
-        // Update card data
-        card.dataset.listed = data.action === 'added' ? '1' : '0';
-        if (data.action === 'added') {
-          card.dataset.listingId = data.listingId;
-          card.dataset.deleteUrl = data.deleteUrl;
-          card.dataset.deleteToken = data.deleteToken;
-        } else {
-          card.dataset.listingId = '';
-          card.dataset.deleteUrl = '';
-          card.dataset.deleteToken = '';
-        }
-
-        alert(data.message);
-      } else {
-        alert(data.message || 'Operation failed.');
-      }
-    } catch (err) {
-      console.error('Fetch error:', err, 'URL was:', url);
-      alert('An error occurred: ' + err.message + '. Check console for details.');
-    } finally {
-      sellButton.disabled = false;
-      sellButton.textContent = originalText;
-    }
-  }
-
-  sellButton.addEventListener('click', submitSellForm);
-
-  function openModal(card) {
+  document.addEventListener('dblclick', (e) => {
+    const card = e.target.closest('.card-item');
     if (!card) return;
     const isListed = card.dataset.listed === '1';
-    const addUrl = card.dataset.addUrl || '/listing/add';  // Fallback
-    const deleteUrl = card.dataset.deleteUrl || '';  // Empty if not listed
-
-    console.log('Opening modal for:', card.dataset.id, 'isListed:', isListed, 'addUrl:', addUrl, 'deleteUrl:', deleteUrl);  // Debug
 
     modal.classList.remove('hidden');
-    setTimeout(() => modalContent.classList.add('scale-100'), 10);
+    setTimeout(()=>modalContent.classList.add('scale-100'),10);
 
     modalImage.src = card.dataset.image;
     modalName.textContent = card.dataset.name;
     modalDescription.textContent = card.dataset.description;
-    modalPrice.textContent = `$${card.dataset.price}`;
+    modalPrice.textContent = `$${parseFloat(card.dataset.price).toFixed(2)}`;
     modalCollectibleIdInput.value = card.dataset.id;
 
     sellButton.textContent = isListed ? 'Take Out of Sale' : 'Put Up for Sale';
-    sellForm.action = isListed && deleteUrl ? deleteUrl : addUrl;  // Safeguard: Use deleteUrl only if valid
-    modalToken.value = isListed && card.dataset.deleteToken ? card.dataset.deleteToken : card.dataset.addToken;
-  }
-
-  document.addEventListener('dblclick', e => {
-    const card = e.target.closest('.card-item');
-    if (card) openModal(card);
+    sellButton.form.action = isListed
+      ? `/listing/delete/${card.dataset.listingId}`
+      : `{{ path('listing_add') }}`;
+    modalToken.value = isListed
+      ? card.dataset.deleteToken
+      : card.dataset.id ? '{{ csrf_token('add_listing_' ~ 'PLACEHOLDER') }}'.replace('PLACEHOLDER', card.dataset.id)
+      : '{{ csrf_token('add_listing') }}';
   });
 
-  function closeModal() {
+  function closeModal(){
     modalContent.classList.remove('scale-100');
-    setTimeout(() => modal.classList.add('hidden'), 200);
+    setTimeout(()=>modal.classList.add('hidden'),200);
   }
-  closeBtn.addEventListener('click', closeModal);
-  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+  closeBtn.addEventListener('click',closeModal);
+  modal.addEventListener('click', e=>{ if(e.target===modal) closeModal(); });
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+  // AJAX add/remove listing
+  document.getElementById('sellForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const collectibleId = modalCollectibleIdInput.value;
+    const token = modalToken.value;
+    const actionUrl = sellButton.form.action;
+
+    fetch(actionUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        collectible_id: collectibleId,
+        _token: token
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      const flashContainer = document.getElementById('flashContainer');
+      const flash = document.createElement('div');
+      flash.className = `p-3 rounded-md mb-2 text-white ${
+        data.status === 'success' ? 'bg-green-600' :
+        data.status === 'error' ? 'bg-red-600' : 'bg-yellow-500 text-black'}`;
+      flash.textContent = data.message;
+      flashContainer.prepend(flash);
+      setTimeout(()=>flash.remove(),4000);
+
+      closeModal();
+
+      const card = document.querySelector(`.card-item[data-id='${collectibleId}']`);
+      if(card) {
+        if(card.dataset.listed === '0' && data.listingId){
+          card.dataset.listed = '1';
+          card.dataset.listingId = data.listingId;
+          card.dataset.deleteToken = data.deleteToken; // <- server-generated token
+        } else {
+          card.dataset.listed = '0';
+          card.dataset.listingId = '';
+          card.dataset.deleteToken = '';
+        }
+      }
+    });
+  });
+
 });
 </script>
 {% endblock %}

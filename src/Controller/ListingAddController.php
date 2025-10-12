@@ -9,32 +9,29 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Csrf\CsrfToken;
-use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 #[Route('/listing')]
 final class ListingAddController extends AbstractController
 {
-    public function __construct(private CsrfTokenManagerInterface $csrfTokenManager) {}
-
     #[Route('/add', name: 'listing_add', methods: ['POST'])]
     public function add(Request $request, EntityManagerInterface $em): JsonResponse
     {
         $collectibleId = $request->request->get('collectible_id');
-        $token = $request->request->get('_token');
 
         if (!$collectibleId) {
-            return new JsonResponse(['success' => false, 'message' => 'No collectible selected!']);
-        }
-
-        $csrfId = 'add_listing_' . $collectibleId;
-        if (!$this->csrfTokenManager->isTokenValid(new CsrfToken($csrfId, $token))) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid CSRF token.']);
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => 'No collectible selected!'
+            ]);
         }
 
         $collectible = $em->getRepository(Collectible::class)->find($collectibleId);
+
         if (!$collectible) {
-            return new JsonResponse(['success' => false, 'message' => 'Collectible not found!']);
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => 'Collectible not found!'
+            ]);
         }
 
         $existingListing = $em->getRepository(Listing::class)->findOneBy([
@@ -44,8 +41,9 @@ final class ListingAddController extends AbstractController
 
         if ($existingListing) {
             return new JsonResponse([
-                'success' => false,
-                'message' => sprintf('"%s" is already listed for sale!', $collectible->getName())
+                'status' => 'warning',
+                'message' => 'This collectible is already listed for sale!',
+                'listingId' => $existingListing->getId()
             ]);
         }
 
@@ -60,40 +58,37 @@ final class ListingAddController extends AbstractController
         $em->flush();
 
         return new JsonResponse([
-            'success' => true,
-            'message' => sprintf('"%s" is now listed for sale!', $collectible->getName()),
-            'action' => 'added',
-            'listingId' => $listing->getId(),
-            'deleteUrl' => $this->generateUrl('app_listing_delete', ['id' => $listing->getId()]),
-            'deleteToken' => $this->csrfTokenManager->getToken('delete' . $listing->getId())->getValue()
+            'status' => 'success',
+            'message' => 'Collectible "' . $collectible->getName() . '" is now listed for sale!',
+            'listingId' => $listing->getId()
         ]);
     }
 
-    #[Route('/delete/{id<\d+>}', name: 'app_listing_delete', methods: ['POST'])]
+    #[Route('/delete/{id}', name: 'app_listing_delete', methods: ['POST'])]
     public function delete(Request $request, int $id, EntityManagerInterface $em): JsonResponse
     {
         $listing = $em->getRepository(Listing::class)->find($id);
 
         if (!$listing) {
-            return new JsonResponse(['success' => false, 'message' => 'Listing not found.']);
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => 'Listing not found.'
+            ]);
         }
 
-        $token = $request->request->get('_token');
-        if (!$this->csrfTokenManager->isTokenValid(new CsrfToken('delete' . $listing->getId(), $token))) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid CSRF token.']);
+        if (!$this->isCsrfTokenValid('delete'.$listing->getId(), $request->request->get('_token'))) {
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => 'Invalid CSRF token.'
+            ]);
         }
-
-        $collectible = $listing->getCollectible();
 
         $em->remove($listing);
         $em->flush();
 
         return new JsonResponse([
-            'success' => true,
-            'message' => sprintf('"%s" has been removed from sale!', $collectible->getName()),
-            'action' => 'deleted',
-            'addUrl' => $this->generateUrl('listing_add'),
-            'addToken' => $this->csrfTokenManager->getToken('add_listing_' . $collectible->getId())->getValue()
+            'status' => 'success',
+            'message' => 'Listing removed successfully.'
         ]);
     }
 }

@@ -147,12 +147,12 @@ public function explore(
     'categories' => $categories,
 ]);
 }
-  #[Route('/listing/{id}', name: 'listing_show')]
-public function show(Listing $listing): Response
-{
-    return $this->render('home/listing_show.html.twig', [
-        'listing' => $listing,
-    ]);
-}
+//   #[Route('/listing/{id}', name: 'listing_show')]
+// public function show(Listing $listing): Response
+// {
+//     return $this->render('home/listing_show.html.twig', [
+//         'listing' => $listing,
+//     ]);
+// }
 
 }
