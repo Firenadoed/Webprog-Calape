@@ -1,65 +1,158 @@
-{% extends 'base.html.twig' %}
-{% block title %}My Collection — Collectiv{% endblock %}
+<?php
 
-{% block body %}
-<section class="py-16 bg-[#1B1B1D] text-center relative">
-  <h2 class="text-3xl font-semibold text-[#d4af37] mb-10 tracking-wide">
-    Featured Cards
-  </h2>
+namespace App\Controller;
 
-  <div class="relative max-w-7xl mx-auto px-8 overflow-hidden">
+use App\Entity\Collectible;
+use App\Entity\Listing;
+use App\Form\CollectibleType;
+use App\Repository\CollectibleRepository;
+use App\Repository\ListingRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
-    <!-- Left Arrow -->
-    <button id="prevBtn"
-      class="absolute left-0 top-1/2 -translate-y-1/2 bg-black/60 text-[#d4af37] hover:bg-[#d4af37] hover:text-black 
-             transition p-3 rounded-full z-10">
-      &#10094;
-    </button>
+class HomeController extends AbstractController
+{
+    #[Route('/', name: 'home')]
+    public function index(): Response
+    {
+        return $this->render('home/index.html.twig', [
+            'message' => 'Hello Symfony! 🚀',
+        ]);
+    }
 
-    <!-- Dynamic Card Container -->
-    <div id="cardContainer" class="flex transition-transform duration-500 ease-out">
-      {% for card in cards %}
-        <div class="min-w-[250px] md:min-w-[270px] mx-2 bg-[#1F1F21] border border-[#2a2a2d] rounded-xl overflow-hidden 
-                    hover:shadow-[0_0_25px_rgba(212,175,55,0.4)] hover:scale-[1.03] transition duration-300">
-          <img src="{{ asset('images/' ~ card.image) }}" alt="{{ card.name }}" class="w-full h-80 object-cover">
-          <div class="p-4">
-            <h3 class="text-lg font-semibold text-[#d4af37]">{{ card.name }}</h3>
-            <p class="text-gray-400 text-sm mt-1">{{ card.description }}</p>
-            <p class="text-[#d4af37] mt-2 font-semibold">${{ card.price|number_format(2, '.', ',') }}</p>
-          </div>
-        </div>
-      {% else %}
-        <p class="text-gray-400 text-center w-full">No cards found in the database.</p>
-      {% endfor %}
-    </div>
+    #[Route('/collection', name: 'collection')]
+    public function collection(
+        CollectibleRepository $collectibleRepository,
+        ListingRepository $listingRepository
+    ): Response {
+        // Helper to fetch collectibles by category
+        $fetchByCategory = function (string $category) use ($collectibleRepository) {
+            return $collectibleRepository->createQueryBuilder('c')
+                ->join('c.category', 'cat')
+                ->where('cat.name = :categoryName')
+                ->setParameter('categoryName', $category)
+                ->getQuery()
+                ->getResult();
+        };
 
-    <!-- Right Arrow -->
-    <button id="nextBtn"
-      class="absolute right-0 top-1/2 -translate-y-1/2 bg-black/60 text-[#d4af37] hover:bg-[#d4af37] hover:text-black 
-             transition p-3 rounded-full z-10">
-      &#10095;
-    </button>
+        $cards = $fetchByCategory('Cards');
+        $figures = $fetchByCategory('Figures');
+        $games = $fetchByCategory('Games');
+        $others = $fetchByCategory('Others');
 
-  </div>
-</section>
+        // Build a map of collectible_id => listing_id for items that are currently for sale
+        $allListings = $listingRepository->findBy(['is_for_sale' => true]);
+        $listingMap = [];
+        foreach ($allListings as $listing) {
+            $listingMap[$listing->getCollectible()->getId()] = $listing->getId();
+        }
 
-<script>
-  const container = document.getElementById('cardContainer');
-  const prevBtn = document.getElementById('prevBtn');
-  const nextBtn = document.getElementById('nextBtn');
-  let index = 0;
-  const cardWidth = 270 + 16;
-  const visibleCount = 4;
+        return $this->render('home/collection.html.twig', [
+            'cards' => $cards,
+            'figures' => $figures,
+            'games' => $games,
+            'others' => $others,
+            'listingMap' => $listingMap, // Pass the map to Twig
+        ]);
+    }
 
-  nextBtn.addEventListener('click', () => {
-    const maxIndex = {{ cards|length }} - visibleCount;
-    if (index < maxIndex) index++;
-    container.style.transform = `translateX(-${index * cardWidth}px)`;
-  });
+    #[Route('/collection/add', name: 'collection_add')]
+    public function add(
+        Request $request,
+        EntityManagerInterface $em,
+        SluggerInterface $slugger
+    ): Response {
+        $collectible = new Collectible();
+        $form = $this->createForm(CollectibleType::class, $collectible);
+        $form->handleRequest($request);
 
-  prevBtn.addEventListener('click', () => {
-    if (index > 0) index--;
-    container.style.transform = `translateX(-${index * cardWidth}px)`;
-  });
-</script>
-{% endblock %}
+        if ($form->isSubmitted() && $form->isValid()) {
+            $imageFile = $form->get('image')->getData();
+
+            if ($imageFile) {
+                $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+                $safeFilename = $slugger->slug($originalFilename);
+                $newFilename = $safeFilename . '-' . uniqid() . '.' . $imageFile->guessExtension();
+
+                try {
+                    $imageFile->move(
+                        $this->getParameter('collectibles_images_directory'),
+                        $newFilename
+                    );
+                } catch (FileException $e) {
+                    $this->addFlash('error', 'Image upload failed.');
+                }
+
+                $collectible->setImage($newFilename);
+            }
+
+            // Link collectible to logged-in user if available
+            $user = $this->getUser();
+            if ($user) {
+                $collectible->setUser($user);
+            }
+
+            $em->persist($collectible);
+            $em->flush();
+
+            $this->addFlash('success', 'Collectible added successfully!');
+            return $this->redirectToRoute('collection');
+        }
+
+        return $this->render('home/add_collectible.html.twig', [
+            'form' => $form->createView(),
+        ]);
+
+
+        
+    }
+#[Route('/explore', name: 'explore')]
+public function explore(
+    ListingRepository $listingRepository, 
+    CollectibleRepository $collectibleRepository,
+    Request $request
+): Response {
+    $category = $request->query->get('category');
+    $search = $request->query->get('search');
+
+    // Get all categories for the dropdown
+    $categories = $collectibleRepository->createQueryBuilder('c')
+       ->join('c.category', 'cat')
+        ->select('DISTINCT cat.name')
+        ->getQuery()
+        ->getScalarResult(); // returns array of ['name' => 'Cards'], etc.
+    $qb = $listingRepository->createQueryBuilder('l')
+        ->join('l.collectible', 'c')
+        ->join('c.category', 'cat');
+
+    if ($category) {
+        $qb->andWhere('cat.name = :category')
+           ->setParameter('category', $category);
+    }
+
+    if ($search) {
+        $qb->andWhere('c.name LIKE :search')
+           ->setParameter('search', '%' . $search . '%');
+    }
+
+    $listings = $qb->getQuery()->getResult();
+
+  return $this->render('home/explore.html.twig', [
+    'listings' => $listings,
+    'categories' => $categories,
+]);
+}
+  #[Route('/listing/{id}', name: 'listing_show')]
+public function show(Listing $listing): Response
+{
+    return $this->render('home/listing_show.html.twig', [
+        'listing' => $listing,
+    ]);
+}
+
+}

@@ -31,6 +31,9 @@ class Collectible
     #[ORM\Column(length: 255)]
     private ?string $image = null;
 
+    #[ORM\Column(length: 100, nullable: true)]
+    private ?string $franchise = null;
+
     // ManyToOne relationship with Category, nullable for migration safety
     #[ORM\ManyToOne(inversedBy: 'collectibles')]
     #[ORM\JoinColumn(nullable: true)]
@@ -151,6 +154,17 @@ class Collectible
                 $listing->setCollectible(null);
             }
         }
+        return $this;
+    }
+
+        public function getFranchise(): ?string
+    {
+        return $this->franchise;
+    }
+
+    public function setFranchise(?string $franchise): static
+    {
+        $this->franchise = $franchise;
         return $this;
     }
 }

@@ -1,4 +1,9 @@
 {{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
+<div>
+    {{ form_label(form.franchise, 'Franchise:', {'label_attr': {'class': 'form-label'}}) }}
+    {{ form_widget(form.franchise, {'attr': {'class': 'form-control', 'placeholder': 'Enter collectible name'}}) }}
+    {{ form_errors(form.franchise) }}
+</div>
 
 <div>
     {{ form_label(form.name, 'Name:', {'label_attr': {'class': 'form-label'}}) }}

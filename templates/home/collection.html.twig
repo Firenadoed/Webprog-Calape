@@ -3,72 +3,285 @@
 {% block title %}My Collection — Collectiv{% endblock %}
 
 {% block body %}
+{% set listingMap = listingMap|default({}) %}
 
-<section class="py-16 bg-[#1B1B1D] text-center relative">
-  <h2 class="text-3xl font-semibold text-[#d4af37] mb-10 tracking-wide">
-    Featured Cards
-  </h2>
+<section class="bg-gradient-to-b from-[#1B1B1D] to-[#111113] min-h-screen text-gray-200 relative overflow-hidden">
+  <!-- Background Glow -->
+  <div class="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.07),transparent_70%)]"></div>
 
-  <div class="relative max-w-7xl mx-auto px-8 overflow-hidden">
+  <!-- Profile Header -->
+  <div class="relative w-full bg-gradient-to-r from-[#0e0e0f] via-[#141415] to-[#1B1B1D] border-b border-[#2a2a2d] shadow-lg">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center md:items-end justify-between p-8 md:p-12 gap-6">
+      <div class="flex items-center gap-6">
+        <div class="relative">
+          <img src="{{ asset('uploads/profile/profile.png') }}" 
+               alt="Profile Picture" 
+               class="w-32 h-32 md:w-40 md:h-40 rounded-lg object-cover border-4 border-[#d4af37] shadow-[0_0_25px_rgba(212,175,55,0.3)]">
+        </div>
+        <div class="text-left">
+          <h2 class="text-3xl md:text-4xl font-bold text-white drop-shadow-[0_0_10px_rgba(212,175,55,0.3)]">Rohan</h2>
+          <p class="text-sm mt-2 text-gray-500">Joined January 2025 | {{ cards|length + figures|length + games|length + others|length }} Collectibles</p>
+        </div>
+      </div>
+      <div class="flex flex-col items-center md:items-end">
+        <div class="flex items-center gap-3">
+          <div class="bg-[#d4af37] text-black font-bold text-sm px-4 py-2 rounded-full shadow-md">Level 15</div>
+          <a href="{{ path('app_collectible_new') }}" 
+             class="bg-[#2a2a2d] text-[#d4af37] border border-[#d4af37]/50 hover:bg-[#d4af37] hover:text-black font-semibold px-4 py-2 rounded-md transition">
+            Add Collectible
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <!-- Left Arrow -->
-    <button id="prevBtn"
-      class="absolute left-0 top-1/2 -translate-y-1/2 bg-black/60 text-[#d4af37] hover:bg-[#d4af37] hover:text-black 
-             transition p-3 rounded-full z-10">
-      &#10094;
-    </button>
-
-    <!-- Card Container -->
-    <div id="cardContainer" class="flex transition-transform duration-500 ease-out">
-      {% set cards = [
-        {'title': 'Pachirisu', 'image': 'cards/pachirisu.jpg', 'desc': 'Electrified Incisors — Energy card bonus and damage counters.'},
-        {'title': 'Tyrogue', 'image': 'cards/tyrogue.jpg', 'desc': 'Pow-Pow Punching — 10+ damage per coin head.'},
-        {'title': 'Grafaiai', 'image': 'cards/grafaiai.jpg', 'desc': 'Miraculous Paint — Apply a special condition on hit.'},
-        {'title': 'Forest of Vitality', 'image': 'cards/forest.jpg', 'desc': 'Boosts grass Pokémon in the first turn.'},
-        {'title': 'Lillie’s Determination', 'image': 'cards/lillie.jpg', 'desc': 'Shuffle your hand and draw up to 8 cards.'}
-      ] %}
-      
-      {% for card in cards %}
-        <div class="min-w-[250px] md:min-w-[270px] mx-2 bg-[#1F1F21] border border-[#2a2a2d] rounded-xl overflow-hidden 
-                    hover:shadow-[0_0_25px_rgba(212,175,55,0.4)] hover:scale-[1.03] transition duration-300">
-          <img src="{{ asset('images/' ~ card.image) }}" alt="{{ card.title }}" class="w-full h-80 object-cover">
-          <div class="p-4">
-            <h3 class="text-lg font-semibold text-[#d4af37]">{{ card.title }}</h3>
-            <p class="text-gray-400 text-sm mt-1">{{ card.desc }}</p>
-          </div>
+  <!-- Flash Messages -->
+  <div class="max-w-7xl mx-auto px-8 mt-4">
+    {% for label, messages in app.flashes %}
+      {% for message in messages %}
+        <div class="p-3 rounded-md mb-2 text-white
+          {% if label == 'success' %}bg-green-600{% elseif label == 'error' %}bg-red-600{% else %}bg-yellow-500 text-black{% endif %}">
+          {{ message }}
         </div>
       {% endfor %}
-    </div>
-
-    <!-- Right Arrow -->
-    <button id="nextBtn"
-      class="absolute right-0 top-1/2 -translate-y-1/2 bg-black/60 text-[#d4af37] hover:bg-[#d4af37] hover:text-black 
-             transition p-3 rounded-full z-10">
-      &#10095;
-    </button>
-
+    {% endfor %}
   </div>
+
+  {% set sections = {'cards': cards, 'figures': figures, 'games': games, 'others': others} %}
+  {% for key, items in sections %}
+    <section class="py-5 text-center relative overflow-hidden">
+      <h2 class="text-3xl font-semibold text-[#d4af37] mb-8 tracking-wide capitalize drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]">
+        Featured {{ key }}
+      </h2>
+
+      <div class="relative max-w-7xl mx-auto px-8 overflow-hidden">
+        <button id="prevBtn-{{ key }}" class="absolute left-0 top-1/2 -translate-y-1/2 bg-black/60 text-[#d4af37] hover:bg-[#d4af37] hover:text-black transition p-3 rounded-full z-10">&#10094;</button>
+
+        <div id="cardContainer-{{ key }}" class="flex justify-center gap-4 transition-transform duration-500 ease-out">
+          {% for item in items %}
+            {% set listed = listingMap[item.id] is defined %}
+            <div class="card-float card-item w-[200px] h-[300px] bg-[#1F1F21] border border-[#2a2a2d] rounded-xl overflow-hidden shadow-md flex flex-col cursor-pointer"
+                 data-id="{{ item.id }}"
+                 data-listing-id="{{ listed ? listingMap[item.id] : '' }}"
+                 data-name="{{ item.name }}"
+                 data-description="{{ item.description }}"
+                 data-image="{{ asset('uploads/collectibles/' ~ item.image) }}"
+                 data-price="{{ (item.price ?? 0)|number_format(2, '.', '') }}"
+                 data-listed="{{ listed ? '1' : '0' }}"
+                 data-add-token="{{ csrf_token('add_listing_' ~ item.id) }}"
+                 data-add-url="{{ path('listing_add') }}"
+                 data-delete-token="{% if listed %}{{ csrf_token('delete' ~ listingMap[item.id]) }}{% else '' %}{% endif %}"
+                 data-delete-url="{% if listed %}{{ path('app_listing_delete', {'id': listingMap[item.id]}) }}{% else '' %}{% endif %}">
+              <div class="h-[200px] w-full overflow-hidden flex items-center justify-center bg-[#141415]">
+                <img src="{{ asset('uploads/collectibles/' ~ item.image) }}" alt="{{ item.name }}"
+                     class="w-full h-full object-cover object-center transition duration-300 brightness-50">
+              </div>
+              <div class="flex-grow p-3 flex flex-col justify-between">
+                <div>
+                  <h3 class="text-base font-semibold text-[#d4af37] mb-1">{{ item.name }}</h3>
+                  <p class="text-gray-400 text-xs leading-snug line-clamp-2">{{ item.description }}</p>
+                </div>
+                <p class="text-gray-500 text-[11px] mt-2 italic">Collectiv {{ key|capitalize }} Collection</p>
+              </div>
+            </div>
+          {% else %}
+            <p class="text-gray-500 italic mx-auto">No featured {{ key }} yet.</p>
+          {% endfor %}
+        </div>
+
+        <button id="nextBtn-{{ key }}" class="absolute right-0 top-1/2 -translate-y-1/2 bg-black/60 text-[#d4af37] hover:bg-[#d4af37] hover:text-black transition p-3 rounded-full z-10">&#10095;</button>
+      </div>
+
+      {% if not loop.last %}
+      <div class="w-1/3 mx-auto h-[1px] bg-gradient-to-r from-transparent via-[#d4af37]/80 to-transparent my-5"></div>
+      {% endif %}
+    </section>
+  {% endfor %}
 </section>
 
+<!-- Modal -->
+<div id="detailModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center">
+  <div class="bg-[#1f1f21] rounded-xl w-96 p-5 relative flex flex-col items-center max-h-[90vh] overflow-y-auto scale-0 transform transition-transform duration-300">
+    <button id="modalClose" class="absolute top-2 right-2 text-gray-400 hover:text-[#d4af37] text-xl">&times;</button>
+    <img id="modalImage" class="w-full h-64 object-cover rounded-md mb-4" src="" alt="Collectible Image">
+    <h3 id="modalName" class="text-2xl font-bold text-[#d4af37] mb-2 text-center"></h3>
+    <p id="modalDescription" class="text-gray-300 text-sm mb-4 text-center"></p>
+    <p id="modalPrice" class="text-gray-400 text-xs mb-4 text-center">Base Price: <span class="font-bold text-[#d4af37]"></span></p>
+
+    <form id="sellForm" method="POST" action="{{ path('listing_add') }}">
+      <input type="hidden" name="collectible_id" id="modalCollectibleId">
+      <input type="hidden" name="_token" id="modalToken" value="">
+      <button id="sellButton" type="submit" class="bg-[#d4af37] text-black px-5 py-2 rounded-md font-semibold hover:bg-[#f0cf57] transition">
+        Put Up for Sale
+      </button>
+    </form>
+  </div>
+</div>
+
+<style>
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.card-float { animation: float 4s ease-in-out infinite; }
+.scale-90 { transform: scale(0.9); }
+.scale-105 { transform: scale(1.05); }
+.brightness-50 { filter: brightness(0.5); }
+.brightness-100 { filter: brightness(1); }
+</style>
+
 <script>
-  const container = document.getElementById('cardContainer');
-  const prevBtn = document.getElementById('prevBtn');
-  const nextBtn = document.getElementById('nextBtn');
+document.addEventListener('DOMContentLoaded', () => {
+  // Carousel logic
+  ['cards','figures','games','others'].forEach(key => {
+    const container = document.getElementById(`cardContainer-${key}`);
+    if (!container) return;
+    const cards = Array.from(container.querySelectorAll('.card-item'));
+    const prevBtn = document.getElementById(`prevBtn-${key}`);
+    const nextBtn = document.getElementById(`nextBtn-${key}`);
+    const cardWidth = 220;
+    let index = 0;
 
-  let index = 0;
-  const cardWidth = 270 + 16; // width + margin
-  const visibleCount = 4;
+    const updateCards = () => {
+      const total = cards.length;
+      if(total === 0) return;
+      if(index < 0) index = total - 1;
+      if(index >= total) index = 0;
+      const containerWidth = container.offsetWidth;
+      const visibleCards = Math.floor(containerWidth / cardWidth);
+      const offset = ((visibleCards - 1) / 2) * cardWidth;
+      container.style.transform = `translateX(-${index * cardWidth - offset}px)`;
+      cards.forEach(card => { card.classList.remove('scale-105','brightness-100'); card.classList.add('scale-90','brightness-50'); });
+      cards[index].classList.remove('scale-90','brightness-50');
+      cards[index].classList.add('scale-105','brightness-100');
+    };
 
-  nextBtn.addEventListener('click', () => {
-    const maxIndex = {{ cards|length }} - visibleCount;
-    if (index < maxIndex) index++;
-    container.style.transform = `translateX(-${index * cardWidth}px)`;
+    nextBtn?.addEventListener('click', () => { index++; updateCards(); });
+    prevBtn?.addEventListener('click', () => { index--; updateCards(); });
+    updateCards();
+    window.addEventListener('resize', updateCards);
   });
 
-  prevBtn.addEventListener('click', () => {
-    if (index > 0) index--;
-    container.style.transform = `translateX(-${index * cardWidth}px)`;
+  // Modal logic
+  const modal = document.getElementById('detailModal');
+  const modalContent = modal.querySelector('div');
+  const modalImage = document.getElementById('modalImage');
+  const modalName = document.getElementById('modalName');
+  const modalDescription = document.getElementById('modalDescription');
+  const modalPrice = document.querySelector('#modalPrice span');
+  const modalCollectibleIdInput = document.getElementById('modalCollectibleId');
+  const sellButton = document.getElementById('sellButton');
+  const modalToken = document.getElementById('modalToken');
+  const closeBtn = document.getElementById('modalClose');
+  const sellForm = document.getElementById('sellForm');
+
+  async function submitSellForm(e) {
+    e.preventDefault();
+    const collectibleId = modalCollectibleIdInput.value;
+    const token = modalToken.value;
+    const card = document.querySelector(`.card-item[data-id="${collectibleId}"]`);
+    if (!card) {
+      alert('Collectible not found.');
+      return;
+    }
+    const isListed = card.dataset.listed === '1';
+    let url = sellForm.action;
+
+    // Safeguard: Ensure URL is valid
+    if (!url || url === '' || url === window.location.pathname) {
+      url = isListed ? `/listing/delete/${card.dataset.listingId}` : '/listing/add';  // Hard fallback (adjust if your routes differ)
+      sellForm.action = url;
+      console.warn('Fallback URL used:', url);  // Debug log
+    }
+
+    console.log('Submitting to URL:', url, 'isListed:', isListed, 'collectibleId:', collectibleId);  // Debug: Check in console
+
+    // Loading state
+    const originalText = sellButton.textContent;
+    sellButton.disabled = true;
+    sellButton.textContent = 'Processing...';
+
+    const formData = new FormData();
+    formData.append('collectible_id', collectibleId);
+    formData.append('_token', token);
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin'  // Ensures session/CSRF cookies are included
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Response:', data);  // Debug: Check success/error
+
+      if (data.success) {
+        // Update modal
+        sellButton.textContent = data.action === 'added' ? 'Take Out of Sale' : 'Put Up for Sale';
+        modalToken.value = data.action === 'added' ? data.deleteToken : data.addToken;
+        sellForm.action = data.action === 'added' ? data.deleteUrl : data.addUrl;
+
+        // Update card data
+        card.dataset.listed = data.action === 'added' ? '1' : '0';
+        if (data.action === 'added') {
+          card.dataset.listingId = data.listingId;
+          card.dataset.deleteUrl = data.deleteUrl;
+          card.dataset.deleteToken = data.deleteToken;
+        } else {
+          card.dataset.listingId = '';
+          card.dataset.deleteUrl = '';
+          card.dataset.deleteToken = '';
+        }
+
+        alert(data.message);
+      } else {
+        alert(data.message || 'Operation failed.');
+      }
+    } catch (err) {
+      console.error('Fetch error:', err, 'URL was:', url);
+      alert('An error occurred: ' + err.message + '. Check console for details.');
+    } finally {
+      sellButton.disabled = false;
+      sellButton.textContent = originalText;
+    }
+  }
+
+  sellButton.addEventListener('click', submitSellForm);
+
+  function openModal(card) {
+    if (!card) return;
+    const isListed = card.dataset.listed === '1';
+    const addUrl = card.dataset.addUrl || '/listing/add';  // Fallback
+    const deleteUrl = card.dataset.deleteUrl || '';  // Empty if not listed
+
+    console.log('Opening modal for:', card.dataset.id, 'isListed:', isListed, 'addUrl:', addUrl, 'deleteUrl:', deleteUrl);  // Debug
+
+    modal.classList.remove('hidden');
+    setTimeout(() => modalContent.classList.add('scale-100'), 10);
+
+    modalImage.src = card.dataset.image;
+    modalName.textContent = card.dataset.name;
+    modalDescription.textContent = card.dataset.description;
+    modalPrice.textContent = `$${card.dataset.price}`;
+    modalCollectibleIdInput.value = card.dataset.id;
+
+    sellButton.textContent = isListed ? 'Take Out of Sale' : 'Put Up for Sale';
+    sellForm.action = isListed && deleteUrl ? deleteUrl : addUrl;  // Safeguard: Use deleteUrl only if valid
+    modalToken.value = isListed && card.dataset.deleteToken ? card.dataset.deleteToken : card.dataset.addToken;
+  }
+
+  document.addEventListener('dblclick', e => {
+    const card = e.target.closest('.card-item');
+    if (card) openModal(card);
   });
+
+  function closeModal() {
+    modalContent.classList.remove('scale-100');
+    setTimeout(() => modal.classList.add('hidden'), 200);
+  }
+  closeBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+});
 </script>
-
 {% endblock %}

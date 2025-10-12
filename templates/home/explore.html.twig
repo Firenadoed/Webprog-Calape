@@ -1,0 +1,53 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Explore — Collectiv{% endblock %}
+
+{% block body %}
+<section class="py-16 bg-[#1B1B1D] text-white text-center">
+    <h2 class="text-3xl font-semibold text-[#d4af37] mb-6 tracking-wide">Collectibles For Sale</h2>
+
+    {# --- Search & Filter Form --- #}
+    <form method="get" class="mb-10 flex flex-col sm:flex-row justify-between items-center gap-4 max-w-6xl mx-auto">
+    {# --- Search Input --- #}
+    <input type="text" name="search" placeholder="Search collectibles..." 
+           value="{{ app.request.get('search') }}" 
+           class="px-4 py-2 rounded-lg w-full sm:w-64 border-2 border-[#d4af37] text-white bg-[#1B1B1D] placeholder-gray-400 focus:outline-none focus:border-[#ffd700]">
+
+    {# --- Right side: Category + Button --- #}
+    <div class="flex gap-2 w-full sm:w-auto">
+        <select name="category" class="px-4 py-2 rounded-lg text-white bg-[#1B1B1D] border-2 border-[#d4af37] focus:outline-none focus:border-[#ffd700]">
+            <option value="">All Categories</option>
+            {% for cat in categories %}
+                <option value="{{ cat.name }}" 
+                    {% if app.request.get('category') == cat.name %}selected{% endif %}>
+                    {{ cat.name }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="bg-[#d4af37] text-black font-semibold px-6 py-2 rounded-lg hover:bg-[#c19b2f] transition">
+            Filter
+        </button>
+    </div>
+</form>
+
+    {# --- Listings Grid --- #}
+    <div class="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+        {% for listing in listings %}
+            <div class="bg-[#2b2b2d] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition">
+                <img src="{{ asset('uploads/collectibles/' ~ listing.collectible.image) }}" 
+                     alt="{{ listing.collectible.name }}" 
+                     class="w-full h-48 object-cover">
+                <div class="p-4 text-left">
+                    <h3 class="font-semibold text-lg text-[#d4af37]">{{ listing.collectible.name }}</h3>
+                    <p class="text-gray-300 text-sm mt-2">{{ listing.collectible.description|slice(0, 80) ~ '...' }}</p>
+                    <p class="text-gray-400 text-xs mt-1">Category: {{ listing.collectible.category.name }}</p>
+                    <a href="{{ path('listing_show', {'id': listing.id}) }}" class="mt-4 inline-block text-[#d4af37] hover:underline">View Details</a>
+                </div>
+            </div>
+        {% else %}
+            <p class="text-gray-400 col-span-full">No listings found.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Add Collectible{% endblock %}
+
+{% block body %}
+<section class="py-16 bg-[#1B1B1D] text-white text-center">
+  <div class="max-w-2xl mx-auto bg-[#232327] p-8 rounded-2xl shadow-lg">
+    <h2 class="text-3xl font-semibold text-[#d4af37] mb-8">Add New Collectible</h2>
+
+    {{ form_start(form, {'attr': {'id': 'collectible-form'}}) }}
+      <div class="space-y-6 text-left">
+        
+        <!-- Franchise -->
+        {{ form_row(form.franchise, {'attr': {'list': 'franchises', 'placeholder': 'Enter or select a franchise'}}) }}
+        <datalist id="franchises">
+          <option value="Pokemon">
+          <option value="Yu-Gi-Oh">
+          <option value="Magic: The Gathering">
+          <option value="One Piece">
+          <option value="Marvel">
+        </datalist>
+
+        <!-- Name field (no API logic now) -->
+        <div class="relative">
+          {{ form_row(form.name, {'attr': {'id': 'collectible_name', 'autocomplete': 'off'}}) }}
+        </div>
+
+        <!-- Other form fields -->
+        {{ form_row(form.description) }}
+        {{ form_row(form.image) }}
+        {{ form_row(form.price) }}
+        {{ form_row(form.category) }}
+      </div>
+
+      <button class="mt-8 px-6 py-2 bg-[#d4af37] text-black font-semibold rounded-xl hover:bg-[#f5d26a]">
+        Add Collectible
+      </button>
+    {{ form_end(form) }}
+  </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.querySelector('#collectible-form');
+  const franchiseField = document.querySelector('#collectible_franchise');
+  const nameField = document.querySelector('#collectible_name');
+
+  // Placeholder logic for future dynamic behavior
+  console.log('Collectible form loaded.');
+
+  form.addEventListener('submit', (e) => {
+    console.log('Submitting collectible:', {
+      franchise: franchiseField.value,
+      name: nameField.value
+    });
+  });
+});
+</script>
+{% endblock %}

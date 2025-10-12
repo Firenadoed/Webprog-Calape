@@ -35,6 +35,10 @@ class CollectibleType extends AbstractType
                 'required' => true,
                 'attr' => ['class' => 'form-control']
             ])
+            ->add('franchise', TextType::class, [ // ✅ added this
+                'required' => false,
+                'attr' => ['class' => 'form-control', 'placeholder' => 'Enter franchise name']
+            ])
             ->add('image', FileType::class, [
                 'mapped' => false,
                 'required' => false,

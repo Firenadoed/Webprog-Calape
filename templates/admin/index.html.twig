@@ -59,7 +59,7 @@
       <tbody>
         {% for listing in recentListings %}
           <tr class="border-b border-[#3A3A3C] hover:bg-[#2F2F31] transition">
-            <td class="py-2">{{ listing.title }}</td>
+            <td class="py-2">{{ listing.collectible.name }}</td>
             <td class="py-2">₱{{ listing.price|number_format(2, '.', ',') }}</td>
             <td class="py-2">{{ listing.createdAt|date('M d, Y') }}</td>
           </tr>
