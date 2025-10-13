@@ -9,16 +9,9 @@
 
     {{ form_start(form, {'attr': {'id': 'collectible-form'}}) }}
       <div class="space-y-6 text-left">
-        
+        {{ form_row(form.category) }}
         <!-- Franchise -->
-        {{ form_row(form.franchise, {'attr': {'list': 'franchises', 'placeholder': 'Enter or select a franchise'}}) }}
-        <datalist id="franchises">
-          <option value="Pokemon">
-          <option value="Yu-Gi-Oh">
-          <option value="Magic: The Gathering">
-          <option value="One Piece">
-          <option value="Marvel">
-        </datalist>
+        {{ form_row(form.franchise)}}
 
         <!-- Name field (no API logic now) -->
         <div class="relative">
@@ -29,7 +22,6 @@
         {{ form_row(form.description) }}
         {{ form_row(form.image) }}
         {{ form_row(form.price) }}
-        {{ form_row(form.category) }}
       </div>
 
       <button class="mt-8 px-6 py-2 bg-[#d4af37] text-black font-semibold rounded-xl hover:bg-[#f5d26a]">

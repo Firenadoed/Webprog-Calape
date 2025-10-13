@@ -1,0 +1,26 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit {{ collectible.name }} — My Collection{% endblock %}
+
+{% block body %}
+<section class="py-16 bg-[#1B1B1D] text-white text-center">
+  <div class="max-w-2xl mx-auto bg-[#232327] p-8 rounded-2xl shadow-lg">
+    <h2 class="text-3xl font-semibold text-[#d4af37] mb-8">Edit Collectible</h2>
+
+    {{ form_start(form) }}
+      <div class="space-y-6 text-left">
+        {{ form_row(form.franchise) }}
+        {{ form_row(form.name) }}
+        {{ form_row(form.description) }}
+        {{ form_row(form.image) }}
+        {{ form_row(form.price) }}
+        {{ form_row(form.category) }}
+      </div>
+
+      <button class="mt-8 px-6 py-2 bg-[#d4af37] text-black font-semibold rounded-xl hover:bg-[#f5d26a] transition">
+        Save Changes
+      </button>
+    {{ form_end(form) }}
+  </div>
+</section>
+{% endblock %}

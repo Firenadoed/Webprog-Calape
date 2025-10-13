@@ -1,0 +1,23 @@
+{{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
+
+<div>
+    {{ form_label(form.name, 'Category Name:', {'label_attr': {'class': 'form-label'}}) }}
+    {{ form_widget(form.name, {'attr': {'class': 'form-control', 'placeholder': 'Enter category name'}}) }}
+    {{ form_errors(form.name) }}
+</div>
+
+<div>
+    {{ form_label(form.description, 'Description:', {'label_attr': {'class': 'form-label'}}) }}
+    {{ form_widget(form.description, {
+        'attr': {
+            'class': 'form-control',
+            'placeholder': 'Enter a short description',
+            'style': 'height:100px;'
+        }
+    }) }}
+    {{ form_errors(form.description) }}
+</div>
+
+<button class="btn">{{ button_label|default('Save') }}</button>
+
+{{ form_end(form) }}

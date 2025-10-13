@@ -2,3 +2,49 @@
     {{ form_widget(form) }}
     <button class="btn">{{ button_label|default('Save') }}</button>
 {{ form_end(form) }}
+{{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
+<div>
+    {{ form_label(form.franchise, 'Franchise:', {'label_attr': {'class': 'form-label'}}) }}
+    {{ form_widget(form.franchise, {'attr': {'class': 'form-control', 'placeholder': 'Enter collectible name'}}) }}
+    {{ form_errors(form.franchise) }}
+</div>
+
+<div>
+    {{ form_label(form.name, 'Name:', {'label_attr': {'class': 'form-label'}}) }}
+    {{ form_widget(form.name, {'attr': {'class': 'form-control', 'placeholder': 'Enter collectible name'}}) }}
+    {{ form_errors(form.name) }}
+</div>
+
+<div>
+    {{ form_label(form.description, 'Description:', {'label_attr': {'class': 'form-label'}}) }}
+    {{ form_widget(form.description, {
+        'attr': {
+            'class': 'form-control',
+            'placeholder': 'Enter a short description',
+            'style': 'height:100px;'
+        }
+    }) }}
+    {{ form_errors(form.description) }}
+</div>
+
+<div>
+    {{ form_label(form.price, 'Price:', {'label_attr': {'class': 'form-label'}}) }}
+    {{ form_widget(form.price, {'attr': {'class': 'form-control', 'placeholder': 'Enter price in PHP'}}) }}
+    {{ form_errors(form.price) }}
+</div>
+
+<div>
+    {{ form_label(form.category, 'Category:', {'label_attr': {'class': 'form-label'}}) }}
+    {{ form_widget(form.category, {'attr': {'class': 'form-control'}}) }}
+    {{ form_errors(form.category) }}
+</div>
+
+<div>
+    {{ form_label(form.image, 'Image:', {'label_attr': {'class': 'form-label'}}) }}
+    {{ form_widget(form.image, {'attr': {'class': 'form-control'}}) }}
+    {{ form_errors(form.image) }}
+</div>
+
+<button class="btn">{{ button_label|default('Save') }}</button>
+
+{{ form_end(form) }}

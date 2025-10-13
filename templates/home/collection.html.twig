@@ -13,7 +13,7 @@
     <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center md:items-end justify-between p-8 md:p-12 gap-6">
       <div class="flex items-center gap-6">
         <div class="relative">
-          <img src="{{ asset('uploads/profile/profile.png') }}" 
+          <img src="{{ asset('uploads/profile/profile.jpg') }}" 
                alt="Profile Picture" 
                class="w-32 h-32 md:w-40 md:h-40 rounded-lg object-cover border-4 border-[#d4af37] shadow-[0_0_25px_rgba(212,175,55,0.3)]">
         </div>
@@ -25,7 +25,7 @@
       <div class="flex flex-col items-center md:items-end">
         <div class="flex items-center gap-3">
           <div class="bg-[#d4af37] text-black font-bold text-sm px-4 py-2 rounded-full shadow-md">Level 15</div>
-          <a href="{{ path('app_collectible_new') }}" 
+          <a href="{{ path('collection_add') }}" 
              class="bg-[#2a2a2d] text-[#d4af37] border border-[#d4af37]/50 hover:bg-[#d4af37] hover:text-black font-semibold px-4 py-2 rounded-md transition">
             Add Collectible
           </a>
@@ -34,7 +34,7 @@
     </div>
   </div>
 
-  <!-- Flash Messages Container -->
+  <!-- Flash Messages -->
   <div id="flashContainer" class="max-w-7xl mx-auto px-8 mt-4"></div>
 
   {% set sections = {
@@ -100,12 +100,37 @@
     <p id="modalDescription" class="text-gray-300 text-sm mb-4 text-center"></p>
     <p id="modalPrice" class="text-gray-400 text-xs mb-4 text-center">Base Price: <span class="font-bold text-[#d4af37]"></span></p>
 
-    <form id="sellForm" method="POST" class="w-full flex justify-center mt-4">
+    <form id="sellForm" method="POST" class="w-full flex flex-col items-center mt-4 space-y-3">
       <input type="hidden" name="collectible_id" id="modalCollectibleId">
       <input type="hidden" name="_token" id="modalToken" value="">
+
+      <!-- PSA Grade Dropdown -->
+      <div id="gradeWrapper" class="w-full flex flex-col items-center space-y-2">
+        <label for="modalGrade" class="text-gray-300 text-sm font-medium">Select PSA Grade</label>
+        <select id="modalGrade" name="grade" class="w-2/3 bg-[#141415] border border-[#d4af37]/40 text-gray-200 rounded-md px-3 py-2 focus:border-[#d4af37] focus:ring focus:ring-[#d4af37]/40 transition">
+          <option value="">Unrated / Not Graded</option>
+          <option value="10 - GEM-MT">10 - Gem Mint (GEM-MT)</option>
+          <option value="9 - MINT">9 - Mint</option>
+          <option value="8 - NM-MT">8 - Near Mint–Mint (NM-MT)</option>
+          <option value="7 - NM">7 - Near Mint</option>
+          <option value="6 - EX-MT">6 - Excellent–Mint (EX-MT)</option>
+          <option value="5 - EX">5 - Excellent</option>
+          <option value="4 - VG-EX">4 - Very Good–Excellent</option>
+          <option value="3 - VG">3 - Very Good</option>
+          <option value="2 - GOOD">2 - Good</option>
+          <option value="1 - POOR">1 - Poor</option>
+        </select>
+      </div>
+
+      <!-- Submit Button -->
       <button id="sellButton" type="submit" class="bg-[#d4af37] text-black px-5 py-2 rounded-md font-semibold hover:bg-[#f0cf57] transition">
-          Put Up for Sale
+        Put Up for Sale
       </button>
+
+      <!-- Edit Button -->
+      <a id="editButton" href="#" class="hidden bg-[#2a2a2d] text-[#d4af37] border border-[#d4af37]/40 px-5 py-2 rounded-md font-semibold hover:bg-[#d4af37] hover:text-black transition text-center w-2/3">
+        Edit Collectible
+      </a>
     </form>
   </div>
 </div>
@@ -120,8 +145,10 @@
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  // Carousel logic
+function initCollectionPage() {
+  if (window.collectionPageInitialized) return;
+  window.collectionPageInitialized = true;
+
   ['cards','figures','games','others'].forEach(key => {
     const container = document.getElementById(`cardContainer-${key}`);
     if (!container) return;
@@ -147,12 +174,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     nextBtn?.addEventListener('click', () => { index++; updateCards(); });
     prevBtn?.addEventListener('click', () => { index--; updateCards(); });
+    cards.forEach((card, i) => card.addEventListener('click', () => { index = i; updateCards(); }));
     updateCards();
     window.addEventListener('resize', updateCards);
   });
 
-  // Modal logic
   const modal = document.getElementById('detailModal');
+  if(!modal) return;
   const modalContent = modal.querySelector('div');
   const modalImage = document.getElementById('modalImage');
   const modalName = document.getElementById('modalName');
@@ -161,30 +189,34 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalCollectibleIdInput = document.getElementById('modalCollectibleId');
   const sellButton = document.getElementById('sellButton');
   const modalToken = document.getElementById('modalToken');
+  const editButton = document.getElementById('editButton');
   const closeBtn = document.getElementById('modalClose');
 
-  document.addEventListener('dblclick', (e) => {
-    const card = e.target.closest('.card-item');
-    if (!card) return;
-    const isListed = card.dataset.listed === '1';
+  document.querySelectorAll('.card-item').forEach(card => {
+    card.addEventListener('dblclick', () => {
+      const isListed = card.dataset.listed === '1';
+      modal.classList.remove('hidden');
+      setTimeout(()=>modalContent.classList.add('scale-100'),10);
 
-    modal.classList.remove('hidden');
-    setTimeout(()=>modalContent.classList.add('scale-100'),10);
+      modalImage.src = card.dataset.image;
+      modalName.textContent = card.dataset.name;
+      modalDescription.textContent = card.dataset.description;
+      modalPrice.textContent = `$${parseFloat(card.dataset.price).toFixed(2)}`;
+      modalCollectibleIdInput.value = card.dataset.id;
 
-    modalImage.src = card.dataset.image;
-    modalName.textContent = card.dataset.name;
-    modalDescription.textContent = card.dataset.description;
-    modalPrice.textContent = `$${parseFloat(card.dataset.price).toFixed(2)}`;
-    modalCollectibleIdInput.value = card.dataset.id;
+      // Update form + visibility
+      sellButton.textContent = isListed ? 'Take Out of Sale' : 'Put Up for Sale';
+      document.getElementById('gradeWrapper').style.display = isListed ? 'none' : 'flex';
+      editButton.classList.toggle('hidden', isListed);
+      editButton.href = `/collection/${card.dataset.id}/edit`;
 
-    sellButton.textContent = isListed ? 'Take Out of Sale' : 'Put Up for Sale';
-    sellButton.form.action = isListed
-      ? `/listing/delete/${card.dataset.listingId}`
-      : `{{ path('listing_add') }}`;
-    modalToken.value = isListed
-      ? card.dataset.deleteToken
-      : card.dataset.id ? '{{ csrf_token('add_listing_' ~ 'PLACEHOLDER') }}'.replace('PLACEHOLDER', card.dataset.id)
-      : '{{ csrf_token('add_listing') }}';
+      sellButton.form.action = isListed
+        ? `/listing/delete/${card.dataset.listingId}`
+        : `{{ path('listing_add') }}`;
+      modalToken.value = isListed
+        ? card.dataset.deleteToken
+        : '{{ csrf_token('add_listing_' ~ 'PLACEHOLDER') }}'.replace('PLACEHOLDER', card.dataset.id);
+    });
   });
 
   function closeModal(){
@@ -195,49 +227,55 @@ document.addEventListener('DOMContentLoaded', () => {
   modal.addEventListener('click', e=>{ if(e.target===modal) closeModal(); });
   document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
 
-  // AJAX add/remove listing
-  document.getElementById('sellForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const collectibleId = modalCollectibleIdInput.value;
-    const token = modalToken.value;
-    const actionUrl = sellButton.form.action;
+  const sellForm = document.getElementById('sellForm');
+  if(sellForm){
+    sellForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const collectibleId = modalCollectibleIdInput.value;
+      const token = modalToken.value;
+      const grade = document.getElementById('modalGrade').value;
+      const actionUrl = sellButton.form.action;
 
-    fetch(actionUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        collectible_id: collectibleId,
-        _token: token
+      fetch(actionUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          collectible_id: collectibleId,
+          grade: grade,
+          _token: token
+        })
       })
-    })
-    .then(res => res.json())
-    .then(data => {
-      const flashContainer = document.getElementById('flashContainer');
-      const flash = document.createElement('div');
-      flash.className = `p-3 rounded-md mb-2 text-white ${
-        data.status === 'success' ? 'bg-green-600' :
-        data.status === 'error' ? 'bg-red-600' : 'bg-yellow-500 text-black'}`;
-      flash.textContent = data.message;
-      flashContainer.prepend(flash);
-      setTimeout(()=>flash.remove(),4000);
+      .then(res => res.json())
+      .then(data => {
+        const flashContainer = document.getElementById('flashContainer');
+        const flash = document.createElement('div');
+        flash.className = `p-3 rounded-md mb-2 text-white ${
+          data.status === 'success' ? 'bg-green-600' :
+          data.status === 'error' ? 'bg-red-600' : 'bg-yellow-500 text-black'}`;
+        flash.textContent = data.message;
+        flashContainer.prepend(flash);
+        setTimeout(()=>flash.remove(),4000);
 
-      closeModal();
+        closeModal();
 
-      const card = document.querySelector(`.card-item[data-id='${collectibleId}']`);
-      if(card) {
-        if(card.dataset.listed === '0' && data.listingId){
-          card.dataset.listed = '1';
-          card.dataset.listingId = data.listingId;
-          card.dataset.deleteToken = data.deleteToken; // <- server-generated token
-        } else {
-          card.dataset.listed = '0';
-          card.dataset.listingId = '';
-          card.dataset.deleteToken = '';
+        const card = document.querySelector(`.card-item[data-id='${collectibleId}']`);
+        if(card) {
+          if(card.dataset.listed === '0' && data.listingId){
+            card.dataset.listed = '1';
+            card.dataset.listingId = data.listingId;
+            card.dataset.deleteToken = data.deleteToken;
+          } else {
+            card.dataset.listed = '0';
+            card.dataset.listingId = '';
+            card.dataset.deleteToken = '';
+          }
         }
-      }
+      });
     });
-  });
+  }
+}
 
-});
+document.addEventListener('DOMContentLoaded', initCollectionPage);
+document.addEventListener('turbo:load', initCollectionPage);
 </script>
 {% endblock %}

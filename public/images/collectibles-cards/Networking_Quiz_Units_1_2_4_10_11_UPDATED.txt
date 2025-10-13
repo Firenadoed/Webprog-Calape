@@ -1,0 +1,229 @@
+=========================
+UNIT 1: INTRODUCTION TO DATA COMMUNICATIONS AND NETWORKING
+=========================
+
+Q1: Raw facts collected that become meaningful only after processing.
+A1: Data
+
+Q2: Processed data that enables decision-making.
+A2: Information
+
+Q3: What is the main objective of data communication and networking?
+A3: To enable seamless exchange of data between any two points in the world.
+
+Q4: What are the four fundamental characteristics of effective data communication?
+A4: Delivery, Accuracy, Timeliness, and Jitter
+
+Q5: List the five components of a data communication system.
+A5: Message, Sender, Receiver, Transmission Medium, and Protocol
+
+Q6: Rules that define what, how, and when data is communicated.
+A6: Protocol
+
+Q7: Mention the three types of data flow directions.
+A7: Simplex, Half Duplex, and Full Duplex
+
+Q8: A device that sends data (message) in a communication system.
+A8: Sender
+
+Q9: What are the categories of computer networks based on size?
+A9: LAN (Local Area Network), MAN (Metropolitan Area Network), and WAN (Wide Area Network)
+
+Q10: Define LAN.
+A10: A network covering a small geographic area, such as an office or building.
+
+Q11: Define WAN.
+A11: A network covering a large geographic area, such as a country or continent.
+
+Q12: Define MAN.
+A12: A network larger than a LAN but smaller than a WAN, usually spanning a city.
+
+Q13: What are the three key elements of a protocol?
+A13: Syntax, Semantics, and Timing
+
+Q14: What are the two categories of standards in networking?
+A14: De facto (by convention) and De jure (by law)
+
+Q15: Name any three standard organizations in networking.
+A15: ISO, IEEE, and ITU-T
+
+-------------------------
+UNIT 2: SIGNALS
+-------------------------
+
+Q1: What are the two types of data?
+A1: Analog and Digital
+
+Q2: What are the two types of signals?
+A2: Analog Signal and Digital Signal
+
+Q3: Signals that repeat themselves after a fixed time period.
+A3: Periodic Signals
+
+Q4: Signals that do not repeat after a fixed time.
+A4: Non-periodic Signals
+
+Q5: Characteristics of an analog signal.
+A5: Amplitude, Frequency, and Phase
+
+Q6: What is the relationship between frequency and period?
+A6: They are inversely proportional (f = 1/T).
+
+Q7: Define wavelength.
+A7: The distance a signal travels in one complete cycle.
+
+Q8: What is a composite signal?
+A8: A combination of two or more simple sine waves with different frequencies, amplitudes, and phases.
+
+Q9: Define bit rate.
+A9: The number of bits transmitted per second.
+
+Q10: Define baud rate.
+A10: The number of signal changes per second.
+
+Q11: When is bit rate equal to baud rate?
+A11: When each signal change represents one bit.
+
+Q12: What is baseband transmission?
+A12: Transmission of digital data directly over a lowpass channel without modulation.
+
+Q13: What is broadband transmission?
+A13: Converting digital signals to analog before transmission through a bandpass channel.
+
+Q14: What is attenuation?
+A14: The reduction in signal strength over distance.
+
+Q15: Define distortion.
+A15: The change in shape of a signal during transmission.
+
+-------------------------
+UNIT 4: NETWORK MODELS (OSI MODEL)
+-------------------------
+
+Q1: What does OSI stand for?
+A1: Open Systems Interconnection
+
+Q2: How many layers does the OSI model have?
+A2: Seven
+
+Q3: List the seven layers of the OSI model (top to bottom).
+A3: Application, Presentation, Session, Transport, Network, Data Link, Physical
+
+Q4: Which layer is responsible for end-to-end process delivery?
+A4: Transport Layer
+
+Q5: Which layer handles logical addressing and routing?
+A5: Network Layer
+
+Q6: Which layer is responsible for hop-to-hop delivery?
+A6: Data Link Layer
+
+Q7: Which layer provides services like translation, encryption, and compression?
+A7: Presentation Layer
+
+Q8: Which layer establishes, manages, and terminates sessions?
+A8: Session Layer
+
+Q9: Which layer provides user access to network services?
+A9: Application Layer
+
+Q10: Which layer deals with physical connection, bit transmission, and electrical specifications?
+A10: Physical Layer
+
+Q11: What is encapsulation in networking?
+A11: The process of adding headers (and sometimes trailers) to data as it passes through layers.
+
+Q12: What is peer-to-peer communication in OSI?
+A12: Communication between corresponding layers of sender and receiver.
+
+Q13: What is the main responsibility of the network layer?
+A13: Source-to-destination delivery of packets.
+
+Q14: What does the data link layer divide data into?
+A14: Frames
+
+Q15: What does the transport layer divide data into?
+A15: Segments
+
+-------------------------
+UNIT 10: TRANSMISSION MEDIA
+-------------------------
+
+Q1: Define transmission media.
+A1: The physical path through which data travels from sender to receiver.
+
+Q2: What are the two broad categories of transmission media?
+A2: Guided (wired) and Unguided (wireless)
+
+Q3: Give examples of guided media.
+A3: Twisted pair cable, Coaxial cable, Optical fiber
+
+Q4: Give examples of unguided media.
+A4: Radio waves, Microwaves, Infrared
+
+Q5: What are the two types of twisted pair cables?
+A5: Unshielded Twisted Pair (UTP) and Shielded Twisted Pair (STP)
+
+Q6: Which guided medium offers the highest transmission speed and bandwidth?
+A6: Optical Fiber Cable
+
+Q7: Mention one advantage of optical fiber.
+A7: High bandwidth, immune to electromagnetic interference
+
+Q8: What are the three frequency ranges of wireless communication?
+A8: Radio, Microwave, and Infrared
+
+Q9: Which unguided medium is used in satellite communication?
+A9: Microwaves
+
+Q10: What is the disadvantage of optical fiber cables?
+A10: Expensive installation and maintenance
+
+-------------------------
+UNIT 11: NETWORK TOPOLOGIES
+-------------------------
+
+Q1: Define network topology.
+A1: The physical or logical arrangement of nodes and connections in a network.
+
+Q2: What are the two types of network topology arrangements?
+A2: Physical topology and Logical topology
+
+Q3: In which topology are all devices connected to a single central cable?
+A3: Bus topology
+
+Q4: In which topology are all devices connected to a central device such as a hub or switch?
+A4: Star topology
+
+Q5: Topology where each device is connected to exactly two others forming a circular path.
+A5: Ring topology
+
+Q6: Topology that connects every device to every other device.
+A6: Mesh topology
+
+Q7: Topology that combines two or more different types of topologies.
+A7: Hybrid topology
+
+Q8: Topology where all nodes share the same transmission medium.
+A8: Bus topology
+
+Q9: Which topology is most fault-tolerant?
+A9: Mesh topology
+
+Q10: Which topology is most commonly used in modern LANs?
+A10: Star topology
+
+Q11: What happens if the central hub fails in a star topology?
+A11: The entire network stops functioning.
+
+Q12: Mention one disadvantage of ring topology.
+A12: Failure of a single node can disrupt the entire network.
+
+Q13: What is the main advantage of bus topology?
+A13: Easy to install and requires less cable.
+
+Q14: What is the main disadvantage of mesh topology?
+A14: Expensive due to high cabling cost and complexity.
+
+Q15: What topology is suitable for large organizations needing reliability and scalability?
+A15: Hybrid topology

@@ -43,7 +43,7 @@ class HomeController extends AbstractController
         $cards = $fetchByCategory('Cards');
         $figures = $fetchByCategory('Figures');
         $games = $fetchByCategory('Games');
-        $others = $fetchByCategory('Others');
+        $others = $fetchByCategory('Other Collectibles');
 
         // Build a map of collectible_id => listing_id for items that are currently for sale
         $allListings = $listingRepository->findBy(['is_for_sale' => true]);
@@ -147,12 +147,52 @@ public function explore(
     'categories' => $categories,
 ]);
 }
-//   #[Route('/listing/{id}', name: 'listing_show')]
-// public function show(Listing $listing): Response
-// {
-//     return $this->render('home/listing_show.html.twig', [
-//         'listing' => $listing,
-//     ]);
-// }
+  #[Route('/listings/{id}', name: 'listing_show')]
+public function show(Listing $listing): Response
+{
+    return $this->render('home/listing_show.html.twig', [
+        'listing' => $listing,
+    ]);
+}
+#[Route('/collection/{id}/edit', name: 'collection_edit')]
+public function edit(
+    Request $request,
+    Collectible $collectible,
+    EntityManagerInterface $em,
+    SluggerInterface $slugger
+): Response {
+    $form = $this->createForm(CollectibleType::class, $collectible);
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+        $imageFile = $form->get('image')->getData();
+
+        if ($imageFile) {
+            $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+            $safeFilename = $slugger->slug($originalFilename);
+            $newFilename = $safeFilename . '-' . uniqid() . '.' . $imageFile->guessExtension();
+
+            try {
+                $imageFile->move(
+                    $this->getParameter('collectibles_images_directory'),
+                    $newFilename
+                );
+                $collectible->setImage($newFilename);
+            } catch (FileException $e) {
+                $this->addFlash('error', 'Image upload failed.');
+            }
+        }
+
+        $em->flush();
+
+        $this->addFlash('success', 'Collectible updated successfully!');
+        return $this->redirectToRoute('collection');
+    }
+
+    return $this->render('home/edit_collectible.html.twig', [
+        'form' => $form->createView(),
+        'collectible' => $collectible,
+    ]);
+}
 
 }

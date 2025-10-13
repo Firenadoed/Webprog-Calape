@@ -24,9 +24,9 @@
     <p class="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
       “Where Collectors Belong” — Discover. Showcase. Connect.
     </p>
-    <a href="#" 
+    <a href="{{ path('explore') }}" 
        class="bg-[#d4af37] text-black px-8 py-3 rounded-md font-semibold text-lg hover:bg-[#c19b2f] hover:scale-105 transition-all duration-300 shadow-[0_0_25px_rgba(212,175,55,0.4)]">
-      Explore Collections
+      Explore
     </a>
   </div>
 
@@ -39,29 +39,30 @@
 
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 px-6 md:px-12">
     {% set collectibles = [
-      {'title': 'Trading Cards', 'image': 'collectibles-cards/Cards.jpg', 'desc': 'Discover rare Pokémon, Yu-Gi-Oh!, and more.'},
+      {'title': 'Cards', 'image': 'collectibles-cards/Cards.jpg', 'desc': 'Discover rare Pokémon, Yu-Gi-Oh!, and more.'},
       {'title': 'Figures', 'image': 'collectibles-cards/Figures.jpg', 'desc': 'Explore collectible figures and statues from your favorite universes.'},
-      {'title': 'Video Games', 'image': 'collectibles-cards/Games.jpg', 'desc': 'Classic cartridges, limited editions, and modern treasures.'},
+      {'title': 'Games', 'image': 'collectibles-cards/Games.jpg', 'desc': 'Classic cartridges, limited editions, and modern treasures.'},
       {'title': 'Artworks', 'image': 'collectibles-cards/Artwork.jpg', 'desc': 'Fan-made and official artwork collectibles with timeless value.'}
     ] %}
 
     {% for item in collectibles %}
-      <div class="group relative bg-[#1F1F21] border border-[#2a2a2d] rounded-xl overflow-hidden 
-                  hover:shadow-[0_0_40px_rgba(212,175,55,0.5)] hover:scale-[1.05] transition duration-300">
+    {% set category_slug = item.title %} {# Use exact category name as in DB #}
+    <div class="group relative bg-[#1F1F21] border border-[#2a2a2d] rounded-xl overflow-hidden 
+                hover:shadow-[0_0_40px_rgba(212,175,55,0.5)] hover:scale-[1.05] transition duration-300">
         <img src="{{ asset('images/' ~ item.image) }}" alt="{{ item.title }}" 
              class="w-full h-56 object-cover opacity-90 group-hover:opacity-100 transition">
         <div class="absolute inset-0 bg-black/50 backdrop-blur-sm opacity-0 group-hover:opacity-100 
                     transition duration-300 flex flex-col justify-center items-center px-4 text-center">
-          <p class="text-[#d4af37] font-semibold text-lg mb-2">{{ item.title }}</p>
-          <p class="text-gray-300 text-sm mb-4">{{ item.desc }}</p>
-          <a href="#" 
-             class="text-sm text-white border border-[#d4af37] px-4 py-2 rounded-md 
-                    hover:bg-[#d4af37] hover:text-black transition">
-            View {{ item.title }}
-          </a>
+            <p class="text-[#d4af37] font-semibold text-lg mb-2">{{ item.title }}</p>
+            <p class="text-gray-300 text-sm mb-4">{{ item.desc }}</p>
+            <a href="{{ path('explore', {'category': category_slug}) }}" 
+               class="text-sm text-white border border-[#d4af37] px-4 py-2 rounded-md 
+                      hover:bg-[#d4af37] hover:text-black transition">
+                View {{ item.title }}
+            </a>
         </div>
-      </div>
-    {% endfor %}
+    </div>
+{% endfor %}
   </div>
 </section>
 
@@ -71,7 +72,7 @@
   <p class="text-gray-400 mb-8 max-w-2xl mx-auto">
     Showcase your rare finds, build your collection, and connect with collectors across the world.
   </p>
-  <a href="#" class="bg-[#d4af37] text-black font-semibold px-8 py-3 rounded-md hover:bg-[#c19b2f] transition">
+  <a href="{{ path('collection') }}" class="bg-[#d4af37] text-black font-semibold px-8 py-3 rounded-md hover:bg-[#c19b2f] transition">
     Get Started
   </a>
 </section>
