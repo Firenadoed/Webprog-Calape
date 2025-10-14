@@ -44,6 +44,38 @@
       {% endif %}
     </div>
   </div>
+  <!-- Recent Activity Table -->
+<div class="bg-[#2A2A2C] rounded-xl shadow-lg p-6 border border-[#3A3A3C] mt-6 mb-10">
+  <h2 class="text-xl font-bold text-[#d4af37] mb-4">Recent Activity</h2>
+  <div class="max-h-64 overflow-y-auto">
+    <table class="w-full text-sm text-gray-300">
+      <thead>
+        <tr class="border-b border-[#3A3A3C] text-gray-400">
+          <th class="py-2 text-left">User</th>
+          <th class="py-2 text-left">Entity</th>
+          <th class="py-2 text-left">Action</th>
+          <th class="py-2 text-left">Details</th>
+          <th class="py-2 text-left">Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for activity in recentActivities %}
+          <tr class="border-b border-[#3A3A3C] hover:bg-[#2F2F31] transition">
+            <td class="py-2">{{ activity.user ? activity.user.username : 'System' }}</td>
+            <td class="py-2">{{ activity.entityType }} (ID: {{ activity.entityId }})</td>
+            <td class="py-2">{{ activity.action }}</td>
+            <td class="py-2">{{ activity.details ?: '-' }}</td>
+            <td class="py-2">{{ activity.createdAt|date('M d, Y H:i') }}</td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="5" class="text-center text-gray-500 py-4">No recent activity</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 
   <!-- Recent Listings Table -->
   <div class="bg-[#2A2A2C] rounded-xl shadow-lg p-6 border border-[#3A3A3C]">

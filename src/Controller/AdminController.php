@@ -6,6 +6,7 @@ use App\Repository\UserRepository;
 use App\Repository\CollectibleRepository;
 use App\Repository\ListingRepository;
 use App\Repository\CategoryRepository;
+use App\Repository\ActivityLogRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -17,7 +18,8 @@ final class AdminController extends AbstractController
         UserRepository $userRepo,
         CollectibleRepository $collectibleRepo,
         ListingRepository $listingRepo,
-        CategoryRepository $categoryRepo
+        CategoryRepository $categoryRepo,
+        ActivityLogRepository $activityLogRepo
     ): Response {
         // --- Basic totals ---
         $totalUsers = $userRepo->count([]);
@@ -44,6 +46,15 @@ final class AdminController extends AbstractController
         // --- Recent listings (limit 5) ---
         $recentListings = $listingRepo->findBy([], ['createdAt' => 'DESC'], 5);
 
+        // --- Recent activity log (limit 10) ---
+        $recentActivities = $activityLogRepo->createQueryBuilder('a')
+            ->leftJoin('a.user', 'U')
+            ->addSelect('U')
+            ->orderBy('a.createdAt', 'DESC')
+            ->setMaxResults(10)
+            ->getQuery()
+            ->getResult();
+
         return $this->render('admin/index.html.twig', [
             'title' => 'Admin Dashboard',
             'totalUsers' => $totalUsers,
@@ -53,7 +64,7 @@ final class AdminController extends AbstractController
             'totalValue' => $totalValue,
             'mostPopularCategory' => $mostPopularCategory,
             'recentListings' => $recentListings,
+            'recentActivities' => $recentActivities, // <<< added here
         ]);
     }
 }
-  

@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Collectible;
 use App\Entity\Listing;
+use App\Entity\ActivityLog;
 use App\Form\CollectibleType;
 use App\Repository\CollectibleRepository;
 use App\Repository\ListingRepository;
@@ -116,13 +117,28 @@ public function add(
         }
 
         // Link collectible to logged-in user if available
-        $user = $this->getUser();
-        if ($user) {
-            $collectible->setUser($user);
-        }
-
+        // $user = $this->getUser();
+        // if ($user) {
+        //     $collectible->setUser($user);
+        // }
+        $userRepository = $em->getRepository(\App\Entity\User::class);
+        $hardcodedUser = $userRepository->find(1);
+        $collectible->setUser($hardcodedUser);
+        
         $em->persist($collectible);
         $em->flush();
+
+        $activity = new ActivityLog();
+        $activity->setUser($hardcodedUser); // or $this->getUser() if live
+        $activity->setEntityType('Collectible');
+        $activity->setEntityId($collectible->getId());
+        $activity->setAction('Added');
+        $activity->setDetails('Added Collectible: ' . $collectible->getName());
+        $activity->setCreatedAt(new \DateTimeImmutable());
+
+        $em->persist($activity);
+        $em->flush();
+
 
         $this->addFlash('success', 'Collectible added successfully!');
         return $this->redirectToRoute('collection');
@@ -186,12 +202,31 @@ public function delete(Collectible $collectible, Request $request, EntityManager
         return new JsonResponse(['status'=>'error','message'=>'Invalid CSRF token']);
     }
 
+    // Hardcoded user check (for now)
+    $userRepository = $em->getRepository(\App\Entity\User::class);
+    $hardcodedUser = $userRepository->find(1);
+
+    // // Only allow deletion if collectible belongs to user
+    // if ($collectible->getUser() !== $hardcodedUser) {
+    //     return new JsonResponse(['status'=>'error','message'=>'Unauthorized']);
+    // }
+
+
+
+    $activity = new ActivityLog();
+    $activity->setUser($hardcodedUser);
+    $activity->setEntityType('Collectible');
+    $activity->setEntityId($collectible->getId());
+    $activity->setAction('Deleted');
+    $activity->setDetails('Deleted collectible: ' . $collectible->getName());
+    $activity->setCreatedAt(new \DateTimeImmutable());
+
     $em->remove($collectible);
+    $em->persist($activity);
     $em->flush();
 
     return new JsonResponse(['status'=>'success','message'=>'Collectible deleted']);
 }
-
 
 
 }

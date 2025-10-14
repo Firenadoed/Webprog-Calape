@@ -4,6 +4,8 @@ namespace App\Controller;
 
 use App\Entity\Collectible;
 use App\Entity\Listing;
+use App\Entity\ActivityLog;
+use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -41,7 +43,7 @@ final class ListingAddController extends AbstractController
         ]);
 
         if ($existingListing) {
-            $deleteToken = $csrf->getToken('delete' . $existingListing->getId())->getValue();
+           $deleteToken = $csrf->getToken('delete' . $listing->getId())->getValue();
 
             return new JsonResponse([
                 'status' => 'warning',
@@ -50,16 +52,34 @@ final class ListingAddController extends AbstractController
                 'deleteToken' => $deleteToken, // ✅ include token here
             ]);
         }
+        $userRepository = $em->getRepository(\App\Entity\User::class);
+        $hardcodedUser = $userRepository->find(1);
+
+
         $listing = new Listing();
         $listing->setGrade($grade); // ✅ Save it to DB
         $listing->setCollectible($collectible);
         $listing->setPrice($collectible->getPrice() ?? 0.0);
         $listing->setIsForSale(true);
         $listing->setIsShopItem(false);
+        $listing->setUser($hardcodedUser); // or $this->getUser() if live
         $listing->setCreatedAt(new \DateTime());
 
         $em->persist($listing);
         $em->flush();
+
+        $activity = new ActivityLog();
+        $activity->setUser($hardcodedUser); // or $this->getUser() if live
+        $activity->setEntityType('Listing');
+        $activity->setEntityId($listing->getId());
+        $activity->setAction('Added');
+        $activity->setDetails('Added Listing: ' . $collectible->getName());
+        $activity->setCreatedAt(new \DateTimeImmutable());
+
+      
+        $em->persist($activity);
+        $em->flush();
+
 
         // ✅ generate CSRF delete token for this new listing
         $deleteToken = $csrf->getToken('delete' . $listing->getId())->getValue();
@@ -91,9 +111,20 @@ final class ListingAddController extends AbstractController
             ]);
         }
 
-        $em->remove($listing);
-        $em->flush();
+        $userRepository = $em->getRepository(\App\Entity\User::class);
+        $hardcodedUser = $userRepository->find(1);
 
+        $activity = new ActivityLog();
+        $activity->setUser($hardcodedUser); // or $this->getUser() if live
+        $activity->setEntityType('Listing');
+        $activity->setEntityId($listing->getId());
+        $activity->setAction('Deleted');
+        $activity->setDetails('Deleted Listing: ' . $listing->getCollectible()->getName());
+        $activity->setCreatedAt(new \DateTimeImmutable());
+
+        $em->remove($listing);
+        $em->persist($activity);
+        $em->flush();
         return new JsonResponse([
             'status' => 'success',
             'message' => 'Listing removed successfully.'

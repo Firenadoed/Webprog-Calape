@@ -45,7 +45,7 @@ class CollectibleType extends AbstractType
     'attr' => ['class' => 'form-control'],
     'constraints' => [
         new File([
-            'maxSize' => '2M', // limit file size
+            'maxSize' => '2M', 
             'mimeTypes' => [
                 'image/jpeg',
                 'image/png',

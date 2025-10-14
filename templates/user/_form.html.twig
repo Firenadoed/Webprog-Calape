@@ -1,0 +1,37 @@
+{{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
+<div>
+    {{ form_label(form.username, 'Username:', {'label_attr': {'class': 'form-label'}}) }}
+    {{ form_widget(form.username, {'attr': {'class': 'form-control', 'placeholder': 'Enter Username'}}) }}
+    {{ form_errors(form.username) }}
+</div>
+
+<div>
+    {{ form_label(form.plainPassword, 'Password:', {'label_attr': {'class': 'form-label'}}) }}
+    {{ form_widget(form.plainPassword, {'attr': {'class': 'form-control', 'placeholder': 'Enter Password'}}) }}
+    {{ form_errors(form.plainPassword) }}
+</div>
+
+<div>
+    {{ form_label(form.email, 'Email:', {'label_attr': {'class': 'form-label'}}) }}
+    {{ form_widget(form.email, {'attr': {'class': 'form-control', 'placeholder': 'example@gmail.com?'}}) }}
+</div>
+
+<div>
+    {{ form_label(form.bio, 'Bio:', {'label_attr': {'class': 'form-label'}}) }}
+    {{ form_widget(form.bio, {'attr': {'class': 'form-control', 'placeholder': 'Tell us about yourself'}}) }}
+</div>
+
+<div>
+    {{ form_label(form.role, 'Role:', {'label_attr': {'class': 'form-label'}}) }}
+    {{ form_widget(form.role, {'attr': {'class': 'form-control', 'placeholder': 'Role?'}}) }}
+</div>
+
+<div>
+    {{ form_label(form.profile_image, 'Image:', {'label_attr': {'class': 'form-label'}}) }}
+    {{ form_widget(form.profile_image, {'attr': {'class': 'form-control'}}) }}
+    {{ form_errors(form.profile_image) }}
+</div>
+
+<button class="btn">{{ button_label|default('Save') }}</button>
+
+{{ form_end(form) }}

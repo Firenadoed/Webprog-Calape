@@ -49,7 +49,7 @@
 
         // Image
         if (tcgdexData.image) {
-          const highResUrl = tcgdexData.image + '/high.jpg';
+          const highResUrl = tcgdexData.image + '/low.jpg';
           fetchedImageInput.value = highResUrl;
 
           previewImg.src = highResUrl;
