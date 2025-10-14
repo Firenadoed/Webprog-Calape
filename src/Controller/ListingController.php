@@ -17,12 +17,35 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 final class ListingController extends AbstractController
 {
     #[Route(name: 'app_listing_index', methods: ['GET'])]
-    public function index(ListingRepository $listingRepository): Response
-    {
-        return $this->render('listing/index.html.twig', [
-            'listings' => $listingRepository->findAll(),
-        ]);
+public function index(Request $request, ListingRepository $listingRepository): Response
+{
+    $search = $request->query->get('search'); // Get search term
+    $filter = $request->query->get('filter'); // Get filter term (optional)
+
+    $qb = $listingRepository->createQueryBuilder('l')
+        ->leftJoin('l.user', 'u')
+        ->leftJoin('l.collectible', 'c')
+        ->addSelect('u', 'c');
+
+    // Apply search
+    if ($search) {
+        $qb->andWhere('l.grade LIKE :search OR u.username LIKE :search OR c.name LIKE :search')
+           ->setParameter('search', '%'.$search.'%');
     }
+
+    // Apply filter
+    if ($filter === 'for_sale') {
+        $qb->andWhere('l.isForSale = :forSale')
+           ->setParameter('forSale', true);
+    }
+
+    $listings = $qb->getQuery()->getResult();
+
+    return $this->render('listing/index.html.twig', [
+        'listings' => $listings,
+    ]);
+}
+
 
     #[Route('/new', name: 'app_listing_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response

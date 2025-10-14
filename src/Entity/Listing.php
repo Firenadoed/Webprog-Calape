@@ -31,8 +31,6 @@ class Listing
     #[ORM\Column]
     private ?bool $is_for_sale = null;
 
-    #[ORM\Column]
-    private ?bool $is_shop_item = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTime $createdAt = null;

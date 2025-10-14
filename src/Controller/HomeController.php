@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\String\Slugger\SluggerInterface;
-
+use Symfony\Component\HttpFoundation\JsonResponse;
 class HomeController extends AbstractController
 {
     #[Route('/', name: 'home')]
@@ -61,56 +61,78 @@ class HomeController extends AbstractController
         ]);
     }
 
-    #[Route('/collection/add', name: 'collection_add')]
-    public function add(
-        Request $request,
-        EntityManagerInterface $em,
-        SluggerInterface $slugger
-    ): Response {
-        $collectible = new Collectible();
-        $form = $this->createForm(CollectibleType::class, $collectible);
-        $form->handleRequest($request);
+   #[Route('/collection/add', name: 'collection_add')]
+public function add(
+    Request $request,
+    EntityManagerInterface $em,
+    SluggerInterface $slugger
+): Response {
+    $collectible = new Collectible();
+    $form = $this->createForm(CollectibleType::class, $collectible);
+    $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $imageFile = $form->get('image')->getData();
+    if ($form->isSubmitted() && $form->isValid()) {
+        $imageFile = $form->get('image')->getData();
 
-            if ($imageFile) {
-                $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
-                $safeFilename = $slugger->slug($originalFilename);
-                $newFilename = $safeFilename . '-' . uniqid() . '.' . $imageFile->guessExtension();
+        // Check if there's a fetched image URL from JS
+        $fetchedImageUrl = $request->request->get('fetched_image');
 
-                try {
-                    $imageFile->move(
-                        $this->getParameter('collectibles_images_directory'),
-                        $newFilename
+        if (!$imageFile && $fetchedImageUrl) {
+            // Download the image from the URL
+            try {
+                $imageContents = file_get_contents($fetchedImageUrl);
+                if ($imageContents !== false) {
+                    $tmpFile = tempnam(sys_get_temp_dir(), 'collectible_');
+                    file_put_contents($tmpFile, $imageContents);
+
+                    $imageFile = new \Symfony\Component\HttpFoundation\File\UploadedFile(
+                        $tmpFile,
+                        basename($fetchedImageUrl),
+                        mime_content_type($tmpFile),
+                        null,
+                        true // mark as "test" to bypass move restrictions
                     );
-                } catch (FileException $e) {
-                    $this->addFlash('error', 'Image upload failed.');
                 }
-
-                $collectible->setImage($newFilename);
+            } catch (\Exception $e) {
+                $this->addFlash('error', 'Failed to download the fetched image.');
             }
-
-            // Link collectible to logged-in user if available
-            $user = $this->getUser();
-            if ($user) {
-                $collectible->setUser($user);
-            }
-
-            $em->persist($collectible);
-            $em->flush();
-
-            $this->addFlash('success', 'Collectible added successfully!');
-            return $this->redirectToRoute('collection');
         }
 
-        return $this->render('home/add_collectible.html.twig', [
-            'form' => $form->createView(),
-        ]);
+        // If we now have an image (user-uploaded or fetched), move it
+        if ($imageFile) {
+            $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+            $safeFilename = $slugger->slug($originalFilename);
+            $newFilename = $safeFilename . '-' . uniqid() . '.' . $imageFile->guessExtension();
 
+            try {
+                $imageFile->move(
+                    $this->getParameter('collectibles_images_directory'),
+                    $newFilename
+                );
+                $collectible->setImage($newFilename);
+            } catch (FileException $e) {
+                $this->addFlash('error', 'Image upload failed.');
+            }
+        }
 
-        
+        // Link collectible to logged-in user if available
+        $user = $this->getUser();
+        if ($user) {
+            $collectible->setUser($user);
+        }
+
+        $em->persist($collectible);
+        $em->flush();
+
+        $this->addFlash('success', 'Collectible added successfully!');
+        return $this->redirectToRoute('collection');
     }
+
+    return $this->render('home/add_collectible.html.twig', [
+        'form' => $form->createView(),
+    ]);
+}
+
 #[Route('/explore', name: 'explore')]
 public function explore(
     ListingRepository $listingRepository, 
@@ -154,45 +176,22 @@ public function show(Listing $listing): Response
         'listing' => $listing,
     ]);
 }
-#[Route('/collection/{id}/edit', name: 'collection_edit')]
-public function edit(
-    Request $request,
-    Collectible $collectible,
-    EntityManagerInterface $em,
-    SluggerInterface $slugger
-): Response {
-    $form = $this->createForm(CollectibleType::class, $collectible);
-    $form->handleRequest($request);
 
-    if ($form->isSubmitted() && $form->isValid()) {
-        $imageFile = $form->get('image')->getData();
 
-        if ($imageFile) {
-            $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
-            $safeFilename = $slugger->slug($originalFilename);
-            $newFilename = $safeFilename . '-' . uniqid() . '.' . $imageFile->guessExtension();
-
-            try {
-                $imageFile->move(
-                    $this->getParameter('collectibles_images_directory'),
-                    $newFilename
-                );
-                $collectible->setImage($newFilename);
-            } catch (FileException $e) {
-                $this->addFlash('error', 'Image upload failed.');
-            }
-        }
-
-        $em->flush();
-
-        $this->addFlash('success', 'Collectible updated successfully!');
-        return $this->redirectToRoute('collection');
+#[Route('/collection/delete/{id}', name: 'collectible_delete', methods: ['POST'])]
+public function delete(Collectible $collectible, Request $request, EntityManagerInterface $em): JsonResponse
+{
+    $token = $request->request->get('_token');
+    if (!$this->isCsrfTokenValid('delete'.$collectible->getId(), $token)) {
+        return new JsonResponse(['status'=>'error','message'=>'Invalid CSRF token']);
     }
 
-    return $this->render('home/edit_collectible.html.twig', [
-        'form' => $form->createView(),
-        'collectible' => $collectible,
-    ]);
+    $em->remove($collectible);
+    $em->flush();
+
+    return new JsonResponse(['status'=>'success','message'=>'Collectible deleted']);
 }
+
+
 
 }

@@ -12,7 +12,7 @@ use Symfony\Component\Form\Extension\Core\Type\MoneyType;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use App\Entity\Category;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-
+use Symfony\Component\Validator\Constraints\File;
 class CollectibleType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
@@ -39,11 +39,24 @@ class CollectibleType extends AbstractType
                 'required' => false,
                 'attr' => ['class' => 'form-control', 'placeholder' => 'Enter franchise name']
             ])
-            ->add('image', FileType::class, [
-                'mapped' => false,
-                'required' => false,
-                'attr' => ['class' => 'form-control'],
-            ]);
+          ->add('image', FileType::class, [
+    'mapped' => false,
+    'required' => false,
+    'attr' => ['class' => 'form-control'],
+    'constraints' => [
+        new File([
+            'maxSize' => '2M', // limit file size
+            'mimeTypes' => [
+                'image/jpeg',
+                'image/png',
+                'image/webp',
+                'image/jfif',
+            ],
+            'mimeTypesMessage' => 'Please upload a valid image file (JPEG, PNG, or WEBP)',
+        ]),
+    ],
+])
+        ;
     }
 
     public function configureOptions(OptionsResolver $resolver): void

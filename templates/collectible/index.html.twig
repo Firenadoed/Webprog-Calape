@@ -46,10 +46,12 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Name</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Description</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Category</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Franchise</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Price</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
+
                 <tbody class="bg-gray-900 divide-y divide-gray-700">
                     {% for collectible in collectibles %}
                     <tr class="hover:bg-gray-800 transition">
@@ -68,17 +70,22 @@
                             {{ collectible.description|length > 50 ? collectible.description|slice(0,50) ~ '...' : collectible.description }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            {% if collectible.category %}
-                                {{ collectible.category.name }}
-                            {% else %}
-                                <span class="text-gray-400">No Category</span>
-                            {% endif %}
+                            {{ collectible.category ? collectible.category.name : 'No Category' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {{ collectible.franchise ?: 'No Franchise' }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">₱{{ collectible.price|number_format(2, '.', ',') }}</td>
                         <td class="px-6 py-4 whitespace-nowrap flex flex-col sm:flex-row gap-1">
                             <button
                                 class="px-3 py-1 bg-[#d4af37] text-gray-900 font-semibold rounded-md hover:bg-yellow-400 transition"
-                                data-modal-target="modal-{{ collectible.id }}">
+                                data-modal-target="detailModal"
+                                data-image="{{ asset('uploads/collectibles/' ~ collectible.image) }}"
+                                data-name="{{ collectible.name }}"
+                                data-description="{{ collectible.description }}"
+                                data-price="{{ collectible.price }}"
+                                data-category="{{ collectible.category ? collectible.category.name : '' }}"
+                                data-franchise="{{ collectible.franchise ?: '' }}">
                                 Show
                             </button>
                             <a href="{{ path('app_collectible_edit', {'id': collectible.id}) }}"
@@ -87,29 +94,9 @@
                             </a>
                         </td>
                     </tr>
-
-                    {# === Server-side Modal === #}
-                    <div id="modal-{{ collectible.id }}" class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-center justify-center z-50 overflow-auto">
-                        <div class="bg-gray-900 p-6 rounded-md w-96 relative max-h-[90vh] overflow-auto">
-                            <span class="absolute top-2 right-3 cursor-pointer text-[#d4af37]" onclick="document.getElementById('modal-{{ collectible.id }}').classList.add('hidden')">✕</span>
-                            {% if collectible.image %}
-                                <img src="{{ asset('uploads/collectibles/' ~ collectible.image) }}" class="w-full h-40 object-cover rounded-md mb-4">
-                            {% endif %}
-                            <h2 class="text-xl font-bold text-[#d4af37] mb-2">{{ collectible.name }}</h2>
-                            <p class="text-gray-300 mb-2">{{ collectible.description }}</p>
-                            <p class="text-gray-400 mb-2">Category: {{ collectible.category ? collectible.category.name : 'No Category' }}</p>
-                            <p class="text-gray-300 font-semibold">₱{{ collectible.price|number_format(2, '.', ',') }}</p>
-
-                            <div class="flex justify-between mt-4 gap-2">
-                                <a href="{{ path('app_collectible_edit', {'id': collectible.id}) }}" class="px-3 py-1 bg-[#d4af37] text-gray-900 rounded hover:bg-yellow-400">Edit</a>
-                                {{ include('collectible/_delete_form.html.twig', {'collectible': collectible}) }}
-                            </div>
-                        </div>
-                    </div>
-
                     {% else %}
                     <tr>
-                        <td colspan="7" class="px-6 py-4 text-center text-gray-400">No collectibles found</td>
+                        <td colspan="8" class="px-6 py-4 text-center text-gray-400">No collectibles found</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -125,13 +112,68 @@
     </div>
 </div>
 
-{# === JS for Modals === #}
+{# === Modal Layout === #}
+<div id="detailModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+  <div class="bg-[#1f1f21] rounded-xl w-full max-w-5xl flex gap-4 p-4 relative max-h-[90vh] overflow-hidden scale-0 transform transition-transform duration-300">
+
+    <!-- Image -->
+    <div class="flex-shrink-0 w-1/2 h-full flex items-center justify-center bg-[#141415] rounded-md overflow-hidden">
+      <img id="modalImage" class="w-full max-h-[60vh] object-contain rounded-md mb-4" src="" alt="Collectible Image">
+    </div>
+
+    <!-- Info & buttons -->
+    <div class="flex flex-col flex-grow justify-between p-2 overflow-y-auto">
+      <button id="modalClose" class="self-end text-gray-400 hover:text-[#d4af37] text-2xl mb-2">&times;</button>
+
+      <div>
+        <h3 id="modalName" class="text-2xl font-bold text-[#d4af37] mb-2"></h3>
+        <p id="modalDescription" class="text-gray-300 text-sm mb-4"></p>
+        <p id="modalPrice" class="text-gray-400 text-xs mb-2">Price: <span class="font-bold text-[#d4af37]"></span></p>
+        <p id="modalCategory" class="text-gray-400 text-xs mb-2">Category: <span class="font-bold text-[#d4af37]"></span></p>
+        <p id="modalFranchise" class="text-gray-400 text-xs mb-2">Franchise: <span class="font-bold text-[#d4af37]"></span></p>
+      </div>
+
+      <div class="flex gap-2 mt-4">
+        <a id="editButton" href="#" class="hidden bg-[#2a2a2d] text-[#d4af37] border border-[#d4af37]/40 px-4 py-2 rounded-md font-semibold hover:bg-[#d4af37] hover:text-black text-center">
+          Edit Collectible
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 document.querySelectorAll('button[data-modal-target]').forEach(btn => {
     btn.addEventListener('click', () => {
         const target = btn.getAttribute('data-modal-target');
-        document.getElementById(target).classList.remove('hidden');
+        const modal = document.getElementById(target);
+        const modalContent = modal.querySelector('div');
+
+        modal.querySelector('#modalImage').src = btn.dataset.image;
+        modal.querySelector('#modalName').textContent = btn.dataset.name;
+        modal.querySelector('#modalDescription').textContent = btn.dataset.description;
+        modal.querySelector('#modalPrice span').textContent = btn.dataset.price ? `₱${parseFloat(btn.dataset.price).toFixed(2)}` : 'N/A';
+        modal.querySelector('#modalCategory span').textContent = btn.dataset.category || 'No Category';
+        modal.querySelector('#modalFranchise span').textContent = btn.dataset.franchise || 'No Franchise';
+
+        modal.classList.remove('hidden');
+        setTimeout(()=> modalContent.classList.add('scale-100'), 10);
+
+        function closeModal() {
+            modalContent.classList.remove('scale-100');
+            setTimeout(()=> modal.classList.add('hidden'), 200);
+        }
+
+        modal.querySelector('#modalClose').onclick = closeModal;
+        modal.addEventListener('click', e => { if(e.target === modal) closeModal(); });
+        document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
     });
 });
 </script>
+
+<style>
+.scale-0 { transform: scale(0); }
+.scale-100 { transform: scale(1); transition: transform 0.3s ease; }
+</style>
+
 {% endblock %}
