@@ -21,6 +21,7 @@ import './js/collection.js';
 import './js/datatable.js';
 import './js/dashboard-data.js';
 import './js/profile.js';
+import './js/pokemon.js';
 import $ from 'jquery';
 import 'datatables.net';
 

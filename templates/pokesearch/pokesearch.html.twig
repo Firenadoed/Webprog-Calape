@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Pokémon Card Finder{% endblock %}
+
+{% block body %}
+<section class="py-16 bg-[#1B1B1D] text-white" 
+         id="pokemon-container"
+         data-collection-add-url="{{ path('collection_add') }}">
+  <div class="max-w-3xl mx-auto">
+
+    <h2 class="text-3xl font-semibold text-[#d4af37] mb-6 text-center">Pokémon Card Finder</h2>
+
+    <form id="pokemon-form" class="mb-6">
+      <input type="text" id="pokemon-name" placeholder="Enter Pokémon name..."
+        class="w-full px-4 py-2 rounded-md bg-gray-800 text-white border border-gray-700 focus:ring-[#d4af37] focus:border-[#d4af37]"/>
+    </form>
+
+    <div id="results" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+
+  </div>
+</section>
+
+{% endblock %}

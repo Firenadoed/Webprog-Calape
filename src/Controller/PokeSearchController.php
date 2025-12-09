@@ -11,12 +11,12 @@ use Doctrine\ORM\EntityManagerInterface;  // CORRECT NAMESPACE
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;  // ADD THIS
 
-final class TrialController extends AbstractController
+final class PokeSearchController extends AbstractController
 {
-    #[Route('/trial', name: 'pokesearch_trial')]
+    #[Route('/pokesearch', name: 'pokesearch_trial')]
     public function index(): Response
     {
-        return $this->render('trial/pokesearch.html.twig', [
+        return $this->render('pokesearch/pokesearch.html.twig', [
             'controller_name' => 'TrialController',
         ]);
     }
