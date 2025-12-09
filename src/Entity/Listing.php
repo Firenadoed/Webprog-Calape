@@ -3,10 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\ListingRepository;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use App\Entity\User;
-use App\Entity\Collectible;
 
 #[ORM\Entity(repositoryClass: ListingRepository::class)]
 class Listing
@@ -16,61 +13,28 @@ class Listing
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(inversedBy: 'listings')]
-    private ?User $user = null;
-
-    #[ORM\ManyToOne(inversedBy: 'listings')]
-    private ?Collectible $collectible = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\Column(length: 255)]
     private ?string $grade = null;
 
-    #[ORM\Column(nullable: true)]
+    #[ORM\Column]
     private ?float $price = null;
 
     #[ORM\Column]
     private ?bool $is_for_sale = null;
 
+    #[ORM\ManyToOne(inversedBy: 'listings')]
+    #[ORM\JoinColumn(onDelete: 'CASCADE')]  // Add this line
+    private ?User $user = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTime $createdAt = null;
+    #[ORM\ManyToOne(inversedBy: 'listings')]
+    #[ORM\JoinColumn(onDelete: 'CASCADE')]  // Add this line
+    private ?Collectible $collectible = null;
 
-    public function __construct()
-    {
-        $this->createdAt = new \DateTime(); // initialize createdAt to current time
-        $this->is_for_sale = false;         // default value
-        $this->is_shop_item = false;        // default value
-    }
-
-    // -------------------------
-    // Getters and Setters
-    // -------------------------
-
-    public function getId(): ?int
+    #[ORM\ManyToOne]
+    private ?user $CreatedBy = null;
+        public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getUser(): ?User
-    {
-        return $this->user;
-    }
-
-    public function setUser(?User $user): static
-    {
-        $this->user = $user;
-        return $this;
-    }
-
-    public function getCollectible(): ?Collectible
-    {
-        return $this->collectible;
-    }
-
-    public function setCollectible(?Collectible $collectible): static
-    {
-        $this->collectible = $collectible;
-        return $this;
     }
 
     public function getGrade(): ?string
@@ -78,9 +42,10 @@ class Listing
         return $this->grade;
     }
 
-    public function setGrade(?string $grade): static
+    public function setGrade(string $grade): static
     {
         $this->grade = $grade;
+
         return $this;
     }
 
@@ -89,9 +54,10 @@ class Listing
         return $this->price;
     }
 
-    public function setPrice(?float $price): static
+    public function setPrice(float $price): static
     {
         $this->price = $price;
+
         return $this;
     }
 
@@ -103,28 +69,43 @@ class Listing
     public function setIsForSale(bool $is_for_sale): static
     {
         $this->is_for_sale = $is_for_sale;
+
         return $this;
     }
 
-    public function isShopItem(): ?bool
+    public function getUser(): ?User
     {
-        return $this->is_shop_item;
+        return $this->user;
     }
 
-    public function setIsShopItem(bool $is_shop_item): static
+    public function setUser(?User $user): static
     {
-        $this->is_shop_item = $is_shop_item;
+        $this->user = $user;
+
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTime
+    public function getCollectible(): ?Collectible
     {
-        return $this->createdAt;
+        return $this->collectible;
     }
 
-    public function setCreatedAt(\DateTime $createdAt): static
+    public function setCollectible(?Collectible $collectible): static
     {
-        $this->createdAt = $createdAt;
+        $this->collectible = $collectible;
+
+        return $this;
+    }
+
+    public function getCreatedBy(): ?user
+    {
+        return $this->CreatedBy;
+    }
+
+    public function setCreatedBy(?user $CreatedBy): static
+    {
+        $this->CreatedBy = $CreatedBy;
+
         return $this;
     }
 }

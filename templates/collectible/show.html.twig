@@ -1,60 +1,107 @@
+{% extends 'sidebar.html.twig' %}
+
+{% block title %}{{ collectible.name }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/show.css') }}">
+{% endblock %}
+
 {% block body %}
-{# Modal Background Overlay #}
-<div id="collectible-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
-
-    {# Modal Box #}
-    <div class="bg-gray-900 border-2 border-[#d4af37] rounded-lg shadow-lg w-full max-w-md p-6 relative">
-
-        {# Close Button #}
-        <button onclick="closeModal()" class="absolute top-3 right-3 text-[#d4af37] hover:text-yellow-400 text-xl font-bold">&times;</button>
-
-        <h2 class="text-center text-2xl font-bold text-[#d4af37] mb-4">{{ collectible.name }}</h2>
-
-        <div class="space-y-3 text-white">
-            {# Image #}
-            <div class="flex justify-center">
-                {% if collectible.image %}
-                    <img src="{{ asset('uploads/collectibles/' ~ collectible.image) }}" 
-                         alt="{{ collectible.name }}" 
-                         class="w-48 h-48 object-cover rounded-md border border-gray-600">
-                {% else %}
-                    <span class="text-gray-400">No Image</span>
-                {% endif %}
-            </div>
-
-            {# Category #}
-            <div class="flex justify-between border-b border-gray-700 pb-1">
-                <span class="font-semibold text-[#d4af37]">Category:</span>
-                <span>{{ collectible.category ? collectible.category.name : 'No Category' }}</span>
-            </div>
-
-            {# Price #}
-            <div class="flex justify-between border-b border-gray-700 pb-1">
-                <span class="font-semibold text-[#d4af37]">Price:</span>
-                <span>₱{{ collectible.price|number_format(2, '.', ',') }}</span>
-            </div>
+<div class="show-container">
+    <div class="show-header">
+        <h1>{{ collectible.name }}</h1>
+        <div class="show-subtitle">
+            {% if collectible.franchise %}
+                From {{ collectible.franchise }}
+            {% endif %}
+            {% if collectible.category %}
+                • {{ collectible.category|capitalize }}
+            {% endif %}
         </div>
+    </div>
+    
+    <div class="show-content">
+        <!-- Left Column: Image -->
+        <div class="show-image-section">
+            {% if collectible.image %}
+                <img src="{{ asset('uploads/collectibles/' ~ collectible.image) }}" 
+                     alt="{{ collectible.name }}" 
+                     class="show-main-image">
+            {% else %}
+                <div class="show-no-image">
+                    📷 No Image Available
+                </div>
+            {% endif %}
+            
 
-        {# Action Buttons #}
-        <div class="mt-6 flex justify-between gap-2">
-            <a href="#" onclick="closeModal()" class="flex-1 bg-gray-800 text-[#d4af37] py-2 rounded hover:bg-gray-700 text-center">Close</a>
-            <a href="{{ path('app_collectible_edit', {'id': collectible.id}) }}" class="flex-1 bg-[#d4af37] text-gray-900 py-2 rounded hover:bg-yellow-400 text-center">Edit</a>
-            {{ include('collectible/_delete_form.html.twig', { 'attr': {'class':'flex-1 bg-red-600 text-white py-2 rounded hover:bg-red-700 text-center'} }) }}
+        </div>
+        
+        <!-- Right Column: Information -->
+        <div class="show-info-section">
+            <div class="show-info-grid">
+                <div class="show-info-item">
+                    <div class="show-info-label">ID</div>
+                    <div class="show-info-value">#{{ collectible.id }}</div>
+                </div>
+                
+                <div class="show-info-item">
+                    <div class="show-info-label">Name</div>
+                    <div class="show-info-value">{{ collectible.name }}</div>
+                </div>
+                
+                {% if collectible.category %}
+                <div class="show-info-item">
+                    <div class="show-info-label">Category</div>
+                    <div class="show-info-value">
+                        <span class="show-badge">{{ collectible.category|capitalize }}</span>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if collectible.franchise %}
+                <div class="show-info-item">
+                    <div class="show-info-label">Franchise</div>
+                    <div class="show-info-value">{{ collectible.franchise }}</div>
+                </div>
+                {% endif %}
+                
+                {% if collectible.user %}
+                <div class="show-info-item">
+                    <div class="show-info-label">Owner</div>
+                    <div class="show-owner-info">
+                        {% if collectible.user.profileImage %}
+                            <img src="{{ asset('uploads/profile/' ~ collectible.user.profileImage) }}" 
+                                 alt="{{ collectible.user.username }}" 
+                                 class="show-owner-avatar">
+                        {% else %}
+                            <div class="show-owner-avatar" style="background: #d4af37; display: flex; align-items: center; justify-content: center; color: #1a1a1a; font-weight: bold;">
+                                {{ collectible.user.username|first|upper }}
+                            </div>
+                        {% endif %}
+                        <div class="show-owner-details">
+                            <h4>{{ collectible.user.username }}</h4>
+                            <p>Collector since {{ collectible.user.createdAt ? collectible.user.createdAt|date('M Y') : 'N/A' }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="show-actions">
+                <a href="{{ path('app_collectible_index') }}" class="show-btn show-btn-back" data-turbo="false">← Back to Collectibles</a>
+                <a href="{{ path('app_collectible_edit', {'id': collectible.id}) }}" class="show-btn show-btn-edit" >✏️ Edit</a>
+                
+                <form method="post" action="{{ path('app_collectible_delete', {'id': collectible.id}) }}" 
+                      onsubmit="return confirm('Are you sure you want to delete this collectible?');" 
+                      style="display: inline;">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ collectible.id) }}">
+                    <button type="submit" class="show-btn show-btn-delete">🗑️ Delete</button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
-
-{# Trigger Button (example) #}
-<button onclick="openModal()" class="px-3 py-1 bg-[#d4af37] text-gray-900 font-semibold rounded-md hover:bg-yellow-400 transition">Show</button>
-
-{# JS for opening/closing modal #}
-<script>
-function openModal() {
-    document.getElementById('collectible-modal').classList.remove('hidden');
-}
-
-function closeModal() {
-    document.getElementById('collectible-modal').classList.add('hidden');
-}
-</script>
 {% endblock %}

@@ -1,4 +1,4 @@
-{% extends 'base.html.twig' %}
+{% extends '../admin/sidebar.html.twig' %}
 
 {% block title %}User{% endblock %}
 
@@ -16,24 +16,20 @@
                 <td>{{ user.username }}</td>
             </tr>
             <tr>
-                <th>Bio</th>
-                <td>{{ user.bio }}</td>
-            </tr>
-            <tr>
-                <th>Profile_image</th>
-                <td>{{ user.profileImage }}</td>
+                <th>Roles</th>
+                <td>{{ user.roles ? user.roles|json_encode : '' }}</td>
             </tr>
             <tr>
                 <th>Password</th>
                 <td>{{ user.password }}</td>
             </tr>
             <tr>
-                <th>Email</th>
-                <td>{{ user.email }}</td>
+                <th>Profile_image</th>
+                <td>{{ user.profileImage }}</td>
             </tr>
             <tr>
-                <th>Role</th>
-                <td>{{ user.role }}</td>
+                <th>Bio</th>
+                <td>{{ user.bio }}</td>
             </tr>
         </tbody>
     </table>

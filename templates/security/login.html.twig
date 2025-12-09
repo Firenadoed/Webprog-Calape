@@ -1,0 +1,93 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Log in!{% endblock %}
+
+{% block body %}
+<div class="min-h-[calc(100vh-200px)] flex items-center justify-center px-4 py-8">
+    <div class="w-full max-w-md">
+        <form method="post" class="bg-[#1B1B1D] border border-[#d4af37]/30 rounded-xl p-8 shadow-2xl">
+            {% if error %}
+                <div class="bg-red-900/30 border border-red-700 text-red-300 px-4 py-3 rounded-lg mb-6">
+                    {{ error.messageKey|trans(error.messageData, 'security') }}
+                </div>
+            {% endif %}
+
+            {% if app.user %}
+                <div class="mb-6 p-4 bg-[#d4af37]/10 border border-[#d4af37]/30 rounded-lg">
+                    <p class="text-gray-300 mb-2">You are logged in as <span class="text-[#d4af37] font-semibold">{{ app.user.userIdentifier }}</span></p>
+                    <a href="{{ path('app_logout') }}" class="text-[#d4af37] hover:text-[#c19b2f] transition font-medium">
+                        Logout
+                    </a>
+                </div>
+            {% endif %}
+
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-[#d4af37] mb-2">Welcome Back</h1>
+                <p class="text-gray-400">Sign in to your COLLECTIV account</p>
+            </div>
+
+            <div class="space-y-6">
+                <div>
+                    <label for="inputUsername" class="block text-sm font-medium text-gray-300 mb-2">
+                        Username
+                    </label>
+                    <input type="text" 
+                           value="{{ last_username }}" 
+                           name="username" 
+                           id="inputUsername" 
+                           class="w-full bg-[#0e0e0f] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] transition"
+                           autocomplete="username" 
+                           required 
+                           autofocus
+                           placeholder="Enter your username">
+                </div>
+
+                <div>
+                    <label for="inputPassword" class="block text-sm font-medium text-gray-300 mb-2">
+                        Password
+                    </label>
+                    <input type="password" 
+                           name="password" 
+                           id="inputPassword" 
+                           class="w-full bg-[#0e0e0f] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] transition"
+                           autocomplete="current-password" 
+                           required
+                           placeholder="Enter your password">
+                </div>
+
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+                <div class="flex items-center">
+                    <input type="checkbox" 
+                           name="_remember_me" 
+                           id="rememberMe"
+                           class="h-4 w-4 text-[#d4af37] bg-[#0e0e0f] border-gray-700 rounded focus:ring-[#d4af37] focus:ring-offset-0 focus:ring-2">
+                    <label for="rememberMe" class="ml-2 block text-sm text-gray-400">
+                        Remember me
+                    </label>
+                </div>
+
+                <button type="submit" 
+                        class="w-full bg-[#d4af37] hover:bg-[#c19b2f] text-black font-bold py-3 px-4 rounded-lg transition duration-200 transform hover:-translate-y-0.5 active:translate-y-0">
+                    Sign In
+                </button>
+
+                <div class="text-center pt-4 border-t border-gray-800">
+                    <p class="text-gray-400 text-sm">
+                        Don't have an account? 
+                        <a href="{{ path('app_register') }}" class="text-[#d4af37] hover:text-[#c19b2f] font-medium transition">
+                            Sign up
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </form>
+
+        <div class="mt-8 text-center">
+            <a href="{{ path('home') }}" class="text-gray-400 hover:text-[#d4af37] transition">
+                ← Return to home
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

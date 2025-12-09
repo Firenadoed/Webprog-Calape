@@ -1,146 +1,108 @@
-{% extends 'admin/base-admin.html.twig' %}
+{% extends 'sidebar.html.twig' %}
+
 {% block title %}User Management{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/crud-components.css') }}">
+{% endblock %}
+
 {% block body %}
-<div class="px-0 sm:px-0 lg:px-0">
-
-    <h1 class="text-3xl font-bold text-[#d4af37] mb-6 text-center">User Management</h1>
-
-    {# === Search Bar === #}
-    <form method="get" action="{{ path('app_user_index') }}" class="mb-4 flex gap-2 justify-center">
-        <input type="text" name="search" value="{{ app.request.query.get('search') }}" placeholder="Search by username or email..." 
-               class="px-3 py-2 rounded-md border border-gray-600 bg-gray-800 text-white w-64" />
-        <button type="submit" 
-                class="bg-[#d4af37] hover:bg-[#b9962f] text-black px-4 py-2 rounded-md font-semibold">
-            Search
-        </button>
-    </form>
+<div class="crud-page-container">
+<meta name="turbo-visit-control" content="reload">
+    <div class="crud-page-header">
+        <h1 class="crud-page-title">User Management</h1>
+        
+        <div class="crud-page-actions">
+            <a href="{{ path('app_user_new') }}" class="crud-btn crud-btn-create">＋ New User</a>
+        </div>
+    </div>
 
     {# === Users Table === #}
-    <div class="overflow-x-auto border border-gray-700 rounded-md shadow-lg">
-        <div class="max-h-[calc(80vh-180px)] overflow-y-auto">
-            <table class="min-w-full divide-y divide-gray-700">
-                <thead class="bg-gray-800 sticky top-0 z-10">
+    <div class="crud-table-wrapper">
+        <div class="crud-table-scroll">
+            <table id="userManagementTable" class="crud-table">
+                <thead>
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">ID</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Profile</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Username</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Email</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Role</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                        <th>ID</th>
+                        <th>Profile</th>
+                        <th>Username</th>
+                        <th>Roles</th>
+                        <th>Status</th>
+                        <th>Date Created</th>
+                        <th>Actions</th> {# Changed from 8 to 7 columns #}
                     </tr>
                 </thead>
 
-                <tbody class="bg-gray-900 divide-y divide-gray-700">
+                <tbody>
                     {% for user in users %}
-                    <tr class="hover:bg-gray-800 transition">
-                        <td class="px-6 py-4 whitespace-nowrap">{{ user.id }}</td>
-
-                        <td class="px-6 py-4 whitespace-nowrap">
+                    <tr class="{{ loop.index is even ? 'crud-table-row-even' : 'crud-table-row-odd' }}">
+                        <td data-label="ID">{{ user.id }}</td>
+                        <td data-label="Profile">
                             {% if user.profileImage %}
                                 <img src="{{ asset('uploads/profile/' ~ user.profileImage) }}"
                                      alt="{{ user.username }}"
-                                     class="w-12 h-12 object-cover rounded-full border border-gray-600">
+                                     class="crud-avatar">
                             {% else %}
                                 <span class="text-gray-400">No Image</span>
                             {% endif %}
                         </td>
-
-                        <td class="px-6 py-4 whitespace-nowrap">{{ user.username }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ user.email }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ user.role|capitalize }}</td>
-
-                        <td class="px-6 py-4 whitespace-nowrap flex flex-col sm:flex-row gap-1">
-                            <button
-                                class="px-3 py-1 bg-[#d4af37] text-gray-900 font-semibold rounded-md hover:bg-yellow-400 transition"
-                                data-modal-target="userDetailModal"
-                                data-image="{{ user.profileImage ? asset('uploads/profile/' ~ user.profileImage) : '' }}"
-                                data-username="{{ user.username }}"
-                                data-email="{{ user.email }}"
-                                data-role="{{ user.role|capitalize }}">
-                                Show
-                            </button>
-                            <a href="{{ path('app_user_edit', {'id': user.id}) }}"
-                               class="px-3 py-1 bg-[#d4af37] text-gray-900 font-semibold rounded-md hover:bg-yellow-400 transition">
-                               Edit
-                            </a>
+                        <td data-label="Username">{{ user.username }}</td>
+                        <td data-label="Roles">
+                            {% if 'ROLE_ADMIN' in user.roles %}
+                                <span class="crud-badge crud-badge-admin">Admin</span>
+                            {% elseif 'ROLE_STAFF' in user.roles %}
+                                <span class="crud-badge crud-badge-staff">Staff</span>
+                            {% else %}
+                                <span class="crud-badge crud-badge-user">User</span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Status">
+                            {% if user.status == true %}
+                                <span class="crud-badge crud-badge-active">Active</span>
+                            {% elseif user.status == false %}
+                                <span class="crud-badge crud-badge-inactive">Inactive</span>
+                            {% elseif user.status is null %}
+                                <span class="crud-badge crud-badge-inactive">Inactive</span>
+                            {% else %}
+                                <span class="crud-badge">{{ user.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Date Created" data-order="{{ user.createdAt|date('U') }}">
+                            {% if user.createdAt %}
+                                <div class="text-muted small">{{ user.createdAt|date('M d, Y') }}</div>
+                                <div class="text-xs text-gray-500">{{ user.createdAt|date('h:i A') }}</div>
+                            {% else %}
+                                <span class="text-gray-400">-</span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Actions">
+                            <div class="crud-btn-group" style="display: flex; gap: 0.5rem; flex-wrap: nowrap;">
+                                <a href="{{ path('app_user_edit', {'id': user.id}) }}"
+                                   class="crud-btn crud-btn-secondary crud-btn-small">
+                                    Edit
+                                </a>
+                                <form method="post" 
+                                      action="{{ path('app_user_delete', {'id': user.id}) }}" 
+                                      onsubmit="return confirm('Are you sure you want to delete this user? This action cannot be undone.');"
+                                      style="display: inline; margin: 0;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ user.id) }}">
+                                    <button type="submit" class="crud-btn crud-btn-danger crud-btn-small">Delete</button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="7" class="px-6 py-4 text-center text-gray-400">No users found</td>
+                        <td colspan="7" class="crud-empty-state"> {# Changed from 8 to 7 #}
+                            <div class="crud-empty-icon">📭</div>
+                            <p>No users found</p>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
-
-    <div class="mt-6 text-center">
-        <a href="{{ path('app_user_new') }}"
-           class="inline-block px-6 py-3 bg-[#d4af37] text-gray-900 font-bold rounded-lg hover:bg-yellow-400 transition">
-            ＋ Create New User
-        </a>
-    </div>
 </div>
-
-{# === User Modal === #}
-<div id="userDetailModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
-  <div class="bg-[#1f1f21] rounded-xl w-full max-w-3xl flex gap-4 p-4 relative max-h-[90vh] overflow-hidden scale-0 transform transition-transform duration-300">
-
-    <!-- Profile Image -->
-    <div class="flex-shrink-0 w-1/2 h-full flex items-center justify-center bg-[#141415] rounded-md overflow-hidden">
-      <img id="modalUserImage" class="w-full max-h-[60vh] object-contain rounded-md mb-4" src="" alt="User Profile">
-    </div>
-
-    <!-- Info & buttons -->
-    <div class="flex flex-col flex-grow justify-between p-2 overflow-y-auto">
-      <button id="userModalClose" class="self-end text-gray-400 hover:text-[#d4af37] text-2xl mb-2">&times;</button>
-
-      <div>
-        <h3 id="modalUsername" class="text-2xl font-bold text-[#d4af37] mb-2"></h3>
-        <p id="modalEmail" class="text-gray-300 text-sm mb-4"></p>
-        <p id="modalRole" class="text-gray-400 text-xs mb-2">Role: <span class="font-bold text-[#d4af37]"></span></p>
-      </div>
-
-      <div class="flex gap-2 mt-4">
-        <a id="modalEditButton" href="#" class="hidden bg-[#2a2a2d] text-[#d4af37] border border-[#d4af37]/40 px-4 py-2 rounded-md font-semibold hover:bg-[#d4af37] hover:text-black text-center">
-          Edit User
-        </a>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-document.querySelectorAll('button[data-modal-target]').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const target = btn.getAttribute('data-modal-target');
-        const modal = document.getElementById(target);
-        const modalContent = modal.querySelector('div');
-
-        modal.querySelector('#modalUserImage').src = btn.dataset.image || '';
-        modal.querySelector('#modalUsername').textContent = btn.dataset.username;
-        modal.querySelector('#modalEmail').textContent = btn.dataset.email;
-        modal.querySelector('#modalRole span').textContent = btn.dataset.role;
-
-        modal.classList.remove('hidden');
-        setTimeout(()=> modalContent.classList.add('scale-100'), 10);
-
-        function closeModal() {
-            modalContent.classList.remove('scale-100');
-            setTimeout(()=> modal.classList.add('hidden'), 200);
-        }
-
-        modal.querySelector('#userModalClose').onclick = closeModal;
-        modal.addEventListener('click', e => { if(e.target === modal) closeModal(); });
-        document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
-    });
-});
-</script>
-
-<style>
-.scale-0 { transform: scale(0); }
-.scale-100 { transform: scale(1); transition: transform 0.3s ease; }
-</style>
 {% endblock %}

@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Register - Collectiv{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/register.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="register-container">
+    <div class="register-header">
+        <h1>Join Collectiv</h1>
+        <p class="register-subtitle">Start your collecting journey today</p>
+    </div>
+
+    {% if form_errors(registrationForm) %}
+    <div class="form-errors">
+        {{ form_errors(registrationForm) }}
+    </div>
+    {% endif %}
+
+    {{ form_start(registrationForm, {'attr': {'class': 'register-form'}}) }}
+    
+        <div class="form-group">
+            {{ form_label(registrationForm.username) }}
+            {{ form_widget(registrationForm.username, {'attr': {
+                'class': 'form-input',
+                'placeholder': 'Choose a username'
+            }}) }}
+        </div>
+
+        <div class="form-group">
+            {{ form_label(registrationForm.plainPassword, 'Password') }}
+            {{ form_widget(registrationForm.plainPassword, {'attr': {
+                'class': 'form-input',
+                'placeholder': 'Create a secure password'
+            }}) }}
+            
+
+        <div class="checkbox-group">
+            {{ form_widget(registrationForm.agreeTerms) }}
+            {{ form_label(registrationForm.agreeTerms) }}
+        </div>
+
+        <button type="submit" class="register-btn">
+            ✨ Create Account
+        </button>
+    {{ form_end(registrationForm) }}
+
+    <div class="register-links">
+        <p>Already have an account? <a href="{{ path('app_login') }}">Sign in here</a></p>
+        <p><a href="{{ path('home') }}">← Back to Home</a></p>
+    </div>
+</div>
+{% endblock %}

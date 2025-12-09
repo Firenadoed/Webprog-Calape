@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
 @import "tailwindcss";
-@source not "../../public";
+
 
 body {
   font-family: 'Poppins', sans-serif;
@@ -37,65 +37,63 @@ body {
 /* Keep same container width */
 .form-container {
   background: #222;
-  border: 2px solid #d4af37;
-  border-radius: 10px;
-  padding: 18px;
+  border: 1.6px solid #d4af37; /* 20% smaller border */
+  border-radius: 8px; /* 20% smaller radius */
+  padding: 14.4px; /* 20% smaller padding */
   width: 80%;
-  max-width: 80vw; /* ✅ same as before */
-  box-shadow: 0 0 15px rgba(0,0,0,0.6);
-  margin-top: -80px; /* move it up */
+  max-width: 80vw;
+  box-shadow: 0 0 12px rgba(0,0,0,0.6); /* 20% smaller shadow */
+  margin-top: -80px;
 }
 
-
-
-/* Heading */
+/* Heading - 20% smaller */
 .form-container h1 {
-  font-size: 1.4rem;
+  font-size: 1.12rem; /* 20% smaller */
   font-weight: 700;
-  margin-bottom: 18px;
+  margin-bottom: 14.4px; /* 20% smaller */
   text-align: center;
   color: #d4af37;
 }
 
-/* Labels */
+/* Labels - 20% smaller */
 .form-label {
-  font-size: 0.9rem;
+  font-size: 0.72rem; /* 20% smaller */
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: 3.2px; /* 20% smaller */
   color: #d4af37;
 }
 
-/* Inputs */
+/* Inputs - 20% smaller */
 .form-control {
   background: #1B1B1D;
   color: white;
-  border: 1px solid #d4af37;
+  border: 0.8px solid #d4af37; /* 20% smaller border */
   width: 100%;
-  font-size: 0.9rem;
-  padding: 0.5rem 0.8rem;
-  border-radius: 6px;
-  margin-bottom: 12px;
+  font-size: 0.72rem; /* 20% smaller */
+  padding: 0.4rem 0.64rem; /* 20% smaller padding */
+  border-radius: 4.8px; /* 20% smaller radius */
+  margin-bottom: 9.6px; /* 20% smaller margin */
 }
 
 .form-control:focus {
-  box-shadow: 0 0 5px #f1c40f;
+  box-shadow: 0 0 4px #f1c40f; /* 20% smaller shadow */
   border-color: #f1c40f;
 }
 
-/* Textarea */
+/* Textarea - 20% smaller */
 textarea.form-control {
-  min-height: 90px;
+  min-height: 72px; /* 20% smaller */
 }
 
-/* Button */
+/* Button - 20% smaller */
 button.btn {
-  font-size: 1rem;
+  font-size: 0.8rem; /* 20% smaller */
   width: 100%;
-  padding: 10px;
+  padding: 8px; /* 20% smaller padding */
   background: #d4af37;
   color: #1B1B1D;
   font-weight: 600;
-  border-radius: 8px;
+  border-radius: 6.4px; /* 20% smaller radius */
   border: none;
   transition: 0.3s;
 }
@@ -103,26 +101,26 @@ button.btn:hover {
   background: #f1c40f;
 }
 
-/* Back link */
+/* Back link - 20% smaller */
 .back-link {
   display: block;
-  margin-top: 10px;
+  margin-top: 8px; /* 20% smaller */
   text-align: center;
   color: #d4af37;
-  font-size: 0.9rem;
+  font-size: 0.72rem; /* 20% smaller */
   text-decoration: none;
 }
 .back-link:hover {
   text-decoration: underline;
 }
 
-/* Switch toggle */
+/* Switch toggle - 20% smaller */
 .switch {
   position: relative;
   display: inline-block;
-  width: 44px;
-  height: 22px;
-  margin-right: 8px;
+  width: 35.2px; /* 20% smaller */
+  height: 17.6px; /* 20% smaller */
+  margin-right: 6.4px; /* 20% smaller */
 }
 .switch input {
   opacity: 0;
@@ -138,15 +136,15 @@ button.btn:hover {
   bottom: 0;
   background-color: #444;
   transition: .4s;
-  border-radius: 22px;
+  border-radius: 17.6px; /* 20% smaller */
 }
 .slider:before {
   position: absolute;
   content: "";
-  height: 16px;
-  width: 16px;
-  left: 3px;
-  bottom: 3px;
+  height: 12.8px; /* 20% smaller */
+  width: 12.8px; /* 20% smaller */
+  left: 2.4px; /* 20% smaller */
+  bottom: 2.4px; /* 20% smaller */
   background-color: white;
   transition: .4s;
   border-radius: 50%;
@@ -155,6 +153,614 @@ input:checked + .slider {
   background-color: #d4af37;
 }
 input:checked + .slider:before {
-  transform: translateX(22px);
+  transform: translateX(17.6px); /* 20% smaller */
 }
 
+/* Form errors - 20% smaller */
+.form-error {
+  font-size: 0.72rem; /* 20% smaller */
+  color: #ff6b6b;
+  margin-top: 4px; /* 20% smaller */
+  margin-bottom: 9.6px; /* 20% smaller */
+}
+
+/* === DataTables UI Fixes === */
+.dataTables_wrapper {
+  margin-top: 0.8rem; /* 20% smaller */
+  padding: 0.8rem; /* 20% smaller */
+  color: #f8f8f8;
+}
+
+.dataTables_filter {
+  float: right;
+  margin-bottom: 0.8rem; /* 20% smaller */
+}
+
+.dataTables_filter label {
+  color: #f8f8f8;
+  font-weight: 500;
+  font-size: 0.72rem; /* 20% smaller */
+}
+
+[id^="dt-search-"] {
+  border-radius: 6.4px; /* 20% smaller */
+  padding: 4.8px 8px; /* 20% smaller */
+  margin-left: 0.4rem; /* 20% smaller */
+  border: 0.8px solid #d4af37; /* 20% smaller */
+  background-color: #1b1b1d;
+  width: 240px; /* 20% smaller */
+  color: #d4af37;
+  font-size: 0.72rem; /* 20% smaller */
+}
+
+[id^="dt-length-"] {
+    background-color: #1f1f21;
+    border: 0.8px solid #d4af37; /* 20% smaller */
+    color: #d4af37;
+    border-radius: 0.3rem; /* 20% smaller */
+    padding: 0.2rem 0.4rem; /* 20% smaller */
+    font-size: 0.72rem; /* 20% smaller */
+}
+
+.dataTables_paginate {
+  margin-top: 0.8rem; /* 20% smaller */
+  text-align: center;
+}
+
+.dataTables_paginate .paginate_button {
+  border-radius: 6.4px; /* 20% smaller */
+  margin: 0 1.6px; /* 20% smaller */
+  padding: 3.2px 6.4px; /* 20% smaller */
+  background-color: #2a2a2a;
+  color: #f8f8f8 !important;
+  font-size: 0.72rem; /* 20% smaller */
+}
+
+.dataTables_paginate .paginate_button.current {
+  background-color: #d4af37 !important;
+  color: #1b1b1d !important;
+}
+
+.dataTables_info {
+  margin-top: 0.8rem; /* 20% smaller */
+  color: #f8f8f8;
+  font-size: 0.7rem; /* 20% smaller */
+}
+
+
+
+/* === DataTables Pagination Fix === */
+.dt-paging {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4.8px; /* 20% smaller spacing between buttons */
+  margin-top: 0.8rem; /* 20% smaller */
+  margin-bottom: 0.8rem; /* 20% smaller */
+}
+
+.dt-paging-button {
+  background-color: #2a2a2a;
+  color: #f8f8f8;
+  border: none;
+  border-radius: 4.8px; /* 20% smaller */
+  padding: 4.8px 8px; /* 20% smaller */
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  font-weight: 500;
+  font-size: 0.72rem; /* 20% smaller */
+}
+
+.dt-paging-button:hover:not(.disabled) {
+  background-color: #d4af37;
+  color: #1b1b1d;
+}
+
+.dt-paging-button.current {
+  background-color: #d4af37 !important;
+  color: #1b1b1d !important;
+}
+
+.dt-paging-button.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dt-info {
+  text-align: center;
+  width: 100%;
+  color: #9ca3af;
+  margin-top: 0.6rem; /* 20% smaller */
+  font-size: 0.7rem; /* 20% smaller */
+  letter-spacing: 0.24px; /* 20% smaller */
+}
+
+
+/* Register Page Styles - Gold & Black Theme */
+.register-container {
+    max-width: 500px;
+    margin: 3rem auto;
+    padding: 2rem;
+    background: #1a1a1a;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    border: 1px solid #2a2a2a;
+}
+
+.register-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.register-header h1 {
+    color: #d4af37;
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.register-subtitle {
+    color: #a0a0a0;
+    font-size: 1.1rem;
+}
+
+.register-form {
+    color: #e0e0e0;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    color: #d4af37;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #f0f0f0;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #d4af37;
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
+}
+
+.form-input::placeholder {
+    color: #666;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.checkbox-group input[type="checkbox"] {
+    margin-top: 0.25rem;
+    width: 18px;
+    height: 18px;
+    accent-color: #d4af37;
+}
+
+.checkbox-group label {
+    color: #e0e0e0;
+    font-weight: normal;
+    margin-bottom: 0;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.checkbox-group a {
+    color: #d4af37;
+    text-decoration: none;
+}
+
+.checkbox-group a:hover {
+    text-decoration: underline;
+}
+
+.form-errors {
+    background: rgba(127, 29, 29, 0.2);
+    border: 1px solid rgba(153, 27, 27, 0.5);
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    color: #fca5a5;
+    font-size: 0.95rem;
+}
+
+.form-errors ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.form-errors li {
+    margin-bottom: 0.25rem;
+}
+
+.register-btn {
+    width: 100%;
+    padding: 0.875rem;
+    background: linear-gradient(135deg, #d4af37, #ffd700);
+    color: #1a1a1a;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.register-btn:hover {
+    background: linear-gradient(135deg, #ffd700, #d4af37);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.register-btn:active {
+    transform: translateY(0);
+}
+
+.register-links {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #333;
+}
+
+.register-links p {
+    color: #a0a0a0;
+    margin-bottom: 0.5rem;
+}
+
+.register-links a {
+    color: #d4af37;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.register-links a:hover {
+    text-decoration: underline;
+}
+
+.password-requirements {
+    background: #2a2a2a;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: #a0a0a0;
+}
+
+.password-requirements h4 {
+    color: #d4af37;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.password-requirements ul {
+    margin: 0;
+    padding-left: 1.2rem;
+}
+
+.password-requirements li {
+    margin-bottom: 0.25rem;
+}
+
+.password-requirements li.valid {
+    color: #4caf50;
+}
+
+.password-requirements li.invalid {
+    color: #f44336;
+}
+
+@media (max-width: 768px) {
+    .register-container {
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+    
+    .register-header h1 {
+        font-size: 2rem;
+    }
+}
+
+
+/* Price input styling */
+.collection-price-wrapper {
+  margin: 15px 0;
+  padding: 10px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.collection-price-label {
+  display: block;
+  color: #e5e5e5;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.collection-price-input {
+  width: 100%;
+  padding: 10px 12px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: white;
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+
+.collection-price-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.collection-price-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.collection-price-help {
+  display: block;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+
+
+/* Base Layout & Navbar Styles */
+.base-body {
+    background-color: #1B1B1D;
+    color: white;
+    min-height: 100vh;
+    font-family: system-ui, -apple-system, sans-serif;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Main Content */
+.base-main {
+    flex-grow: 1;
+}
+
+/* Navbar Styles */
+.base-navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+    background-color: #1B1B1D;
+    position: relative;
+    z-index: 50;
+}
+
+/* Logo Section */
+.base-nav-logo-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.base-nav-logo {
+    height: 2rem;
+    width: 2rem;
+    object-fit: contain;
+}
+
+.base-nav-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #d4af37;
+}
+
+/* Desktop Navigation Links */
+.base-nav-links {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .base-nav-links {
+        display: flex;
+        gap: 1.5rem;
+    }
+}
+
+.base-nav-link {
+    color: #9CA3AF;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.base-nav-link:hover {
+    color: #d4af37;
+}
+
+.base-nav-link-active {
+    color: #d4af37;
+    font-weight: 600;
+}
+
+/* Admin/Staff Dashboard Links */
+.base-admin-dashboard-link {
+    color: #9CA3AF;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.base-admin-dashboard-link:hover {
+    color: #d4af37;
+}
+
+.base-staff-dashboard-link {
+    color: #9CA3AF;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.base-staff-dashboard-link:hover {
+    color: #d4af37;
+}
+
+/* User Section */
+.base-user-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.base-welcome-text {
+    color: #9CA3AF;
+    font-size: 0.875rem;
+}
+
+/* Login/Logout Buttons */
+.base-login-button {
+    background-color: #d4af37;
+    color: black;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+}
+
+.base-login-button:hover {
+    background-color: #c19b2f;
+}
+
+.base-logout-button {
+    background-color: #DC2626;
+    color: white;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+}
+
+.base-logout-button:hover {
+    background-color: #B91C1C;
+}
+
+/* Utility Classes */
+.base-hidden {
+    display: none;
+}
+
+.base-visible {
+    display: block;
+}
+
+.base-flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.base-flex-col {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Footer */
+.base-footer {
+    background-color: #1B1B1D;
+    border-top: 1px solid rgba(212, 175, 55, 0.3);
+    padding: 1.5rem;
+    margin-top: auto;
+}
+
+.base-footer-content {
+    text-align: center;
+    color: #9CA3AF;
+    font-size: 0.875rem;
+}
+
+/* Page Container */
+.base-page-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 767px) {
+    .base-navbar {
+        padding: 0.75rem 1rem;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .base-user-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .base-welcome-text {
+        display: none;
+    }
+}
+
+/* Animation Classes */
+.base-transition-all {
+    transition: all 0.2s ease;
+}
+
+.base-hover-gold:hover {
+    color: #d4af37 !important;
+}
+
+.base-hover-scale {
+    transition: transform 0.2s ease;
+}
+
+.base-hover-scale:hover {
+    transform: scale(1.05);
+}
+
+/* Loading States */
+.base-loading {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.base-skeleton {
+    background: linear-gradient(90deg, #2D2D2D 25%, #3D3D3D 50%, #2D2D2D 75%);
+    background-size: 200% 100%;
+    animation: base-skeleton-loading 1.5s infinite;
+    border-radius: 0.25rem;
+}
+
+@keyframes base-skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Turbo Frame Styling */
+[data-turbo-suppress-warning] {
+    outline: none;
+}

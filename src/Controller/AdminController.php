@@ -5,9 +5,9 @@ namespace App\Controller;
 use App\Repository\UserRepository;
 use App\Repository\CollectibleRepository;
 use App\Repository\ListingRepository;
-use App\Repository\CategoryRepository;
 use App\Repository\ActivityLogRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -18,53 +18,78 @@ final class AdminController extends AbstractController
         UserRepository $userRepo,
         CollectibleRepository $collectibleRepo,
         ListingRepository $listingRepo,
-        CategoryRepository $categoryRepo,
-        ActivityLogRepository $activityLogRepo
     ): Response {
-        // --- Basic totals ---
         $totalUsers = $userRepo->count([]);
+        
+        $totalStaff = $userRepo->createQueryBuilder('u')
+            ->select('COUNT(u.id)')
+            ->where('u.roles LIKE :role_staff OR u.roles LIKE :role_admin')
+            ->setParameter('role_staff', '%ROLE_STAFF%')
+            ->setParameter('role_admin', '%ROLE_ADMIN%')
+            ->getQuery()
+            ->getSingleScalarResult();
+        
         $totalCollectibles = $collectibleRepo->count([]);
         $totalListings = $listingRepo->count([]);
-        $totalCategories = $categoryRepo->count([]);
+        
+        $totalValue = 0;
+        try {
+            $totalValue = $listingRepo->createQueryBuilder('l')
+                ->select('SUM(l.price)')
+                ->getQuery()
+                ->getSingleScalarResult() ?? 0;
+        } catch (\Exception $e) {
+        }
 
-        // --- Total value of listings ---
-        $totalValue = $listingRepo->createQueryBuilder('l')
-            ->select('SUM(l.price)')
-            ->getQuery()
-            ->getSingleScalarResult() ?? 0;
-
-        // --- Most popular category ---
-        $mostPopularCategory = $collectibleRepo->createQueryBuilder('c')
-            ->select('cat.name AS name, COUNT(c.id) AS collectibleCount')
-            ->join('c.category', 'cat')
-            ->groupBy('cat.id')
-            ->orderBy('collectibleCount', 'DESC')
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
-
-        // --- Recent listings (limit 5) ---
-        $recentListings = $listingRepo->findBy([], ['createdAt' => 'DESC'], 5);
-
-        // --- Recent activity log (limit 10) ---
-        $recentActivities = $activityLogRepo->createQueryBuilder('a')
-            ->leftJoin('a.user', 'U')
-            ->addSelect('U')
-            ->orderBy('a.createdAt', 'DESC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult();
+        $recentListings = $listingRepo->findBy([], ['id' => 'DESC'], 5);
+        $recentUsers = $userRepo->findBy([], ['id' => 'DESC'], 10);
 
         return $this->render('admin/index.html.twig', [
             'title' => 'Admin Dashboard',
             'totalUsers' => $totalUsers,
+            'totalStaff' => $totalStaff,
             'totalCollectibles' => $totalCollectibles,
             'totalListings' => $totalListings,
-            'totalCategories' => $totalCategories,
             'totalValue' => $totalValue,
-            'mostPopularCategory' => $mostPopularCategory,
             'recentListings' => $recentListings,
-            'recentActivities' => $recentActivities, // <<< added here
+            'recentUsers' => $recentUsers,
+        ]);
+    }
+    
+    #[Route('/admin/logs', name: 'admin_logs_index')]
+    public function logs(ActivityLogRepository $logRepository): Response
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        
+        $logs = $logRepository->findBy([], ['created_at' => 'DESC']);
+        
+        return $this->render('admin/logs.html.twig', [
+            'logs' => $logs,
+            'filters' => [],
+        ]);
+    }
+
+    #[Route('/admin/logs/filter', name: 'admin_logs_filter')]
+    public function filterLogs(
+        ActivityLogRepository $logRepository, 
+        Request $request
+    ): Response
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        
+        $user = $request->query->get('user');
+        $action = $request->query->get('action');
+        $date = $request->query->get('date');
+        
+        $logs = $logRepository->findWithFilters($user, $action, $date);
+        
+        return $this->render('admin/logs.html.twig', [
+            'logs' => $logs,
+            'filters' => [
+                'user' => $user,
+                'action' => $action,
+                'date' => $date,
+            ]
         ]);
     }
 }

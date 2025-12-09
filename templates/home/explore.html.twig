@@ -1,49 +1,77 @@
+{# templates/explore.html.twig #}
 {% extends 'base.html.twig' %}
 
 {% block title %}Explore — Collectiv{% endblock %}
 
 {% block body %}
 <section class="py-16 bg-[#1B1B1D] text-white text-center">
-    <h2 class="text-3xl font-semibold text-[#d4af37] mb-6 tracking-wide">Collectibles For Sale</h2>
+    {# --- Section Header --- #}
+    <h2 class="text-3xl font-semibold text-[#d4af37] mb-2 tracking-wide relative inline-block">
+        Collectibles For Sale
+        <span class="absolute left-0 bottom-0 w-full h-1 bg-[#ffd700] rounded-full opacity-50"></span>
+    </h2>
+    <p class="text-gray-400 mb-10">Browse rare collectibles and find your next treasure</p>
 
     {# --- Search & Filter Form --- #}
-    <form method="get" class="mb-10 flex flex-col sm:flex-row justify-between items-center gap-4 max-w-6xl mx-auto">
-    {# --- Search Input --- #}
-    <input type="text" name="search" placeholder="Search collectibles..." 
-           value="{{ app.request.get('search') }}" 
-           class="px-4 py-2 rounded-lg w-full sm:w-64 border-2 border-[#d4af37] text-white bg-[#1B1B1D] placeholder-gray-400 focus:outline-none focus:border-[#ffd700]">
+    <form method="get" class="mb-10 flex flex-col sm:flex-row justify-between items-center gap-4 max-w-6xl mx-auto bg-[#1f1f21] p-4 rounded-xl shadow-md">
+        <div class="relative w-full sm:w-64">
+            <input type="text" name="search" placeholder="Search collectibles..." 
+                   value="{{ app.request.get('search') }}" 
+                   class="px-10 py-2 rounded-lg w-full border-2 border-[#d4af37] text-white bg-[#1B1B1D] placeholder-gray-400 focus:outline-none focus:border-[#ffd700]">
+            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</span>
+        </div>
+        
+        <div class="flex gap-2 w-full sm:w-auto">
+            <select name="category" class="px-4 py-2 rounded-lg text-white bg-[#1B1B1D] border-2 border-[#d4af37] focus:outline-none focus:border-[#ffd700]">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                    <option value="{{ cat }}" {% if app.request.get('category') == cat %}selected{% endif %}>
+                        {{ cat }}
+                    </option>
+                {% endfor %}
+            </select>
 
-    {# --- Right side: Category + Button --- #}
-    <div class="flex gap-2 w-full sm:w-auto">
-        <select name="category" class="px-4 py-2 rounded-lg text-white bg-[#1B1B1D] border-2 border-[#d4af37] focus:outline-none focus:border-[#ffd700]">
-            <option value="">All Categories</option>
-            {% for cat in categories %}
-                <option value="{{ cat.name }}" 
-                    {% if app.request.get('category') == cat.name %}selected{% endif %}>
-                    {{ cat.name }}
-                </option>
-            {% endfor %}
-        </select>
+            <select name="franchise" class="px-4 py-2 rounded-lg text-white bg-[#1B1B1D] border-2 border-[#d4af37] focus:outline-none focus:border-[#ffd700]">
+                <option value="">All Franchises</option>
+                {% for franchise in franchises %}
+                    <option value="{{ franchise }}" {% if app.request.get('franchise') == franchise %}selected{% endif %}>
+                        {{ franchise }}
+                    </option>
+                {% endfor %}
+            </select>
 
-        <button type="submit" class="bg-[#d4af37] text-black font-semibold px-6 py-2 rounded-lg hover:bg-[#c19b2f] transition">
-            Filter
-        </button>
-    </div>
-</form>
+            <button type="submit" class="bg-[#d4af37] text-black font-semibold px-6 py-2 rounded-lg hover:bg-[#c19b2f] transition">
+                Filter
+            </button>
+        </div>
+    </form>
 
     {# --- Listings Grid --- #}
     <div class="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
         {% for listing in listings %}
-            <div class="bg-[#2b2b2d] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition">
-                <img src="{{ asset('uploads/collectibles/' ~ listing.collectible.image) }}" 
-                     alt="{{ listing.collectible.name }}" 
-                     class="w-full h-48 object-cover">
+            <div class="bg-[#2b2b2d] rounded-xl overflow-hidden shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
+                <div class="relative">
+                    <img src="{{ asset('uploads/collectibles/' ~ listing.collectible.image) }}" 
+                         alt="{{ listing.collectible.name }}" 
+                         class="w-full h-48 object-cover rounded-t-xl" loading="lazy">
+                    <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/70 to-transparent p-2">
+                        <p class="text-xs text-gray-200">{{ listing.collectible.category }} • {{ listing.collectible.franchise }}</p>
+                    </div>
+                </div>
                 <div class="p-4 text-left">
                     <h3 class="font-semibold text-lg text-[#d4af37]">{{ listing.collectible.name }}</h3>
-                    <p class="text-gray-300 text-sm mt-2">{{ listing.collectible.description|slice(0, 80) ~ '...' }}</p>
-                    <p class="text-gray-400 text-xs mt-1">Category: {{ listing.collectible.category.name }}</p>
-                    <p class="text-gray-300 text-xs mt-2"> ₱ {{ listing.collectible.price }}</p>
-                    <a href="{{ path('listing_show', {'id': listing.id}) }}" class="mt-4 inline-block text-[#d4af37] hover:underline">View Details</a>
+                    <p class="text-gray-300 text-sm mt-2 truncate" title="{{ listing.collectible.description }}">
+                        {{ listing.collectible.description|slice(0, 80) ~ '...' }}
+                    </p>
+                    <div class="flex justify-between items-center mt-2">
+                        <span class="text-gray-300 text-sm font-bold">₱ {{ listing.price }}</span>
+                        <span class="text-xs px-2 py-1 bg-gray-700 rounded">Grade: {{ listing.grade }}</span>
+                    </div>
+
+                    <a href="{{ path('listing_show', {'id': listing.id}) }}" 
+                       class="mt-4 inline-block w-full text-center bg-[#d4af37] text-black font-semibold px-4 py-2 rounded-lg hover:bg-[#c19b2f] transition">
+                        Buy Now
+                    </a>
                 </div>
             </div>
         {% else %}

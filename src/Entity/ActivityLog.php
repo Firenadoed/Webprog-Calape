@@ -13,61 +13,61 @@ class ActivityLog
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(inversedBy: 'activityLogs')]
-    private ?User $user = null;
+    #[ORM\Column]
+    private ?int $userId = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $EntityType = null;
+    private ?string $username = null;
 
-    #[ORM\Column]
-    private ?int $EntityId = null;
+    #[ORM\Column(length: 255)]
+    private ?string $role = null;
 
     #[ORM\Column(length: 255)]
     private ?string $action = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $details = null;
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $targetData = null;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $createdAt = null;
+    private ?\DateTime $created_at = null;
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getUser(): ?user
+    public function getUserId(): ?int
     {
-        return $this->user;
+        return $this->userId;
     }
 
-    public function setUser(?user $user): static
+    public function setUserId(int $userId): static
     {
-        $this->user = $user;
+        $this->userId = $userId;
 
         return $this;
     }
 
-    public function getEntityType(): ?string
+    public function getUsername(): ?string
     {
-        return $this->EntityType;
+        return $this->username;
     }
 
-    public function setEntityType(string $EntityType): static
+    public function setUsername(string $username): static
     {
-        $this->EntityType = $EntityType;
+        $this->username = $username;
 
         return $this;
     }
 
-    public function getEntityId(): ?int
+    public function getRole(): ?string
     {
-        return $this->EntityId;
+        return $this->role;
     }
 
-    public function setEntityId(int $EntityId): static
+    public function setRole(string $role): static
     {
-        $this->EntityId = $EntityId;
+        $this->role = $role;
 
         return $this;
     }
@@ -84,27 +84,32 @@ class ActivityLog
         return $this;
     }
 
-    public function getDetails(): ?string
+    public function getTargetData(): ?string
     {
-        return $this->details;
+        return $this->targetData;
     }
 
-    public function setDetails(string $details): static
+    public function setTargetData(?string $targetData): static
     {
-        $this->details = $details;
+        $this->targetData = $targetData;
 
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeImmutable
+    public function getCreatedAt(): ?\DateTime
     {
-        return $this->createdAt;
+        return $this->created_at;
     }
 
-    public function setCreatedAt(\DateTimeImmutable $createdAt): static
+    public function setCreatedAt(\DateTime $created_at): static
     {
-        $this->createdAt = $createdAt;
+        $this->created_at = $created_at;
 
         return $this;
+    }
+    public function __construct()
+    {
+        // Store in Philippine Time (UTC+8)
+        $this->created_at = new \DateTime('now', new \DateTimeZone('Asia/Manila'));
     }
 }

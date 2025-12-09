@@ -7,9 +7,6 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use App\Entity\Category;
-use App\Entity\User;
-use App\Entity\Listing;
 
 #[ORM\Entity(repositoryClass: CollectibleRepository::class)]
 class Collectible
@@ -19,45 +16,39 @@ class Collectible
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 100)]
+    #[ORM\Column(length: 255)]
     private ?string $name = null;
 
     #[ORM\Column(type: Types::TEXT)]
     private ?string $description = null;
 
-    #[ORM\Column]
-    private ?float $price = null;
-
     #[ORM\Column(length: 255)]
     private ?string $image = null;
 
-    #[ORM\Column(length: 100, nullable: true)]
+    #[ORM\Column(length: 255)]
     private ?string $franchise = null;
 
-    // ManyToOne relationship with Category, nullable for migration safety
     #[ORM\ManyToOne(inversedBy: 'collectibles')]
-    #[ORM\JoinColumn(nullable: true)]
-    private ?Category $category = null;
-
-    // ManyToOne relationship with User, nullable for migration safety
-    #[ORM\ManyToOne(inversedBy: 'collectibles')]
-    #[ORM\JoinColumn(nullable: true)]
-    private ?User $user = null;
+    #[ORM\JoinColumn(onDelete: 'CASCADE')]
+    private ?User $user = null;  // Owner of the collectible
 
     /**
      * @var Collection<int, Listing>
      */
-    #[ORM\OneToMany(targetEntity: Listing::class, mappedBy: 'collectible')]
+    #[ORM\OneToMany(targetEntity: Listing::class, mappedBy: 'collectible', cascade: ['persist', 'remove'])]
     private Collection $listings;
+
+    #[ORM\Column(length: 255)]
+    private ?string $category = null;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?User $createdBy = null;  // User who created/added this collectible
 
     public function __construct()
     {
         $this->listings = new ArrayCollection();
     }
-
-    // -------------------------
-    // Getters and Setters
-    // -------------------------
 
     public function getId(): ?int
     {
@@ -72,6 +63,7 @@ class Collectible
     public function setName(string $name): static
     {
         $this->name = $name;
+
         return $this;
     }
 
@@ -83,17 +75,7 @@ class Collectible
     public function setDescription(string $description): static
     {
         $this->description = $description;
-        return $this;
-    }
 
-    public function getPrice(): ?float
-    {
-        return $this->price;
-    }
-
-    public function setPrice(float $price): static
-    {
-        $this->price = $price;
         return $this;
     }
 
@@ -105,17 +87,19 @@ class Collectible
     public function setImage(string $image): static
     {
         $this->image = $image;
+
         return $this;
     }
 
-    public function getCategory(): ?Category
+    public function getFranchise(): ?string
     {
-        return $this->category;
+        return $this->franchise;
     }
 
-    public function setCategory(?Category $category): static
+    public function setFranchise(string $franchise): static
     {
-        $this->category = $category;
+        $this->franchise = $franchise;
+
         return $this;
     }
 
@@ -127,6 +111,7 @@ class Collectible
     public function setUser(?User $user): static
     {
         $this->user = $user;
+
         return $this;
     }
 
@@ -144,27 +129,43 @@ class Collectible
             $this->listings->add($listing);
             $listing->setCollectible($this);
         }
+
         return $this;
     }
 
     public function removeListing(Listing $listing): static
     {
         if ($this->listings->removeElement($listing)) {
+            // set the owning side to null (unless already changed)
             if ($listing->getCollectible() === $this) {
                 $listing->setCollectible(null);
             }
         }
+
         return $this;
     }
 
-        public function getFranchise(): ?string
+    public function getCategory(): ?string
     {
-        return $this->franchise;
+        return $this->category;
     }
 
-    public function setFranchise(?string $franchise): static
+    public function setCategory(string $category): static
     {
-        $this->franchise = $franchise;
+        $this->category = $category;
+
+        return $this;
+    }
+
+    public function getCreatedBy(): ?User
+    {
+        return $this->createdBy;
+    }
+
+    public function setCreatedBy(?User $createdBy): static
+    {
+        $this->createdBy = $createdBy;
+
         return $this;
     }
 }

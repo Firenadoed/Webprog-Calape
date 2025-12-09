@@ -19,7 +19,7 @@
                 <p class="text-gray-300 mb-4">{{ listing.collectible.description }}</p>
 
                 <div class="text-2xl font-semibold text-[#d4af37] mb-6">
-                    ${{ listing.price }}
+                    ₱{{ listing.price }}
                 </div>
 
                 <div class="space-x-4">
@@ -32,14 +32,40 @@
                 </div>
 
                 {# Optional: Additional info like condition, category #}
-                <div class="mt-6 text-gray-400">
-                    <p>Category: {{ listing.collectible.category.name }}</p>
-                    <p>Condition: {{ listing.grade ?: 'N/A' }}</p>
-                    <p>Seller: {{  'Unknown' }}</p>
+                <div class="mt-6 text-gray-400 space-y-2">
+                    <p><strong>Category:</strong> {{ listing.collectible.category }}</p>
+                    <p><strong>Franchise:</strong> {{ listing.collectible.franchise }}</p>
+                    <p><strong>Condition/Grade:</strong> {{ listing.grade ?: 'N/A' }}</p>
+                    <p><strong>Seller:</strong> {{ listing.user.username ?: 'Unknown' }}</p>
+                    <p><strong>Status:</strong> 
+                        <span class="{{ listing.isForSale ? 'text-green-400' : 'text-red-400' }}">
+                            {{ listing.isForSale ? 'For Sale' : 'Not for Sale' }}
+                        </span>
+                    </p>
                 </div>
             </div>
 
             {# Optional: Related products could go here #}
+            {% if relatedListings is defined and relatedListings|length > 0 %}
+                <div class="mt-10">
+                    <h3 class="text-xl font-bold text-[#d4af37] mb-4">Related Items</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        {% for related in relatedListings %}
+                            <a href="{{ path('listing_show', {'id': related.id}) }}" 
+                               class="bg-[#2b2b2d] rounded-lg overflow-hidden hover:shadow-xl transition-all">
+                                <img src="{{ asset('uploads/collectibles/' ~ related.collectible.image) }}" 
+                                     alt="{{ related.collectible.name }}" 
+                                     class="w-full h-32 object-cover">
+                                <div class="p-3">
+                                    <h4 class="font-semibold text-sm text-[#d4af37] truncate">{{ related.collectible.name }}</h4>
+                                    <p class="text-xs text-gray-400">{{ related.collectible.category }}</p>
+                                    <p class="text-sm font-bold mt-1">₱{{ related.price }}</p>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
         </div>
     </div>
 </section>

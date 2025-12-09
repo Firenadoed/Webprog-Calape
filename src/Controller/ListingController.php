@@ -3,60 +3,54 @@
 namespace App\Controller;
 
 use App\Entity\Listing;
-use App\Entity\Collectible;
 use App\Form\ListingType;
 use App\Repository\ListingRepository;
+use App\Service\ActivityLogger;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 
 #[Route('/listing')]
 final class ListingController extends AbstractController
 {
     #[Route(name: 'app_listing_index', methods: ['GET'])]
-public function index(Request $request, ListingRepository $listingRepository): Response
-{
-    $search = $request->query->get('search'); // Get search term
-    $filter = $request->query->get('filter'); // Get filter term (optional)
+    public function index(ListingRepository $listingRepository): Response
+    {
+        $listings = $listingRepository->findAll();
 
-    $qb = $listingRepository->createQueryBuilder('l')
-        ->leftJoin('l.user', 'u')
-        ->leftJoin('l.collectible', 'c')
-        ->addSelect('u', 'c');
-
-    // Apply search
-    if ($search) {
-        $qb->andWhere('l.grade LIKE :search OR u.username LIKE :search OR c.name LIKE :search')
-           ->setParameter('search', '%'.$search.'%');
+        return $this->render('listing/index.html.twig', [
+            'listings' => $listings,
+        ]);
     }
-
-    // Apply filter
-    if ($filter === 'for_sale') {
-        $qb->andWhere('l.isForSale = :forSale')
-           ->setParameter('forSale', true);
-    }
-
-    $listings = $qb->getQuery()->getResult();
-
-    return $this->render('listing/index.html.twig', [
-        'listings' => $listings,
-    ]);
-}
-
 
     #[Route('/new', name: 'app_listing_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    public function new(
+        Request $request, 
+        EntityManagerInterface $entityManager,
+        ActivityLogger $logger
+    ): Response
     {
+        if (!$this->isGranted('ROLE_STAFF') && !$this->isGranted('ROLE_ADMIN')) {
+            $this->addFlash('error', 'You need staff or admin privileges to create listings!');
+            return $this->redirectToRoute('app_listing_index', [], Response::HTTP_SEE_OTHER);
+        }
+
         $listing = new Listing();
         $form = $this->createForm(ListingType::class, $listing);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $listing->setCreatedBy($this->getUser());
+            
             $entityManager->persist($listing);
             $entityManager->flush();
+
+            $currentUser = $this->getUser();
+            $logger->log($currentUser, 'CREATE_LISTING',
+                'Created listing: ' . $listing->getTitle() . ' (ID: ' . $listing->getId() . ')'
+            );
 
             return $this->redirectToRoute('app_listing_index', [], Response::HTTP_SEE_OTHER);
         }
@@ -76,13 +70,30 @@ public function index(Request $request, ListingRepository $listingRepository): R
     }
 
     #[Route('/{id}/edit', name: 'app_listing_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Listing $listing, EntityManagerInterface $entityManager): Response
+    public function edit(
+        Request $request, 
+        Listing $listing, 
+        EntityManagerInterface $entityManager,
+        ActivityLogger $logger
+    ): Response
     {
+        if ($this->isGranted('ROLE_STAFF') && !$this->isGranted('ROLE_ADMIN')) {
+            if ($listing->getCreatedBy() !== $this->getUser()) {
+                $this->addFlash('error', 'You can only edit your own listings!');
+                return $this->redirectToRoute('app_listing_index', [], Response::HTTP_SEE_OTHER);
+            }
+        }
+
         $form = $this->createForm(ListingType::class, $listing);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
+
+            $currentUser = $this->getUser();
+            $logger->log($currentUser, 'UPDATE_LISTING',
+                'Updated listing: ' . $listing->getTitle() . ' (ID: ' . $listing->getId() . ')'
+            );
 
             return $this->redirectToRoute('app_listing_index', [], Response::HTTP_SEE_OTHER);
         }
@@ -93,17 +104,44 @@ public function index(Request $request, ListingRepository $listingRepository): R
         ]);
     }
 
-    #[Route('/{id}', name: 'app_listing_deleted', methods: ['POST'])]
-    public function delete(Request $request, Listing $listing, EntityManagerInterface $entityManager): Response
+    #[Route('/{id}', name: 'app_listing_delete', methods: ['POST'])]
+    public function delete(
+        Request $request, 
+        Listing $listing, 
+        EntityManagerInterface $entityManager,
+        ActivityLogger $logger
+    ): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$listing->getId(), $request->getPayload()->getString('_token'))) {
-            $entityManager->remove($listing);
-            $entityManager->flush();
+        if ($this->isGranted('ROLE_STAFF') && !$this->isGranted('ROLE_ADMIN')) {
+            if ($listing->getCreatedBy() !== $this->getUser()) {
+                $this->addFlash('error', 'You can only delete your own listings!');
+                $response = $this->redirectToRoute('app_listing_index', [], Response::HTTP_SEE_OTHER);
+                $response->headers->set('Turbo-Location', 'false');
+                return $response;
+            }
         }
 
-        return $this->redirectToRoute('app_listing_index', [], Response::HTTP_SEE_OTHER);
+        if ($listing->getCreatedBy() !== $this->getUser()) {
+            $this->addFlash('error', 'You can only delete your own listings!');
+            $response = $this->redirectToRoute('app_listing_index', [], Response::HTTP_SEE_OTHER);
+            $response->headers->set('Turbo-Location', 'false');
+            return $response;
+        }
+
+        if ($this->isCsrfTokenValid('delete'.$listing->getId(), $request->getPayload()->getString('_token'))) {
+            $currentUser = $this->getUser();
+            $logger->log($currentUser, 'DELETE_LISTING',
+                'Deleted listing: ' . $listing->getTitle() . ' (ID: ' . $listing->getId() . ')'
+            );
+            
+            $entityManager->remove($listing);
+            $entityManager->flush();
+            
+            $this->addFlash('success', 'Listing deleted successfully!');
+        }
+
+        $response = $this->redirectToRoute('app_listing_index', [], Response::HTTP_SEE_OTHER);
+        $response->headers->set('Turbo-Location', 'false');
+        return $response;
     }
-
-
-
 }

@@ -5,83 +5,102 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Form\UserType;
 use App\Repository\UserRepository;
+use App\Service\ActivityLogger;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\String\Slugger\SluggerInterface;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 #[Route('/user')]
 final class UserController extends AbstractController
 {
-    #[Route('/users', name: 'app_user_index', methods: ['GET'])]
-    public function index(Request $request, UserRepository $userRepository): Response
+    #[Route(name: 'app_user_index', methods: ['GET'])]
+    public function index(UserRepository $userRepository): Response
     {
-        $search = $request->query->get('search');
-
-        $users = $search
-            ? $userRepository->createQueryBuilder('u')
-                ->where('u.username LIKE :search OR u.email LIKE :search')
-                ->setParameter('search', '%'.$search.'%')
-                ->getQuery()
-                ->getResult()
-            : $userRepository->findAll();
-
         return $this->render('user/index.html.twig', [
-            'users' => $users,
+            'users' => $userRepository->findAll(),
         ]);
     }
 
     #[Route('/new', name: 'app_user_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager, SluggerInterface $slugger, UserPasswordHasherInterface $passwordHasher): Response
-    {
-        $user = new User();
-        $form = $this->createForm(UserType::class, $user);
-        $form->handleRequest($request);
+public function new(
+    Request $request, 
+    EntityManagerInterface $entityManager,
+    UserPasswordHasherInterface $passwordHasher,
+    SluggerInterface $slugger,
+    ActivityLogger $logger
+): Response
+{
+    $user = new User();
+    $form = $this->createForm(UserType::class, $user, ['is_edit' => false]);
+    $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            // Handle uploaded profile image
-            $profileImageFile = $form->get('profile_image')->getData();
-            if ($profileImageFile) {
-                $originalFilename = pathinfo($profileImageFile->getClientOriginalName(), PATHINFO_FILENAME);
-                $safeFilename = $slugger->slug($originalFilename);
-                $newFilename = $safeFilename.'-'.uniqid().'.'.$profileImageFile->guessExtension();
+    // ✔ Correct Symfony validation pattern
+    if ($form->isSubmitted() && $form->isValid()) {
 
-                try {
-                    $profileImageFile->move(
-                        $this->getParameter('profiles_directory'),
-                        $newFilename
-                    );
-                } catch (FileException $e) {
-                    // handle exception
-                }
-
-                $user->setProfileImage($newFilename);
-            } else {
-                $user->setProfileImage('default.png'); // fallback
-            }
-
-            // Hash password using Symfony hasher
-            $plainPassword = $form->get('plainPassword')->getData();
-            if ($plainPassword) {
-                $hashedPassword = $passwordHasher->hashPassword($user, $plainPassword);
-                $user->setPassword($hashedPassword);
-            }
-
-            $entityManager->persist($user);
-            $entityManager->flush();
-
-            return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
+        // Handle password hashing for new user
+        $password = $form->get('password')->getData();
+        if ($password && trim($password) !== '') {
+            $hashedPassword = $passwordHasher->hashPassword($user, $password);
+            $user->setPassword($hashedPassword);
+        } else {
+            $this->addFlash('error', 'Password is required for new users');
+            return $this->render('user/new.html.twig', [
+                'user' => $user,
+                'form' => $form->createView(),
+            ]);
         }
 
-        return $this->render('user/new.html.twig', [
-            'user' => $user,
-            'form' => $form->createView(),
-        ]);
+        // Handle role from dropdown
+        $selectedRole = $form->get('roles')->getData();
+        $user->setRoles([$selectedRole]);
+
+        // Handle profile image upload
+        $profileImageFile = $form->get('profile_image')->getData();
+        if ($profileImageFile) {
+            $originalFilename = pathinfo($profileImageFile->getClientOriginalName(), PATHINFO_FILENAME);
+            $safeFilename = $slugger->slug($originalFilename);
+            $newFilename = $safeFilename.'-'.uniqid().'.'.$profileImageFile->guessExtension();
+
+            try {
+                $profileImageFile->move(
+                    $this->getParameter('kernel.project_dir').'/public/uploads/profile',
+                    $newFilename
+                );
+                $user->setProfileImage($newFilename);
+            } catch (FileException $e) {
+                $this->addFlash('error', 'Failed to upload image: ' . $e->getMessage());
+                $user->setProfileImage('default.jfif');
+            }
+        } else {
+            // Default image if none uploaded
+            $user->setProfileImage('default.jfif');
+        }
+
+        $entityManager->persist($user);
+        $entityManager->flush();
+
+        // LOG USER CREATION
+        $currentUser = $this->getUser();
+        $logger->log($currentUser, 'CREATE_USER', 
+            'Created user: ' . $user->getUsername() . ' (ID: ' . $user->getId() . ') with role: ' . $selectedRole
+        );
+
+        $this->addFlash('success', 'User created successfully!');
+        return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
     }
+
+    // ❗ If form is submitted but invalid → Symfony automatically shows all errors
+    // (including UniqueEntity errors) in the Twig template
+    return $this->render('user/new.html.twig', [
+        'user' => $user,
+        'form' => $form->createView(),
+    ]);
+}
 
     #[Route('/{id}', name: 'app_user_show', methods: ['GET'])]
     public function show(User $user): Response
@@ -92,41 +111,84 @@ final class UserController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_user_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, User $user, EntityManagerInterface $entityManager, SluggerInterface $slugger, UserPasswordHasherInterface $passwordHasher): Response
+    public function edit(
+        Request $request, 
+        User $user, 
+        EntityManagerInterface $entityManager,
+        UserPasswordHasherInterface $passwordHasher,
+        SluggerInterface $slugger,
+        ActivityLogger $logger
+    ): Response
     {
-        $form = $this->createForm(UserType::class, $user);
+        // Get current role for pre-selection
+        $currentRoles = $user->getRoles();
+        $currentRole = $currentRoles[0] ?? 'ROLE_USER';
+        
+        $form = $this->createForm(UserType::class, $user, ['is_edit' => true]);
+        
+        // Pre-select current role in dropdown
+        $form->get('roles')->setData($currentRole);
+        
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            // Handle uploaded profile image if any
-            $profileImageFile = $form->get('profile_image')->getData();
-            if ($profileImageFile) {
-                $originalFilename = pathinfo($profileImageFile->getClientOriginalName(), PATHINFO_FILENAME);
-                $safeFilename = $slugger->slug($originalFilename);
-                $newFilename = $safeFilename.'-'.uniqid().'.'.$profileImageFile->guessExtension();
-
-                try {
-                    $profileImageFile->move(
-                        $this->getParameter('profiles_directory'),
-                        $newFilename
-                    );
-                } catch (FileException $e) {
-                    // handle exception
+        if ($form->isSubmitted()) {
+            if ($form->isValid()) {
+                // Handle password if changed - only update if not empty
+                $password = $form->get('password')->getData();
+                if ($password && trim($password) !== '') {
+                    $hashedPassword = $passwordHasher->hashPassword($user, $password);
+                    $user->setPassword($hashedPassword);
+                    $this->addFlash('info', 'Password was updated');
                 }
+                // If password is empty, keep existing password (DO NOTHING)
 
-                $user->setProfileImage($newFilename);
+                // Update role
+                $selectedRole = $form->get('roles')->getData();
+                $user->setRoles([$selectedRole]);
+
+                // Handle profile image upload if new image provided
+                $profileImageFile = $form->get('profile_image')->getData();
+                if ($profileImageFile) {
+                    $originalFilename = pathinfo($profileImageFile->getClientOriginalName(), PATHINFO_FILENAME);
+                    $safeFilename = $slugger->slug($originalFilename);
+                    $newFilename = $safeFilename.'-'.uniqid().'.'.$profileImageFile->guessExtension();
+
+                    try {
+                        $profileImageFile->move(
+                            $this->getParameter('kernel.project_dir').'/public/uploads/profile',
+                            $newFilename
+                        );
+                        
+                        // Remove old image if not default
+                        $oldImage = $user->getProfileImage();
+                        if ($oldImage && $oldImage !== 'default.jfif') {
+                            $oldImagePath = $this->getParameter('kernel.project_dir').'/public/uploads/profile/'.$oldImage;
+                            if (file_exists($oldImagePath)) {
+                                unlink($oldImagePath);
+                            }
+                        }
+                        
+                        $user->setProfileImage($newFilename);
+                    } catch (FileException $e) {
+                        $this->addFlash('error', 'Failed to upload image: ' . $e->getMessage());
+                    }
+                }
+                // If no new image uploaded, keep existing image
+
+                $entityManager->flush();
+
+                // LOG USER UPDATE
+                $currentUser = $this->getUser();
+                $logger->log($currentUser, 'UPDATE_USER', 
+                    'Updated user: ' . $user->getUsername() . ' (ID: ' . $user->getId() . ') - New role: ' . $selectedRole
+                );
+
+                $this->addFlash('success', 'User updated successfully!');
+                return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
+            } else {
+                // Form validation failed
+                $this->addFlash('error', 'Please fix the validation errors below.');
             }
-
-            // Hash new password only if provided
-            $plainPassword = $form->get('plainPassword')->getData();
-            if ($plainPassword) {
-                $hashedPassword = $passwordHasher->hashPassword($user, $plainPassword);
-                $user->setPassword($hashedPassword);
-            }
-
-            $entityManager->flush();
-
-            return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
         }
 
         return $this->render('user/edit.html.twig', [
@@ -136,11 +198,40 @@ final class UserController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_user_delete', methods: ['POST'])]
-    public function delete(Request $request, User $user, EntityManagerInterface $entityManager): Response
+    public function delete(
+        Request $request, 
+        User $user, 
+        EntityManagerInterface $entityManager,
+        ActivityLogger $logger
+    ): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$user->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete'.$user->getId(), $request->getPayload()->getString('_token'))) {
+            // Store user info BEFORE deletion
+            $username = $user->getUsername();
+            $userId = $user->getId();
+            
+            // LOG USER DELETION (BEFORE deleting!)
+            $currentUser = $this->getUser();
+            $logger->log($currentUser, 'DELETE_USER', 
+                'Deleted user: ' . $username . ' (ID: ' . $userId . ')'
+            );
+            
+            // Remove profile image file if not default
+            $profileImage = $user->getProfileImage();
+            if ($profileImage && $profileImage !== 'default.jfif') {
+                $imagePath = $this->getParameter('kernel.project_dir').'/public/uploads/profile/'.$profileImage;
+                if (file_exists($imagePath)) {
+                    unlink($imagePath);
+                }
+            }
+            
             $entityManager->remove($user);
             $entityManager->flush();
+            
+            $this->addFlash('success', 'User deleted successfully!');
+        } else {
+            // Invalid CSRF token
+            $this->addFlash('error', 'Invalid security token. Please try again.');
         }
 
         return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);

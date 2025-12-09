@@ -2,61 +2,77 @@
 
 {% block title %}My Collection — Collectiv{% endblock %}
 
-{% block body %}
-<section class="bg-gradient-to-b from-[#1B1B1D] to-[#111113] min-h-screen text-gray-200 relative overflow-hidden">
+{% block stylesheets %}
+{{ parent() }}
+<link rel="stylesheet" href="{{ asset('css/collection.css') }}">
+{% endblock %}
 
-  <div class="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.07),transparent_70%)]"></div>
+{% block body %}
+<section class="collection-page">
+  <div class="collection-bg"></div>
 
   <!-- Profile Section -->
-  <div class="relative w-full bg-gradient-to-r from-[#0e0e0f] via-[#141415] to-[#1B1B1D] border-b border-[#2a2a2d] shadow-lg">
-    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center md:items-end justify-between p-8 md:p-12 gap-6">
-      <div class="flex items-center gap-6">
-        <div class="relative">
-          <img src="{{ asset('uploads/profile/profile.jpg') }}" 
+  <div class="collection-profile-section">
+    <div class="collection-profile-container">
+      <div class="collection-profile-info">
+        <div class="collection-profile-image-wrapper">
+          <img src="{{ asset('uploads/profile/' ~ app.user.profileImage) }}" 
                alt="Profile Picture" 
-               class="w-32 h-32 md:w-40 md:h-40 rounded-lg object-cover border-4 border-[#d4af37] shadow-[0_0_25px_rgba(212,175,55,0.3)]">
+               class="collection-profile-image">
         </div>
-        <div class="text-left">
-          <h2 class="text-3xl md:text-4xl font-bold text-white drop-shadow-[0_0_10px_rgba(212,175,55,0.3)]">Rohan</h2>
-          <p class="text-sm mt-2 text-gray-500">Joined January 2025 | {{ cards|length + figures|length + games|length + others|length }} Collectibles</p>
+        <div class="collection-profile-details">
+          <h2 class="collection-profile-name">{{ app.user.username }}</h2>
+          <p class="collection-profile-meta">
+            Joined {{ app.user.createdAt|date('F Y') }} | 
+            {{ cards|length + figures|length + games|length + artworks|length + others|length }} Collectibles
+          </p>
+          {% if app.user.bio %}
+          <p class="collection-profile-bio">{{ app.user.bio }}</p>
+          {% endif %}
         </div>
       </div>
-      <div class="flex flex-col items-center md:items-end">
-        <div class="flex items-center gap-3">
-          <div class="bg-[#d4af37] text-black font-bold text-sm px-4 py-2 rounded-full shadow-md">Level 15</div>
-          <a href="{{ path('collection_add') }}" 
-             class="bg-[#2a2a2d] text-[#d4af37] border border-[#d4af37]/50 hover:bg-[#d4af37] hover:text-black font-semibold px-4 py-2 rounded-md transition">
+      <div class="collection-profile-actions">
+        <div class="collection-action-buttons">
+          <div class="collection-level-badge">
+            {% if 'ROLE_ADMIN' in app.user.roles %}
+              Admin
+            {% elseif 'ROLE_STAFF' in app.user.roles %}
+              Staff
+            {% else %}
+              Collector
+            {% endif %}
+          </div>
+          <a href="{{ path('collection_add') }}" class="collection-add-button">
             Add Collectible
           </a>
+          <!-- EDIT PROFILE BUTTON ADDED HERE -->
+          <button id="openProfileEditModal" class="collection-edit-profile-button">
+            Edit Profile
+          </button>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Flash Messages -->
-  <div id="flashContainer" class="max-w-7xl mx-auto px-8 mt-4"></div>
+  <div id="collectionFlashContainer" class="collection-flash-container"></div>
 
   <!-- Collectible Display -->
-  {% set sections = {
-    'cards': cards,
-    'figures': figures,
-    'games': games,
-    'others': others
-  } %}
-
-  {% for key, items in sections %}
-    <section class="py-5 text-center relative overflow-hidden">
-      <h2 class="text-3xl font-semibold text-[#d4af37] mb-8 tracking-wide capitalize drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]">
-        Featured {{ key }}
+  {% set sectionNames = ['cards', 'figures', 'games', 'artworks'] %}
+  
+  {% for sectionName in sectionNames %}
+    {% set items = attribute(_context, sectionName) %}
+    <section class="collection-section">
+      <h2 class="collection-section-title">
+        {{ sectionName|capitalize }} Collection
       </h2>
 
-      <div class="relative max-w-7xl mx-auto px-8">
-        <button id="prevBtn-{{ key }}" class="absolute left-0 top-1/2 -translate-y-1/2 bg-black/60 text-[#d4af37] hover:bg-[#d4af37] hover:text-black transition p-3 rounded-full z-10">&#10094;</button>
+      <div class="collection-carousel-container">
+        <button id="collectionPrevBtn-{{ sectionName }}" class="collection-carousel-btn collection-carousel-prev">&#10094;</button>
 
-        <div id="cardContainer-{{ key }}" 
-     class="flex gap-4 overflow-x-visible scroll-smooth hide-scrollbar snap-x snap-mandatory justify-start transition-transform duration-500 ease-in-out">
+        <div id="collectionCardContainer-{{ sectionName }}" class="collection-carousel-track">
           {% for item in items %}
-            <div class="card-float card-item w-[200px] h-[300px] bg-[#1F1F21] border border-[#2a2a2d] rounded-xl overflow-hidden shadow-md flex flex-col cursor-pointer"
+            <div class="collection-collectible-card collection-card-float"
                  data-id="{{ item.id }}"
                  data-listed="{{ listingMap[item.id] is defined ? '1' : '0' }}"
                  data-listing-id="{{ listingMap[item.id] is defined ? listingMap[item.id] : '' }}"
@@ -64,285 +80,214 @@
                  data-description="{{ item.description }}"
                  data-image="{{ asset('uploads/collectibles/' ~ item.image) }}"
                  data-price="{{ item.price ?? '0.00' }}"
+                 data-franchise="{{ item.franchise }}"
+                 data-category="{{ item.category }}"
                  data-delete-collectible-token="{{ csrf_token('delete' ~ item.id) }}"
                  {% if listingMap[item.id] is defined %}
                  data-delete-listing-token="{{ csrf_token('delete' ~ listingMap[item.id]) }}"
                  {% endif %}>
-              <div class="h-[200px] w-full overflow-hidden flex items-center justify-center bg-[#141415]">
+              <div class="collection-card-image-container">
                 <img src="{{ asset('uploads/collectibles/' ~ item.image) }}" alt="{{ item.name }}"
-                     class="max-h-full max-w-full object-contain object-center transition duration-300 brightness-50">
+                     class="collection-card-image">
               </div>
-              <div class="flex-grow p-3 flex flex-col justify-between">
+              <div class="collection-card-content">
                 <div>
-                  <h3 class="text-base font-semibold text-[#d4af37] mb-1">{{ item.name }}</h3>
-                  <p class="text-gray-400 text-xs leading-snug line-clamp-2">{{ item.description }}</p>
+                  <h3 class="collection-card-title">{{ item.name }}</h3>
+                  <p class="collection-card-description">{{ item.description|slice(0, 100) }}{% if item.description|length > 100 %}...{% endif %}</p>
                 </div>
-                <p class="text-gray-500 text-[11px] mt-2 italic">Collectiv {{ key|capitalize }} Collection</p>
+                <p class="collection-card-category">{{ item.franchise }} • {{ item.category }}</p>
+                {% if listingMap[item.id] is defined %}
+                <div class="collection-listed-badge">Listed for Sale</div>
+                {% endif %}
               </div>
             </div>
           {% else %}
-            <p class="text-gray-500 italic mx-auto">No featured {{ key }} yet.</p>
+            <div class="collection-empty-section">
+              <p>No {{ sectionName }} in your collection yet.</p>
+              <a href="{{ path('collection_add') }}" class="collection-empty-add-button">
+                Add Your First {{ sectionName|slice(0, -1)|capitalize }}
+              </a>
+            </div>
           {% endfor %}
         </div>
 
-        <button id="nextBtn-{{ key }}" class="absolute right-0 top-1/2 -translate-y-1/2 bg-black/60 text-[#d4af37] hover:bg-[#d4af37] hover:text-black transition p-3 rounded-full z-10">&#10095;</button>
+        <button id="collectionNextBtn-{{ sectionName }}" class="collection-carousel-btn collection-carousel-next">&#10095;</button>
       </div>
 
       {% if not loop.last %}
-      <div class="w-1/3 mx-auto h-[1px] bg-gradient-to-r from-transparent via-[#d4af37]/80 to-transparent my-5"></div>
+      <div class="collection-section-divider"></div>
       {% endif %}
     </section>
   {% endfor %}
 </section>
 
 <!-- Modal when dblclick Display -->
-<div id="detailModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
-  <div class="bg-[#1f1f21] rounded-xl w-full max-w-5xl flex gap-4 p-4 relative max-h-[90vh] overflow-hidden scale-0 transform transition-transform duration-300">
-    <div class="flex-shrink-0 w-1/2 h-full flex items-center justify-center bg-[#141415] rounded-md overflow-hidden">
-      <img id="modalImage" class="w-full max-h-[60vh] object-contain rounded-md mb-4" src="" alt="Collectible Image">
+<div id="collectionDetailModal" class="collection-modal">
+  <div class="collection-modal-container">
+    <div class="collection-modal-image-container">
+      <img id="collectionModalImage" class="collection-modal-image" src="" alt="Collectible Image">
     </div>
 
-    <div class="flex flex-col flex-grow justify-between p-2 overflow-y-auto">
-      <button id="modalClose" class="self-end text-gray-400 hover:text-[#d4af37] text-2xl mb-2">&times;</button>
+    <div class="collection-modal-content">
+      <button id="collectionModalClose" class="collection-modal-close">&times;</button>
       <div>
-        <h3 id="modalName" class="text-2xl font-bold text-[#d4af37] mb-2"></h3>
-        <p id="modalDescription" class="text-gray-300 text-sm mb-4"></p>
-        <p id="modalPrice" class="text-gray-400 text-xs mb-4">Base Price: <span class="font-bold text-[#d4af37]"></span></p>
-      </div>
+        <h3 id="collectionModalName" class="collection-modal-title"></h3>
+        <p id="collectionModalDescription" class="collection-modal-description"></p>
+        <p id="collectionModalFranchise" class="collection-modal-meta"></p>
+        <p id="collectionModalCategory" class="collection-modal-meta"></p>
+        <p id="collectionModalPrice" class="collection-modal-price">Base Price: <span class="collection-modal-price-value"></span></p>
+     </div>
 
-      <form id="sellForm" method="POST" class="flex flex-col gap-3">
-        <input type="hidden" name="collectible_id" id="modalCollectibleId">
-        <input type="hidden" name="_token" id="modalToken" value="">
+    <form id="collectionSellForm" method="POST" class="collection-modal-form">
+  <input type="hidden" name="collectible_id" id="collectionModalCollectibleId">
+  <input type="hidden" name="_token" id="collectionModalToken" value="">
 
-        <div id="gradeWrapper" class="flex flex-col space-y-2">
-          <label for="modalGrade" class="text-gray-300 text-sm font-medium">Select PSA Grade</label>
-          <select id="modalGrade" name="grade" class="bg-[#141415] border border-[#d4af37]/40 text-gray-200 rounded-md px-3 py-2 focus:border-[#d4af37] focus:ring focus:ring-[#d4af37]/40">
-            <option value="">Unrated / Not Graded</option>
-            <option value="10 - GEM-MT">10 - Gem Mint (GEM-MT)</option>
-            <option value="9 - MINT">9 - Mint</option>
-            <option value="8 - NM-MT">8 - Near Mint–Mint (NM-MT)</option>
-            <option value="7 - NM">7 - Near Mint</option>
-            <option value="6 - EX-MT">6 - Excellent–Mint (EX-MT)</option>
-            <option value="5 - EX">5 - Excellent</option>
-            <option value="4 - VG-EX">4 - Very Good–Excellent</option>
-            <option value="3 - VG">3 - Very Good</option>
-            <option value="2 - GOOD">2 - Good</option>
-            <option value="1 - POOR">1 - Poor</option>
-          </select>
-        </div>
+  <div id="collectionGradeWrapper" class="collection-grade-wrapper">
+    <label for="collectionModalGrade" class="collection-grade-label">Select PSA Grade</label>
+    <select id="collectionModalGrade" name="grade" class="collection-grade-select">
+      <option value="">Unrated / Not Graded</option>
+      <option value="10 - GEM-MT">10 - Gem Mint (GEM-MT)</option>
+      <option value="9 - MINT">9 - Mint</option>
+      <option value="8 - NM-MT">8 - Near Mint–Mint (NM-MT)</option>
+      <option value="7 - NM">7 - Near Mint</option>
+      <option value="6 - EX-MT">6 - Excellent–Mint (EX-MT)</option>
+      <option value="5 - EX">5 - Excellent</option>
+      <option value="4 - VG-EX">4 - Very Good–Excellent</option>
+      <option value="3 - VG">3 - Very Good</option>
+      <option value="2 - GOOD">2 - Good</option>
+      <option value="1 - POOR">1 - Poor</option>
+    </select>
+  </div>
 
-        <div class="flex gap-3">
-          <button id="sellButton" type="submit" class="bg-[#d4af37] text-black px-5 py-2 rounded-md font-semibold hover:bg-[#f0cf57] transition flex-1">
-            Put Up for Sale
-          </button>
-          <button id="deleteButton" type="button" class="bg-red-600 text-white px-5 py-2 rounded-md font-semibold hover:bg-red-500 transition flex-1 hidden">
-            Delete
-          </button>
-        </div>
+  <!-- ADD THIS PRICE INPUT SECTION -->
+  <div id="collectionPriceWrapper" class="collection-price-wrapper" style="display: none;">
+    <label for="collectionModalPriceInput" class="collection-price-label">Sale Price (₱)</label>
+    <input 
+      type="number" 
+      id="collectionModalPriceInput" 
+      name="price" 
+      min="1" 
+      step="0.01" 
+      placeholder="0.00"
+      class="collection-price-input"
+    >
+    <small class="collection-price-help">Minimum price: ₱1.00</small>
+  </div>
 
-        <a id="editButton" href="#" class="hidden bg-[#2a2a2d] text-[#d4af37] border border-[#d4af37]/40 px-5 py-2 rounded-md font-semibold hover:bg-[#d4af37] hover:text-black text-center mt-2">
-          Edit Collectible
-        </a>
-      </form>
+  <div class="collection-modal-actions">
+    <button id="collectionSellButton" type="submit" class="collection-sell-button">
+      Put Up for Sale
+    </button>
+    <button id="collectionDeleteButton" type="button" class="collection-delete-button">
+      Delete
+    </button>
+  </div>
+
+  <a id="collectionEditButton" href="#" class="collection-edit-button">
+    Edit Collectible
+  </a>
+</form>
     </div>
   </div>
 </div>
 
-<style>
-@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-.card-float { animation: float 4s ease-in-out infinite; }
-.scale-90 { transform: scale(0.9); }
-.scale-105 { transform: scale(1.05); }
-.brightness-50 { filter: brightness(0.5); }
-.brightness-100 { filter: brightness(1.5); }
-.card-item { flex: 0 0 auto; }
-</style>
+<!-- Profile Edit Modal -->
+<div id="profileEditModal" class="profile-edit-modal" style="display: none;">
+  <div class="profile-edit-modal-container">
+    <div class="profile-edit-modal-content">
+      <button id="profileEditModalClose" class="profile-edit-modal-close">&times;</button>
+      <h3 class="profile-edit-modal-title">Edit Profile</h3>
+      
+      <form id="profileEditForm" method="POST" class="profile-edit-form">
+        <input type="hidden" name="_token" value="{{ csrf_token('profile_edit') }}">
+        
+        <div class="profile-edit-tabs">
+          <button type="button" class="profile-edit-tab active" data-tab="profile-info">Profile Info</button>
+          <button type="button" class="profile-edit-tab" data-tab="change-password">Change Password</button>
+        </div>
+        
+        <!-- Profile Info Tab -->
+        <div id="profile-info-tab" class="profile-edit-tab-content active">
+          <div class="profile-edit-form-group">
+            <label for="profileUsername">Username</label>
+            <input type="text" id="profileUsername" name="username" 
+                   value="{{ app.user.username }}" class="profile-edit-input" required>
+          </div>
+          
+          <div class="profile-edit-form-group">
+            <label for="profileBio">Bio</label>
+            <textarea id="profileBio" name="bio" class="profile-edit-textarea" rows="4">{{ app.user.bio }}</textarea>
+            <small class="profile-edit-help-text">Max 500 characters</small>
+          </div>
+          
+          <div class="profile-edit-form-group">
+            <div class="current-profile-image-container">
+              <p>Current Profile Image:</p>
+              <img src="{{ asset('uploads/profile/' ~ app.user.profileImage) }}" 
+                   alt="Current Profile Picture" 
+                   class="current-profile-image-preview">
+            </div>
+            
+            <label for="profileImage">Upload New Image</label>
+            <input type="file" id="profileImage" name="profileImage" accept="image/*" class="profile-edit-file-input">
+            <small class="profile-edit-help-text">Max file size: 2MB. Supported formats: JPG, PNG, GIF, WebP</small>
+          </div>
+        </div>
+        
+        <!-- Change Password Tab -->
+        <div id="change-password-tab" class="profile-edit-tab-content">
+          <div class="profile-edit-form-group">
+            <label for="currentPassword">Current Password</label>
+            <input type="password" id="currentPassword" name="currentPassword" class="profile-edit-input" 
+                   placeholder="Enter your current password">
+            <small class="profile-edit-help-text">Required to change your password</small>
+          </div>
+          
+          <div class="profile-edit-form-group">
+            <label for="newPassword">New Password</label>
+            <input type="password" id="newPassword" name="newPassword" class="profile-edit-input" 
+                   placeholder="Enter new password">
+            <small class="profile-edit-help-text">At least 8 characters with letters and numbers</small>
+          </div>
+          
+          <div class="profile-edit-form-group">
+            <label for="confirmPassword">Confirm New Password</label>
+            <input type="password" id="confirmPassword" name="confirmPassword" class="profile-edit-input" 
+                   placeholder="Confirm new password">
+            <small class="profile-edit-help-text">Must match the new password</small>
+          </div>
+          
+          <div class="password-strength-meter">
+            <div class="password-strength-bar"></div>
+            <div class="password-strength-text"></div>
+          </div>
+        </div>
+        
+        <div class="profile-edit-modal-actions">
+          <button type="submit" class="profile-edit-save-button">Save Changes</button>
+          <button type="button" id="profileEditCancelButton" class="profile-edit-cancel-button">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
 
+{% block javascripts %}
+{{ parent() }}
 <script>
-function initCollectionPage() {
-  if (window.collectionPageInitialized) return;
-  window.collectionPageInitialized = true;
-
-  ['cards','figures','games','others'].forEach(key => {
-    const container = document.getElementById(`cardContainer-${key}`);
-    if (!container) return;
-    const cards = Array.from(container.querySelectorAll('.card-item'));
-    const prevBtn = document.getElementById(`prevBtn-${key}`);
-    const nextBtn = document.getElementById(`nextBtn-${key}`);
-    const cardWidth = 220;
-    let index = 0;
-
- const updateCards = () => {
-  const total = cards.length;
-  if (total === 0) return;
-
-  // Wrap index for looping
-  if (index < 0) index = total - 1;
-  if (index >= total) index = 0;
-
-  // Compute scroll distance but make sure it loops correctly
-  const translateX = (index % total) * cardWidth;
-  container.style.transition = "transform 0.5s ease-in-out";
-  container.style.transform = `translateX(-${translateX}px)`;
-
-  // Highlight
-  cards.forEach(card => card.classList.remove('scale-105','brightness-100','scale-90','brightness-50'));
-  cards.forEach(card => card.classList.add('scale-90','brightness-50'));
-  cards[index].classList.remove('scale-90','brightness-50');
-  cards[index].classList.add('scale-105','brightness-150');
+window.collectionData = {
+  listingAddPath: "{{ path('listing_add') }}",
+  listingDeletePath: "/listing/delete/__ID__",
+  sections: {{ ['cards', 'figures', 'games', 'artworks']|json_encode|raw }},
+  currentUser: {
+    id: {{ app.user.id }},
+    username: "{{ app.user.username }}",
+    role: {{ app.user.roles|json_encode|raw }},
+    profileImage: "{{ app.user.profileImage }}"
+  }
 };
-
-    // Button actions
-    nextBtn?.addEventListener('click', () => {
-      index++;
-      updateCards();
-    });
-
-    prevBtn?.addEventListener('click', () => {
-      index--;
-      updateCards();
-    });
-
-    // Card click = focus highlight
-    cards.forEach((card, i) => card.addEventListener('click', () => {
-      index = i;
-      updateCards();
-    }));
-
-    updateCards();
-    window.addEventListener('resize', updateCards);
-  });
-
-  // Modal Logic (same as your original)
-  const modal = document.getElementById('detailModal');
-  if(!modal) return;
-  const modalContent = modal.querySelector('div');
-  const modalImage = document.getElementById('modalImage');
-  const modalName = document.getElementById('modalName');
-  const modalDescription = document.getElementById('modalDescription');
-  const modalPrice = document.querySelector('#modalPrice span');
-  const modalCollectibleIdInput = document.getElementById('modalCollectibleId');
-  const sellButton = document.getElementById('sellButton');
-  const modalToken = document.getElementById('modalToken');
-  const editButton = document.getElementById('editButton');
-  const closeBtn = document.getElementById('modalClose');
-  const deleteButton = document.getElementById('deleteButton');
-
-  document.querySelectorAll('.card-item').forEach(card => {
-    card.addEventListener('dblclick', () => {
-      const isListed = card.dataset.listed === '1';
-      modal.classList.remove('hidden');
-      setTimeout(()=>modalContent.classList.add('scale-100'),10);
-
-      modalImage.src = card.dataset.image;
-      modalName.textContent = card.dataset.name;
-      modalDescription.textContent = card.dataset.description;
-      modalPrice.textContent = `₱${parseFloat(card.dataset.price).toFixed(2)}`;
-      modalCollectibleIdInput.value = card.dataset.id;
-
-      sellButton.textContent = isListed ? 'Take Out of Sale' : 'Put Up for Sale';
-      document.getElementById('gradeWrapper').style.display = isListed ? 'none' : 'flex';
-      editButton.classList.toggle('hidden', isListed);
-      editButton.href = `/collection/${card.dataset.id}/edit`;
-
-      if(!isListed){
-        deleteButton.classList.remove('hidden');
-        modalToken.value = card.dataset.deleteCollectibleToken;
-      } else {
-        deleteButton.classList.add('hidden');
-        modalToken.value = card.dataset.deleteListingToken || '';
-      }
-
-      sellButton.form.action = isListed
-        ? `/listing/delete/${card.dataset.listingId}`
-        : `{{ path('listing_add') }}`;
-
-      deleteButton.onclick = () => {
-        if(confirm("Are you sure you want to delete this collectible?")){
-          fetch(`/collection/delete/${card.dataset.id}`, {
-            method:'POST',
-            headers:{'Content-Type':'application/x-www-form-urlencoded'},
-            body: new URLSearchParams({_token: modalToken.value})
-          }).then(r=>r.json()).then(data=>{
-            if(data.status==='success'){
-              card.remove();
-              closeModal();
-              const flash = document.createElement('div');
-              flash.className='p-3 rounded-md mb-2 text-white bg-green-600';
-              flash.textContent=data.message;
-              document.getElementById('flashContainer').prepend(flash);
-              setTimeout(()=>flash.remove(),4000);
-            } else {
-              alert(data.message);
-            }
-          });
-        }
-      }
-    });
-  });
-
-  function closeModal(){
-    modalContent.classList.remove('scale-100');
-    setTimeout(()=>modal.classList.add('hidden'),200);
-  }
-  closeBtn.addEventListener('click',closeModal);
-  modal.addEventListener('click', e=>{ if(e.target===modal) closeModal(); });
-  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
-
-  const sellForm = document.getElementById('sellForm');
-  if(sellForm){
-    sellForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const collectibleId = modalCollectibleIdInput.value;
-      const token = modalToken.value;
-      const grade = document.getElementById('modalGrade').value;
-      const actionUrl = sellButton.form.action;
-
-      fetch(actionUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          collectible_id: collectibleId,
-          grade: grade,
-          _token: token
-        })
-      })
-      .then(res => res.json())
-      .then(data => {
-        const flashContainer = document.getElementById('flashContainer');
-        const flash = document.createElement('div');
-        flash.className = `p-3 rounded-md mb-2 text-white ${
-          data.status === 'success' ? 'bg-green-600' :
-          data.status === 'error' ? 'bg-red-600' : 'bg-yellow-500 text-black'}`;
-        flash.textContent = data.message;
-        flashContainer.prepend(flash);
-        setTimeout(()=>flash.remove(),4000);
-
-        closeModal();
-
-        const card = document.querySelector(`.card-item[data-id='${collectibleId}']`);
-        if(card) {
-          if(card.dataset.listed === '0' && data.listingId){
-            card.dataset.listed = '1';
-            card.dataset.listingId = data.listingId;
-            card.dataset.deleteToken = data.deleteToken;
-            card.dataset.deleteListingToken = data.deleteToken;
-            modalToken.value = data.deleteToken;
-          } else {
-            card.dataset.listed = '0';
-            card.dataset.listingId = '';
-            card.dataset.deleteToken = '';
-          }
-        }
-      });
-    });
-  }
-}
-
-document.addEventListener('DOMContentLoaded', initCollectionPage);
-document.addEventListener('turbo:render', () => {
-  window.collectionPageInitialized = false;
-  initCollectionPage();
-});
 </script>
+<script src="{{ asset('js/collection.js') }}"></script>
+<script src="{{ asset('js/profile-edit.js') }}"></script>
 {% endblock %}

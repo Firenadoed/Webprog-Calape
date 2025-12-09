@@ -1,104 +1,143 @@
-{% extends 'admin/base-admin.html.twig' %}
+{% extends 'sidebar.html.twig' %}
 
 {% block title %}Admin Dashboard{% endblock %}
 
 {% block body %}
-  <div class="flex items-center justify-between mb-10">
-    <h1 class="text-3xl font-[Poppins] font-bold text-[#d4af37] tracking-tight">Admin Dashboard</h1>
-  </div>
-
-  <!-- Stats Overview -->
-  <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-    <div class="bg-[#2A2A2C] rounded-xl shadow-lg p-6 border border-[#3A3A3C] hover:border-[#d4af37] transition">
-      <h2 class="text-gray-400 text-sm mb-2">Total Users</h2>
-      <p class="text-3xl font-semibold text-[#d4af37]">{{ totalUsers }}</p>
+<div class="admin-dashboard">
+    <!-- Header -->
+    <div class="dashboard-header">
+    <meta name="turbo-visit-control" content="reload">
+        <h1 class="dashboard-title">{{ title|default('Admin Dashboard') }}</h1>
     </div>
 
-    <div class="bg-[#2A2A2C] rounded-xl shadow-lg p-6 border border-[#3A3A3C] hover:border-[#d4af37] transition">
-      <h2 class="text-gray-400 text-sm mb-2">Collectibles</h2>
-      <p class="text-3xl font-semibold text-[#d4af37]">{{ totalCollectibles }}</p>
+    <!-- Stats Overview -->
+    <div class="grid-stats">
+        <div class="admin-stat-card">
+            <h2 class="admin-stat-title">Total Users</h2>
+            <p class="admin-stat-value">{{ totalUsers|default(0) }}</p>
+        </div>
+        
+        <div class="admin-stat-card">
+            <h2 class="admin-stat-title">Total Staff</h2>
+            <p class="admin-stat-value">{{ totalStaff|default(0) }}</p>
+        </div>
+        
+        <div class="admin-stat-card">
+            <h2 class="admin-stat-title">Total Collectibles</h2>
+            <p class="admin-stat-value">{{ totalCollectibles|default(0) }}</p>
+        </div>
+        
+        <div class="admin-stat-card">
+            <h2 class="admin-stat-title">Total Listings</h2>
+            <p class="admin-stat-value">{{ totalListings|default(0) }}</p>
+        </div>
+        
+        <div class="admin-stat-card">
+            <h2 class="admin-stat-title">Total Listing Value</h2>
+            <p class="admin-stat-value price-value">₱{{ totalValue|default(0)|number_format(2, '.', ',') }}</p>
+        </div>
     </div>
 
-    <div class="bg-[#2A2A2C] rounded-xl shadow-lg p-6 border border-[#3A3A3C] hover:border-[#d4af37] transition">
-      <h2 class="text-gray-400 text-sm mb-2">Listings</h2>
-      <p class="text-3xl font-semibold text-[#d4af37]">{{ totalListings }}</p>
+    <!-- Recent Listings Table -->
+    <div class="admin-table-container">
+        <h2 class="admin-table-header">Recent Listings</h2>
+        <div class="crud-table-wrapper">
+            <div class="crud-table-scroll">
+                <table id="recentListingsTable" class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Collectible</th>
+                            <th>Price</th>
+                            <th>Grade</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for listing in recentListings %}
+                            <tr>
+                                <td>#{{ listing.id }}</td>
+                                <td>
+                                    {% if listing.collectible %}
+                                        {{ listing.collectible.name }}
+                                    {% else %}
+                                        <span class="text-gray-500 italic">Unknown</span>
+                                    {% endif %}
+                                </td>
+                                <td class="price-value">₱{{ listing.price|number_format(2, '.', ',') }}</td>
+                                <td>{{ listing.grade|default('N/A') }}</td>
+                                <td>
+                                    {% if listing.isForSale %}
+                                        <span class="badge-success">For Sale</span>
+                                    {% else %}
+                                        <span class="badge-neutral">Not Listed</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
-  </div>
-
-  <!-- Extra Insights -->
-  <div class="grid md:grid-cols-2 gap-6 mb-10">
-    <div class="bg-[#2A2A2C] rounded-xl shadow-lg p-6 border border-[#3A3A3C] hover:border-[#d4af37] transition">
-      <h2 class="text-gray-400 text-sm mb-2">Total Listing Value</h2>
-      <p class="text-3xl font-semibold text-[#d4af37]">₱{{ totalValue|number_format(2, '.', ',') }}</p>
+    <!-- Recent Users Table -->
+    <div class="admin-table-container">
+        <h2 class="admin-table-header">Recent Users</h2>
+        <div class="crud-table-wrapper">
+            <div class="crud-table-scroll">
+                <table id="recentUsersTable" class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Role</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in recentUsers %}
+                            <tr>
+                                <td class="font-medium">{{ user.username }}</td>
+                                <td>
+                                    {% if 'ROLE_ADMIN' in user.roles %}
+                                        <span class="badge-admin">Admin</span>
+                                    {% elseif 'ROLE_STAFF' in user.roles %}
+                                        <span class="badge-staff">Staff</span>
+                                    {% else %}
+                                        <span class="badge-user">User</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
-    <div class="bg-[#2A2A2C] rounded-xl shadow-lg p-6 border border-[#3A3A3C] hover:border-[#d4af37] transition">
-      <h2 class="text-gray-400 text-sm mb-2">Most Popular Category</h2>
-      {% if mostPopularCategory %}
-        <p class="text-lg font-semibold text-[#d4af37]">
-          {{ mostPopularCategory.name }} ({{ mostPopularCategory.collectibleCount }})
-        </p>
-      {% else %}
-        <p class="text-gray-500">No data yet</p>
-      {% endif %}
+    <!-- Quick Stats -->
+    <div class="admin-table-container">
+        <h2 class="admin-table-header">Quick Stats</h2>
+        <div class="quick-actions">
+            <div class="admin-stat-card quick-action-card">
+                <h2 class="admin-stat-title">Users</h2>
+                <p class="admin-stat-value">{{ totalUsers|default(0) }}</p>
+            </div>
+            
+            <div class="admin-stat-card quick-action-card">
+                <h2 class="admin-stat-title">Collectibles</h2>
+                <p class="admin-stat-value">{{ totalCollectibles|default(0) }}</p>
+            </div>
+            
+            <div class="admin-stat-card quick-action-card">
+                <h2 class="admin-stat-title">Listings</h2>
+                <p class="admin-stat-value">{{ totalListings|default(0) }}</p>
+            </div>
+            
+            <div class="admin-stat-card quick-action-card">
+                <h2 class="admin-stat-title">Listing Value</h2>
+                <p class="admin-stat-value price-value">₱{{ totalValue|default(0)|number_format(2, '.', ',') }}</p>
+            </div>
+        </div>
     </div>
-  </div>
-  <!-- Recent Activity Table -->
-<div class="bg-[#2A2A2C] rounded-xl shadow-lg p-6 border border-[#3A3A3C] mt-6 mb-10">
-  <h2 class="text-xl font-bold text-[#d4af37] mb-4">Recent Activity</h2>
-  <div class="max-h-64 overflow-y-auto">
-    <table class="w-full text-sm text-gray-300">
-      <thead>
-        <tr class="border-b border-[#3A3A3C] text-gray-400">
-          <th class="py-2 text-left">User</th>
-          <th class="py-2 text-left">Entity</th>
-          <th class="py-2 text-left">Action</th>
-          <th class="py-2 text-left">Details</th>
-          <th class="py-2 text-left">Date</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for activity in recentActivities %}
-          <tr class="border-b border-[#3A3A3C] hover:bg-[#2F2F31] transition">
-            <td class="py-2">{{ activity.user ? activity.user.username : 'System' }}</td>
-            <td class="py-2">{{ activity.entityType }} (ID: {{ activity.entityId }})</td>
-            <td class="py-2">{{ activity.action }}</td>
-            <td class="py-2">{{ activity.details ?: '-' }}</td>
-            <td class="py-2">{{ activity.createdAt|date('M d, Y H:i') }}</td>
-          </tr>
-        {% else %}
-          <tr>
-            <td colspan="5" class="text-center text-gray-500 py-4">No recent activity</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
 </div>
-
-  <!-- Recent Listings Table -->
-  <div class="bg-[#2A2A2C] rounded-xl shadow-lg p-6 border border-[#3A3A3C]">
-    <h2 class="text-xl font-bold text-[#d4af37] mb-4">Recent Listings</h2>
-    <table class="w-full text-sm text-gray-300">
-      <thead>
-        <tr class="border-b border-[#3A3A3C] text-gray-400">
-          <th class="py-2 text-left">Title</th>
-          <th class="py-2 text-left">Price</th>
-          <th class="py-2 text-left">Date</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for listing in recentListings %}
-          <tr class="border-b border-[#3A3A3C] hover:bg-[#2F2F31] transition">
-            <td class="py-2">{{ listing.collectible.name }}</td>
-            <td class="py-2">₱{{ listing.price|number_format(2, '.', ',') }}</td>
-            <td class="py-2">{{ listing.createdAt|date('M d, Y') }}</td>
-          </tr>
-        {% else %}
-          <tr><td colspan="3" class="text-center text-gray-500 py-4">No listings available</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
 {% endblock %}

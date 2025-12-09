@@ -1,0 +1,23 @@
+<div class="mb-3">
+    {{ form_label(form.collectible, 'Collectible') }}
+    {{ form_widget(form.collectible, {
+        'attr': {
+            'class': 'form-select collectible-select',
+            'id': 'listing_collectible'
+        }
+    }) }}
+    {% if form.collectible.vars.errors|length > 0 %}
+        <div class="invalid-feedback d-block">
+            {{ form_errors(form.collectible) }}
+        </div>
+    {% endif %}
+    <div class="form-text" id="collectible-help">
+        {% if form.collectible.vars.choices|length == 0 and form.vars.data and form.vars.data.user %}
+            This user doesn't have any collectibles yet.
+        {% elseif form.vars.data and form.vars.data.user %}
+            Showing {{ form.collectible.vars.choices|length }} collectible(s) owned by {{ form.vars.data.user.username }}
+        {% else %}
+            Select a user first to see their collectibles
+        {% endif %}
+    </div>
+</div>

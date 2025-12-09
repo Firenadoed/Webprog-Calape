@@ -1,14 +1,14 @@
-{% extends 'admin/base-admin.html.twig' %}
+{% extends 'sidebar.html.twig' %}
 {% block title %}Add Collectible{% endblock %}
 
 {% block body %}
-<div class="flex items-center justify-center min-h-screen bg-[#1B1B1D]">
+<div class="page-container">
     <div class="form-container">
-        <h2 class="text-[#d4af37] text-2xl font-bold mb-6 text-center">Add a New Collectible</h2>
+        <h2 class="page-title">Add a New User</h2>
 
         {{ include('user/_form.html.twig', {'button_label': 'Create'}) }}
 
-        <a href="{{ path('app_user_index') }}" class="back-link">← Back to list</a>
+        <a href="{{ path('app_user_index') }}" class="back-link">Back to list</a>
     </div>
 </div>
 {% endblock %}

@@ -1,0 +1,149 @@
+{% extends 'sidebar.html.twig' %}
+
+{% block title %}Activity Logs{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/crud-components.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/activity-logs.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="logs-activity-container">
+<meta name="turbo-visit-control" content="reload">
+    <div class="logs-activity-header">
+        <h1 class="logs-activity-title">Activity Logs</h1>
+        
+        <div class="logs-activity-actions">
+            <span class="logs-log-count-badge" id="logCount">{{ logs|length }} entries</span>
+        </div>
+    </div>
+
+    {# === Filter Controls === #}
+    <div class="logs-filter-card mb-4">
+        <div class="logs-filter-card-body">
+            <h5 class="logs-filter-title mb-3">Filter Logs</h5>
+            <div class="logs-filter-controls">
+                <div class="logs-filter-group">
+                    <label class="logs-filter-label">User</label>
+                    <input type="text" class="logs-filter-input" id="userFilter" placeholder="Search username...">
+                </div>
+                <div class="logs-filter-group">
+                    <label class="logs-filter-label">Action</label>
+                    <select class="logs-filter-select" id="actionFilter">
+                        <option value="">All Actions</option>
+                        <option value="CREATE">Create Actions</option>
+                        <option value="UPDATE">Update Actions</option>
+                        <option value="DELETE">Delete Actions</option>
+                        <option value="LOGIN">Login</option>
+                        <option value="LOGOUT">Logout</option>
+                    </select>
+                </div>
+                <div class="logs-filter-group">
+                    <label class="logs-filter-label">Role</label>
+                    <select class="logs-filter-select" id="roleFilter">
+                        <option value="">All Roles</option>
+                        <option value="ADMIN">Admin</option>
+                        <option value="STAFF">Staff</option>
+                        <option value="USER">User</option>
+                    </select>
+                </div>
+                <div class="logs-filter-group">
+                    <label class="logs-filter-label">Date</label>
+                    <input type="date" class="logs-filter-input" id="dateFilter">
+                </div>
+                <div class="logs-filter-group">
+                    <button class="logs-clear-filters-btn" id="clearFilters">
+                        <i class="fas fa-times me-1"></i> Clear Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# === Activity Logs Table === #}
+    <div class="logs-activity-table-container">
+        <table id="activityLogsTable" class="logs-activity-table">
+            <thead>
+                <tr>
+                    <th class="logs-timestamp-cell">Timestamp</th>
+                    <th class="logs-user-cell">User</th>
+                    <th width="120">Action</th>
+                    <th class="logs-details-cell">Details</th>
+                    <th width="100">Role</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td data-order="{{ log.createdAt|date('Y-m-d H:i:s') }}">
+                        <div class="logs-timestamp-display">
+                            <strong class="logs-timestamp-date">{{ log.createdAt|date('M d, Y') }}</strong>
+                            <small class="logs-timestamp-time">{{ log.createdAt|date('h:i:s A') }}</small>
+                        </div>
+                        <span class="d-none">{{ log.createdAt|date('Y-m-d H:i:s') }}</span>
+                    </td>
+                    <td>
+                        <strong class="logs-user-name">{{ log.username }}</strong>
+                        <div class="logs-user-id">ID: {{ log.userId }}</div>
+                    </td>
+                    <td>
+                        {% if log.action starts with 'CREATE' %}
+                            <span class="logs-action-badge logs-badge-create">
+                                <i class="fas fa-plus me-1"></i> Create
+                            </span>
+                        {% elseif log.action starts with 'UPDATE' %}
+                            <span class="logs-action-badge logs-badge-update">
+                                <i class="fas fa-edit me-1"></i> Update
+                            </span>
+                        {% elseif log.action starts with 'DELETE' %}
+                            <span class="logs-action-badge logs-badge-delete">
+                                <i class="fas fa-trash me-1"></i> Delete
+                            </span>
+                        {% elseif log.action == 'LOGIN' %}
+                            <span class="logs-action-badge logs-badge-login">
+                                <i class="fas fa-sign-in-alt me-1"></i> Login
+                            </span>
+                        {% elseif log.action == 'LOGOUT' %}
+                            <span class="logs-action-badge logs-badge-logout">
+                                <i class="fas fa-sign-out-alt me-1"></i> Logout
+                            </span>
+                        {% else %}
+                            <span class="logs-action-badge">{{ log.action }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if log.targetData %}
+                            <span class="logs-details-text" title="{{ log.targetData }}">
+                                {{ log.targetData }}
+                            </span>
+                        {% else %}
+                            <span class="logs-details-empty">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if log.role == 'ROLE_ADMIN' %}
+                            <span class="logs-badge-role logs-badge-admin">Admin</span>
+                        {% elseif log.role == 'ROLE_STAFF' %}
+                            <span class="logs-badge-role logs-badge-staff">Staff</span>
+                        {% else %}
+                            <span class="logs-badge-role logs-badge-user">User</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center py-5">
+                        <div class="logs-empty-state">
+                            <div class="logs-empty-icon">📭</div>
+                            <p class="logs-empty-title">No activity logs found</p>
+                            <p class="logs-empty-subtitle">When users perform actions, they'll appear here.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

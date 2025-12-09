@@ -3,60 +3,62 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>{% block title %}Collectiv{% endblock %}</title>
-
-  <link rel="icon" type="image/png" href="{{ asset('images/Collectiv-Logo.png') }}">
-
-
-
+    <link rel="icon" type="image/png" href="{{ asset('images/Collectiv-Logo.png') }}">
+    
     {% block stylesheets %}
       {{ encore_entry_link_tags('app') }}
+      <link rel="stylesheet" href="{{ asset('css/base-styles.css') }}">
     {% endblock %}
-
-
   </head>
 
-  <body class="bg-[#1B1B1D] text-white min-h-screen flex flex-col">
-
+  <body class="base-body" data-turbo-suppress-warning>
     {# --- NAVBAR --- #}
-    <nav class="flex justify-between items-center px-8 py-4 border-b border-[#d4af37]/30 bg-[#1B1B1D]">
-      <div class="flex items-center space-x-2">
-      <img src="{{ asset('images/collectiv-logo.png') }}" alt="Collectiv Logo" class="h-8 w-8"/>
-        <h1 class="text-2xl font-semibold text-[#d4af37]">COLLECTIV</h1>
-        
+    <nav class="base-navbar">
+      <div class="base-nav-logo-container">
+        <img src="{{ asset('images/collectiv-logo.png') }}" alt="Collectiv Logo" class="base-nav-logo"/>
+        <h1 class="base-nav-title">COLLECTIV</h1>
       </div>
-      <ul class="hidden md:flex space-x-6 text-gray-300">
-        <li><a href="{{ path('home') }}" class="hover:text-[#d4af37]">Home</a></li>
-        <li><a href="{{ path('explore') }}" class="hover:text-[#d4af37]">Explore</a></li>
-        <li><a href="{{ path('collection') }}" class="hover:text-[#d4af37]">My Collection</a></li>
-        <li><a href="#" class="hover:text-[#d4af37]">Community</a></li>
+      
+      <ul class="base-nav-links">
+        <li><a href="{{ path('home') }}" class="base-nav-link">Home</a></li>
+        <li><a href="{{ path('explore') }}" class="base-nav-link">Explore</a></li>
+        <li><a href="{{ path('collection') }}" class="base-nav-link">Profile</a></li>
+        
+        {# Admin Dashboard Link #}
+        {% if is_granted('ROLE_ADMIN') %}
+          <li><a href="{{ path('admin_dashboard') }}" class="base-admin-dashboard-link">Admin Dashboard</a></li>
+        {% endif %}
+        
+        {# Staff Dashboard Link #}
+        {% if is_granted('ROLE_STAFF') %}
+          <li><a href="{{ path('app_collectible_index') }}" class="base-staff-dashboard-link">Staff Dashboard</a></li>
+        {% endif %}
       </ul>
-      <a href="#" class="bg-[#d4af37] text-black font-semibold px-4 py-2 rounded-md hover:bg-[#c19b2f] transition">
-        Log In
-      </a>
+      
+      {% if app.user %}
+        {# User is logged in - show Logout #}
+        <div class="base-user-section">
+          <span class="base-welcome-text">Welcome, {{ app.user.username }}</span>
+          <a href="{{ path('app_logout') }}" class="base-logout-button">
+            Log Out
+          </a>
+        </div>
+      {% else %}
+        {# User is not logged in - show Login #}
+        <a href="{{ path('app_login') }}" class="base-login-button">
+          Log In
+        </a>
+      {% endif %}
     </nav>
 
     {# --- MAIN CONTENT --- #}
-    <main class="flex-grow">
+    <main class="base-main">
       {% block body %}{% endblock %}
     </main>
 
-    {# --- FOOTER --- #}
-    <footer class="bg-[#0e0e0f] py-8 text-center text-gray-400 text-sm border-t border-[#d4af37]/20">
-      <p>© 2025 <span class="text-[#d4af37]">COLLECTIV</span> — Where Collectors Belong</p>
-      <div class="mt-2 space-x-4">
-        <a href="#" class="hover:text-[#d4af37]">About</a>
-        <a href="#" class="hover:text-[#d4af37]">FAQ</a>
-        <a href="#" class="hover:text-[#d4af37]">Privacy</a>
-        <a href="#" class="hover:text-[#d4af37]">Contact</a>
-      </div>
-    </footer>
-
-    
     {% block javascripts %}
       {{ encore_entry_script_tags('app') }}
     {% endblock %}
-    
   </body>
 </html>

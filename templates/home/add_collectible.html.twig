@@ -9,16 +9,19 @@
     {# === Main Form === #}
     <div class="lg:col-span-2 bg-[#232327] p-8 rounded-2xl shadow-lg">
       <h2 class="text-3xl font-semibold text-[#d4af37] mb-8 text-center">Add New Collectible</h2>
-
+          
       {{ form_start(form, {'attr': {'id': 'collectible-form'}}) }}
         <div class="space-y-6 text-left">
+
+          
+       <div class="relative">
+            {{ form_row(form.name, {'attr': {'id': 'collectible_name', 'autocomplete': 'off'}}) }}
+          </div>
+          
           {{ form_row(form.category) }}
           {{ form_row(form.franchise) }}
 
           <!-- Name field (auto-filled when fetched) -->
-          <div class="relative">
-            {{ form_row(form.name, {'attr': {'id': 'collectible_name', 'autocomplete': 'off'}}) }}
-          </div>
 
           <!-- Description -->
           {{ form_row(form.description) }}
@@ -46,13 +49,8 @@
             </p>
           </div>
 
-          <!-- Price -->
-          <div class="relative">
-            {{ form_row(form.price, {'attr': {'id': 'collectible_price', 'autocomplete': 'off'}}) }}
-            <p id="price-error" class="text-red-400 text-sm mt-1 hidden">
-              Please enter a valid number for price.
-            </p>
-          </div>
+          {# REMOVED: Price field from here since it's not part of collectible table #}
+          {# Price should be handled separately when creating a listing #}
         </div>
 
         <button type="submit"
@@ -61,7 +59,6 @@
         </button>
       {{ form_end(form) }}
     </div>
-
 
     {# === Side Helper Card === #}
     <div class="bg-[#232327] p-6 rounded-2xl shadow-lg">
@@ -98,72 +95,4 @@
 
   </div>
 </section>
-{% endblock %}
-
-{% block javascripts %}
-  {{ parent() }}
-  <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const form = document.querySelector("#collectible-form");
-    if (!form) return;
-
-    const priceInput = document.querySelector("#collectible_price");
-    const imageInput = document.querySelector("#collectible_image");
-    const priceError = document.querySelector("#price-error");
-    const imageError = document.querySelector("#image-error");
-    const previewImg = document.querySelector("#preview-img");
-    const previewContainer = document.querySelector("#image-preview-container");
-
-    form.addEventListener("submit", (e) => {
-      let isValid = true;
-
-      // === Validate Price ===
-      const priceValue = priceInput.value.trim();
-      if (priceValue !== "" && isNaN(priceValue)) {
-        priceError.classList.remove("hidden");
-        priceInput.classList.add("border-red-500");
-        isValid = false;
-      } else {
-        priceError.classList.add("hidden");
-        priceInput.classList.remove("border-red-500");
-      }
-
-      // === Validate Image ===
-      const file = imageInput.files[0];
-      if (file) {
-        const validTypes = ["image/jpeg", "image/png", "image/jpg", "image/gif"];
-        if (!validTypes.includes(file.type)) {
-          imageError.classList.remove("hidden");
-          imageInput.classList.add("border-red-500");
-          isValid = false;
-        } else {
-          imageError.classList.add("hidden");
-          imageInput.classList.remove("border-red-500");
-        }
-      }
-
-      if (!isValid) e.preventDefault();
-    });
-
-    // === Live Preview of Uploaded Image ===
-    imageInput.addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        const validTypes = ["image/jpeg", "image/png", "image/jpg", "image/gif"];
-        if (validTypes.includes(file.type)) {
-          const reader = new FileReader();
-          reader.onload = function(ev) {
-            previewImg.src = ev.target.result;
-            previewContainer.classList.remove("hidden");
-          };
-          reader.readAsDataURL(file);
-        } else {
-          previewContainer.classList.add("hidden");
-        }
-      } else {
-        previewContainer.classList.add("hidden");
-      }
-    });
-  });
-  </script>
 {% endblock %}

@@ -1,179 +1,103 @@
-{% extends 'admin/base-admin.html.twig' %}
-{% block title %}Collectibles Management{% endblock %}
+{% extends 'sidebar.html.twig' %}
+
+{% block title %}Collectible Management{% endblock %}
+
 
 {% block body %}
-<div class="px-0 sm:px-0 lg:px-0">
-
-    <h1 class="text-3xl font-bold text-[#d4af37] mb-6 text-center">Collectibles Management</h1>
-
-    {# === Filter & Search === #}
-    <div class="flex flex-col sm:flex-row items-center justify-between mb-6 space-y-3 sm:space-y-0 sm:space-x-3">
-        <form method="GET" action="{{ path('app_collectible_index') }}" class="w-full sm:w-1/2 flex-grow sm:flex-grow-0 sm:mr-auto">
-            <label for="search" class="sr-only">Search Collectibles</label>
-            <input type="search"
-                   name="search"
-                   id="search"
-                   value="{{ app.request.query.get('search') }}"
-                   placeholder="Search by name or description..."
-                   class="form-control text-white bg-gray-800 border border-gray-700 focus:border-[#d4af37] focus:ring focus:ring-[#d4af37] focus:ring-opacity-50 rounded-md shadow-sm block w-full px-3 py-1.5 text-sm">
-        </form>
-
-        <form method="GET" action="{{ path('app_collectible_index') }}" class="w-full sm:w-1/2 flex items-center justify-end sm:ml-auto">
-            <label for="category" class="sr-only">Filter by Category</label>
-            <select name="category"
-                    id="category"
-                    onchange="this.form.submit()"
-                    class="form-control text-white bg-gray-800 border border-gray-700 focus:border-[#d4af37] focus:ring focus:ring-[#d4af37] focus:ring-opacity-50 rounded-md shadow-sm block w-full py-1.5 pl-3 pr-10 text-sm">
-                <option value="">All Categories</option>
-                {% for category in categories %}
-                    <option value="{{ category.id }}" {% if app.request.query.get('category') == category.id %}selected{% endif %}>
-                        {{ category.name }}
-                    </option>
-                {% endfor %}
-            </select>
-        </form>
+<div class="crud-page-container">
+<meta name="turbo-visit-control" content="reload">
+ <meta name="turbo-visit-control" content="reload">
+    <meta name="turbo-cache-control" content="no-cache">
+    <div class="crud-page-header">
+        <h1 class="crud-page-title">Collectible Management</h1>
+        
+        <div class="crud-page-actions">
+            <a href="{{ path('app_collectible_new') }}" class="crud-btn crud-btn-create">＋ New Collectible</a>
+        </div>
     </div>
-    {# === End Filter & Search === #}
 
     {# === Collectibles Table === #}
-    <div class="overflow-x-auto border border-gray-700 rounded-md shadow-lg">
-        <div class="max-h-[calc(80vh-180px)] overflow-y-auto">
-            <table class="min-w-full divide-y divide-gray-700">
-                <thead class="bg-gray-800 sticky top-0 z-10">
+    <div class="crud-table-wrapper">
+        <div class="crud-table-scroll">
+            <table id="collectibleManagementTable" class="crud-table">
+                <thead>
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">ID</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Image</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Description</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Category</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Franchise</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Price</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                        <th style="width: 60px;">ID</th>
+                        <th style="width: 80px;">Image</th>
+                        <th style="width: 120px;">Name</th>
+                        <th style="width: 100px;">Owner</th>
+                        <th style="width: 100px;">Category</th>
+                        <th style="width: 100px;">Franchise</th>
+                        <th style="width: 240px;">Actions</th> <!-- Fixed width for actions -->
                     </tr>
                 </thead>
 
-                <tbody class="bg-gray-900 divide-y divide-gray-700">
+                <tbody>
                     {% for collectible in collectibles %}
-                    <tr class="hover:bg-gray-800 transition">
-                        <td class="px-6 py-4 whitespace-nowrap">{{ collectible.id }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                    <tr>
+                        <td>{{ collectible.id }}</td>
+                        <td>
                             {% if collectible.image %}
                                 <img src="{{ asset('uploads/collectibles/' ~ collectible.image) }}"
                                      alt="{{ collectible.name }}"
-                                     class="w-12 h-12 object-cover rounded-md border border-gray-600">
+                                     class="crud-avatar">
                             {% else %}
                                 <span class="text-gray-400">No Image</span>
                             {% endif %}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ collectible.name }}</td>
-                        <td class="px-6 py-4">
-                            {{ collectible.description|length > 50 ? collectible.description|slice(0,50) ~ '...' : collectible.description }}
+                        <td>{{ collectible.name }}</td>
+                        <td>
+                            {% if collectible.user %}
+                                {% if collectible.user.getUsername() %}
+                                    {{ collectible.user.getUsername() }}
+                                {% else %}
+                                    {{ collectible.user.getEmail() }}
+                                {% endif %}
+                            {% else %}
+                                <span class="text-gray-400">—</span>
+                            {% endif %}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            {{ collectible.category ? collectible.category.name : 'No Category' }}
+                        <td>
+                            {% if collectible.category %}
+                                <span class="category-badge">
+                                    {{ collectible.category|capitalize }}
+                                </span>
+                            {% else %}
+                                <span class="text-gray-400">—</span>
+                            {% endif %}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            {{ collectible.franchise ?: 'No Franchise' }}
+
+                        <td>
+                            {% if collectible.franchise %}
+                                {{ collectible.franchise }}
+                            {% else %}
+                                <span class="text-gray-400">—</span>
+                            {% endif %}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">₱{{ collectible.price|number_format(2, '.', ',') }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap flex flex-col sm:flex-row gap-1">
-                            <button
-                                class="px-3 py-1 bg-[#d4af37] text-gray-900 font-semibold rounded-md hover:bg-yellow-400 transition"
-                                data-modal-target="detailModal"
-                                data-image="{{ asset('uploads/collectibles/' ~ collectible.image) }}"
-                                data-name="{{ collectible.name }}"
-                                data-description="{{ collectible.description }}"
-                                data-price="{{ collectible.price }}"
-                                data-category="{{ collectible.category ? collectible.category.name : '' }}"
-                                data-franchise="{{ collectible.franchise ?: '' }}">
-                                Show
-                            </button>
-                            <a href="{{ path('app_collectible_edit', {'id': collectible.id}) }}"
-                               class="px-3 py-1 bg-[#d4af37] text-gray-900 font-semibold rounded-md hover:bg-yellow-400 transition">
-                               Edit
-                            </a>
+                        <td>
+                            <div class="crud-btn-group" style="display: flex; flex-wrap: nowrap; gap: 6px; align-items: center;">
+                                <a href="{{ path('app_collectible_show', {'id': collectible.id}) }}"
+                                   class="crud-btn crud-btn-secondary crud-btn-small">
+                                    View
+                                </a>
+                                <a href="{{ path('app_collectible_edit', {'id': collectible.id}) }}"
+                                   class="crud-btn crud-btn-secondary crud-btn-small">
+                                    Edit
+                                </a>
+                                <form method="post" 
+                                      action="{{ path('app_collectible_delete', {'id': collectible.id}) }}" 
+                                      onsubmit="return confirm('Are you sure you want to delete this collectible? This action cannot be undone.');"
+                                      style="display: inline-block; margin: 0; flex-shrink: 0;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ collectible.id) }}">
+                                    <button type="submit" class="crud-btn crud-btn-danger crud-btn-small" style="padding: 4px 10px; font-size: 12px;">Delete</button>
+                                </form>
+                            </div>
                         </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="8" class="px-6 py-4 text-center text-gray-400">No collectibles found</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
-
-    <div class="mt-6 text-center">
-        <a href="{{ path('app_collectible_new') }}"
-           class="inline-block px-6 py-3 bg-[#d4af37] text-gray-900 font-bold rounded-lg hover:bg-yellow-400 transition">
-            ＋ Create New Collectible
-        </a>
-    </div>
 </div>
-
-{# === Modal Layout === #}
-<div id="detailModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
-  <div class="bg-[#1f1f21] rounded-xl w-full max-w-5xl flex gap-4 p-4 relative max-h-[90vh] overflow-hidden scale-0 transform transition-transform duration-300">
-
-    <!-- Image -->
-    <div class="flex-shrink-0 w-1/2 h-full flex items-center justify-center bg-[#141415] rounded-md overflow-hidden">
-      <img id="modalImage" class="w-full max-h-[60vh] object-contain rounded-md mb-4" src="" alt="Collectible Image">
-    </div>
-
-    <!-- Info & buttons -->
-    <div class="flex flex-col flex-grow justify-between p-2 overflow-y-auto">
-      <button id="modalClose" class="self-end text-gray-400 hover:text-[#d4af37] text-2xl mb-2">&times;</button>
-
-      <div>
-        <h3 id="modalName" class="text-2xl font-bold text-[#d4af37] mb-2"></h3>
-        <p id="modalDescription" class="text-gray-300 text-sm mb-4"></p>
-        <p id="modalPrice" class="text-gray-400 text-xs mb-2">Price: <span class="font-bold text-[#d4af37]"></span></p>
-        <p id="modalCategory" class="text-gray-400 text-xs mb-2">Category: <span class="font-bold text-[#d4af37]"></span></p>
-        <p id="modalFranchise" class="text-gray-400 text-xs mb-2">Franchise: <span class="font-bold text-[#d4af37]"></span></p>
-      </div>
-
-      <div class="flex gap-2 mt-4">
-        <a id="editButton" href="#" class="hidden bg-[#2a2a2d] text-[#d4af37] border border-[#d4af37]/40 px-4 py-2 rounded-md font-semibold hover:bg-[#d4af37] hover:text-black text-center">
-          Edit Collectible
-        </a>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-document.querySelectorAll('button[data-modal-target]').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const target = btn.getAttribute('data-modal-target');
-        const modal = document.getElementById(target);
-        const modalContent = modal.querySelector('div');
-
-        modal.querySelector('#modalImage').src = btn.dataset.image;
-        modal.querySelector('#modalName').textContent = btn.dataset.name;
-        modal.querySelector('#modalDescription').textContent = btn.dataset.description;
-        modal.querySelector('#modalPrice span').textContent = btn.dataset.price ? `₱${parseFloat(btn.dataset.price).toFixed(2)}` : 'N/A';
-        modal.querySelector('#modalCategory span').textContent = btn.dataset.category || 'No Category';
-        modal.querySelector('#modalFranchise span').textContent = btn.dataset.franchise || 'No Franchise';
-
-        modal.classList.remove('hidden');
-        setTimeout(()=> modalContent.classList.add('scale-100'), 10);
-
-        function closeModal() {
-            modalContent.classList.remove('scale-100');
-            setTimeout(()=> modal.classList.add('hidden'), 200);
-        }
-
-        modal.querySelector('#modalClose').onclick = closeModal;
-        modal.addEventListener('click', e => { if(e.target === modal) closeModal(); });
-        document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
-    });
-});
-</script>
-
-<style>
-.scale-0 { transform: scale(0); }
-.scale-100 { transform: scale(1); transition: transform 0.3s ease; }
-</style>
-
 {% endblock %}

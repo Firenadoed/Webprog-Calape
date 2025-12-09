@@ -1,48 +1,34 @@
-{{ form_start(form) }}
-    {{ form_widget(form) }}
-    <button class="btn">{{ button_label|default('Save') }}</button>
-{{ form_end(form) }}
-{{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
+{{ form_start(form, {'attr': {'id': 'listing-form', 'enctype': 'multipart/form-data'}}) }}
+
 <div>
-    {{ form_label(form.franchise, 'Franchise:', {'label_attr': {'class': 'form-label'}}) }}
-    {{ form_widget(form.franchise, {'attr': {'class': 'form-control', 'placeholder': 'Enter collectible name'}}) }}
-    {{ form_errors(form.franchise) }}
+    {{ form_label(form.user, 'User:', {'label_attr': {'class': 'form-label'}}) }}
+    {{ form_widget(form.user, {'attr': {'class': 'form-control user-select'}}) }}
+    {{ form_errors(form.user) }}
+</div>
+
+{# Collectible container for AJAX updates - will be replaced #}
+<div id="collectible-container">
+    {{ form_label(form.collectible, 'Collectible:', {'label_attr': {'class': 'form-label'}}) }}
+    {{ form_widget(form.collectible, {'attr': {'class': 'form-control collectible-select'}}) }}
+    {{ form_errors(form.collectible) }}
 </div>
 
 <div>
-    {{ form_label(form.name, 'Name:', {'label_attr': {'class': 'form-label'}}) }}
-    {{ form_widget(form.name, {'attr': {'class': 'form-control', 'placeholder': 'Enter collectible name'}}) }}
-    {{ form_errors(form.name) }}
-</div>
-
-<div>
-    {{ form_label(form.description, 'Description:', {'label_attr': {'class': 'form-label'}}) }}
-    {{ form_widget(form.description, {
-        'attr': {
-            'class': 'form-control',
-            'placeholder': 'Enter a short description',
-            'style': 'height:100px;'
-        }
-    }) }}
-    {{ form_errors(form.description) }}
+    {{ form_label(form.grade, 'Grade:', {'label_attr': {'class': 'form-label'}}) }}
+    {{ form_widget(form.grade, {'attr': {'class': 'form-control', 'placeholder': 'Enter Grade'}}) }}
+    {{ form_errors(form.grade) }}
 </div>
 
 <div>
     {{ form_label(form.price, 'Price:', {'label_attr': {'class': 'form-label'}}) }}
-    {{ form_widget(form.price, {'attr': {'class': 'form-control', 'placeholder': 'Enter price in PHP'}}) }}
+    {{ form_widget(form.price, {'attr': {'class': 'form-control', 'placeholder': 'Enter Price'}}) }}
     {{ form_errors(form.price) }}
 </div>
 
 <div>
-    {{ form_label(form.category, 'Category:', {'label_attr': {'class': 'form-label'}}) }}
-    {{ form_widget(form.category, {'attr': {'class': 'form-control'}}) }}
-    {{ form_errors(form.category) }}
-</div>
-
-<div>
-    {{ form_label(form.image, 'Image:', {'label_attr': {'class': 'form-label'}}) }}
-    {{ form_widget(form.image, {'attr': {'class': 'form-control'}}) }}
-    {{ form_errors(form.image) }}
+    {{ form_label(form.is_for_sale, 'Status:', {'label_attr': {'class': 'form-label'}}) }}
+    {{ form_widget(form.is_for_sale, {'attr': {'class': 'form-control'}}) }}
+    {{ form_errors(form.is_for_sale) }}
 </div>
 
 <button class="btn">{{ button_label|default('Save') }}</button>

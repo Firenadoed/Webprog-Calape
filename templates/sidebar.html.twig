@@ -1,0 +1,98 @@
+{# templates/admin/base-admin.html.twig #}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Panel{% endblock %}</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="{{ asset('images/Collectiv-Logo.png') }}">
+    
+    {% block stylesheets %}
+      {{ encore_entry_link_tags('app') }}
+      <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
+    {% endblock %}
+  </head>
+
+  <body class="admin-container">
+    <!-- FIXED Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="admin-logo-container">
+        <img src="{{ asset('images/collectiv-logo.png') }}" alt="Collectiv Logo" class="admin-logo">
+        <h2 class="admin-title">COLLECTIV</h2>
+      </div>
+
+      <nav class="admin-nav">
+        {# Admin-only links (ROLE_ADMIN) #}
+        {% if is_granted('ROLE_ADMIN') %}
+          <a href="{{ path('admin_dashboard') }}" class="admin-nav-link" data-turbo="false">
+            <span>📊</span> Dashboard
+          </a>
+          <a href="{{ path('app_user_index') }}" class="admin-nav-link" data-turbo="false">
+            <span>👥</span> Collectors (Admin)
+          </a>
+          <a href="{{ path('admin_logs_index') }}" class="admin-nav-link" data-turbo="false">
+            <span>📝</span> Activity Log (Admin)
+          </a>
+        {% endif %}
+
+        {# Admin & Staff links (ROLE_ADMIN or ROLE_STAFF) #}
+        {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_STAFF') %}
+          <a href="{{ path('app_collectible_index') }}" class="admin-nav-link" data-turbo="false">
+            <span>🏺</span> Collectibles
+          </a>
+          <a href="{{ path('app_listing_index') }}" class="admin-nav-link" data-turbo="false">
+            <span>📋</span> Listings
+          </a>
+        {% endif %}
+      </nav>
+
+      {# Bottom section - fixed at bottom of sidebar #}
+      <div class="admin-user-section">
+        <div class="admin-user-info">
+          <div class="admin-user-label">Logged in as:</div>
+          <div class="admin-user-name">
+            {{ app.user.username }}
+            <span class="admin-role-badge admin-role-{{ is_granted('ROLE_ADMIN') ? 'admin' : 'staff' }}">
+              {{ is_granted('ROLE_ADMIN') ? 'ADMIN' : 'STAFF' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="admin-bottom-links">
+          <a href="{{ path('collection') }}" class="admin-nav-link admin-collection-link">
+            Profile
+          </a>
+          <a href="{{ path('home') }}" class="admin-nav-link admin-home-link">
+            Back to Home
+          </a>
+          <a href="{{ path('app_logout') }}" class="admin-nav-link admin-logout-link">
+            Logout
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Scrollable Main content -->
+    <main class="admin-main-content">
+      {# FLASH MESSAGES #}
+      <div class="flash-messages-container">
+        {% for label, messages in app.flashes(['success', 'error', 'info', 'warning']) %}
+          {% for message in messages %}
+            <div class="flash-message flash-{{ label }}">
+              {{ message }}
+              <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+            </div>
+          {% endfor %}
+        {% endfor %}
+      </div>
+
+      {% block body %}{% endblock %}
+    </main>
+
+    {% block javascripts %}
+      {{ encore_entry_script_tags('app') }}
+    {% endblock %}
+  </body>
+</html>

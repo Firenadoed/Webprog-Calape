@@ -1,19 +1,17 @@
-{% extends 'admin/base-admin.html.twig' %}
-{% block title %}Edit Collectible{% endblock %}
+{% extends 'sidebar.html.twig' %}
+
+{% block title %}Edit User{% endblock %}
 
 {% block body %}
-<div class="flex items-center justify-center min-h-screen bg-[#1B1B1D]">
+<div class="page-container">
     <div class="form-container">
-        <h2 class="text-[#d4af37] text-2xl font-bold mb-6 text-center">Edit Collectible</h2>
+    <h1>Edit User</h1>
 
-        {{ include('user/_form.html.twig', {'button_label': 'Update'}) }}
+    {{ include('user/_form.html.twig', {'button_label': 'Update'}) }}
 
-        {# Add some spacing before delete button #}
-        <div class="mt-4">
-            {{ include('user/_delete_form.html.twig') }}
-        </div>
+   <a href="{{ path('app_user_index') }}" class="back-link">Back to list</a>
 
-        <a href="{{ path('app_user_index') }}" class="back-link mt-4 block">← Back to list</a>
-    </div>
+    {{ include('user/_delete_form.html.twig') }}
+     </div>
 </div>
 {% endblock %}

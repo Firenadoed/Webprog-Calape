@@ -8,11 +8,6 @@ use Doctrine\Persistence\ManagerRegistry;
 
 /**
  * @extends ServiceEntityRepository<Collectible>
- *
- * @method Collectible|null find($id, $lockMode = null, $lockVersion = null)
- * @method Collectible|null findOneBy(array $criteria, array $orderBy = null)
- * @method Collectible[]    findAll()
- * @method Collectible[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
 class CollectibleRepository extends ServiceEntityRepository
 {
@@ -21,34 +16,52 @@ class CollectibleRepository extends ServiceEntityRepository
         parent::__construct($registry, Collectible::class);
     }
 
-    /**
-     * Finds collectibles based on search term and category.
-     *
-     * @param string|null $searchTerm
-     * @param int|string|null $categoryId
-     * @return Collectible[] Returns an array of Collectible objects
-     */
-    public function findByFilters(?string $searchTerm, $categoryId): array
-    {
-        $qb = $this->createQueryBuilder('c');
+//    /**
+//     * @return Collectible[] Returns an array of Collectible objects
+//     */
+//    public function findByExampleField($value): array
+//    {
+//        return $this->createQueryBuilder('c')
+//            ->andWhere('c.exampleField = :val')
+//            ->setParameter('val', $value)
+//            ->orderBy('c.id', 'ASC')
+//            ->setMaxResults(10)
+//            ->getQuery()
+//            ->getResult()
+//        ;
+//    }
 
-        // Apply search filter
-        if ($searchTerm) {
-            $qb->andWhere('c.name LIKE :searchTerm OR c.description LIKE :searchTerm')
-               ->setParameter('searchTerm', '%' . $searchTerm . '%');
-        }
+//    public function findOneBySomeField($value): ?Collectible
+//    {
+//        return $this->createQueryBuilder('c')
+//            ->andWhere('c.exampleField = :val')
+//            ->setParameter('val', $value)
+//            ->getQuery()
+//            ->getOneOrNullResult()
+//        ;
+//    }
 
-        // Apply category filter
-        if ($categoryId && $categoryId !== '') { // Check if categoryId is not empty string
-            $qb->andWhere('c.category = :categoryId')
-               ->setParameter('categoryId', $categoryId);
-        }
 
-        // Order by ID by default, or any other preference
-        $qb->orderBy('c.id', 'ASC');
-
-        return $qb->getQuery()->getResult();
+// src/Repository/CollectibleRepository.php
+public function findByUser($user): array
+{
+    // Check if $user is an ID (integer) or User entity
+    if (is_numeric($user)) {
+        return $this->createQueryBuilder('c')
+            ->where('c.user = :userId')
+            ->setParameter('userId', $user)
+            ->orderBy('c.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    } else {
+        // $user is a User entity
+        return $this->createQueryBuilder('c')
+            ->where('c.user = :user')
+            ->setParameter('user', $user)
+            ->orderBy('c.name', 'ASC')
+            ->getQuery()
+            ->getResult();
     }
+}
 
-    // ... (your existing methods) ...
 }
