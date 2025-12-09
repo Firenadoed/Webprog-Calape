@@ -8,6 +8,7 @@ use App\Form\CollectibleType;
 use App\Form\AddCollectibleType;
 use App\Repository\CollectibleRepository;
 use App\Repository\ListingRepository;
+use App\Service\ActivityLogger;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -67,7 +68,8 @@ class HomeController extends AbstractController
     public function add(
         Request $request,
         EntityManagerInterface $em,
-        SluggerInterface $slugger
+        SluggerInterface $slugger,
+        ActivityLogger $logger
     ): Response {
         $collectible = new Collectible();
         
@@ -123,6 +125,16 @@ class HomeController extends AbstractController
             
             $em->persist($collectible);
             $em->flush();
+
+            // Log collectible creation
+            $logger->log(
+                $user,
+                'CREATE_COLLECTIBLE',
+                'Created collectible: ' . $collectible->getName() . 
+                ' (ID: ' . $collectible->getId() . ') - ' .
+                'Category: ' . $collectible->getCategory() . ' - ' .
+                'Franchise: ' . $collectible->getFranchise()
+            );
 
             $this->addFlash('success', 'Collectible added successfully!');
             return $this->redirectToRoute('collection');
@@ -210,7 +222,12 @@ class HomeController extends AbstractController
     }
 
     #[Route('/collection/delete/{id}', name: 'collectible_delete', methods: ['POST'])]
-    public function delete(Collectible $collectible, Request $request, EntityManagerInterface $em): JsonResponse
+    public function delete(
+        Collectible $collectible, 
+        Request $request, 
+        EntityManagerInterface $em,
+        ActivityLogger $logger
+    ): JsonResponse
     {
         $token = $request->request->get('_token');
         if (!$this->isCsrfTokenValid('delete'.$collectible->getId(), $token)) {
@@ -223,6 +240,16 @@ class HomeController extends AbstractController
             $user = $userRepository->find(1);
         }
 
+        // Log before deletion
+        $logger->log(
+            $user,
+            'DELETE_COLLECTIBLE',
+            'Deleted collectible: ' . $collectible->getName() . 
+            ' (ID: ' . $collectible->getId() . ') - ' .
+            'Category: ' . $collectible->getCategory() . ' - ' .
+            'Franchise: ' . $collectible->getFranchise()
+        );
+
         $em->remove($collectible);
         $em->flush();
 
@@ -234,7 +261,8 @@ class HomeController extends AbstractController
         Request $request, 
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher,
-        SluggerInterface $slugger
+        SluggerInterface $slugger,
+        ActivityLogger $logger
     ): JsonResponse {
         $user = $this->getUser();
         
@@ -251,6 +279,9 @@ class HomeController extends AbstractController
         $currentPassword = $request->request->get('currentPassword');
         $newPassword = $request->request->get('newPassword');
         $confirmPassword = $request->request->get('confirmPassword');
+        
+        // Track changes for logging
+        $changes = [];
         
         if ($currentPassword || $newPassword || $confirmPassword) {
             if (empty($currentPassword) || empty($newPassword) || empty($confirmPassword)) {
@@ -297,9 +328,17 @@ class HomeController extends AbstractController
             
             $hashedPassword = $passwordHasher->hashPassword($user, $newPassword);
             $user->setPassword($hashedPassword);
+            $changes[] = 'password changed';
             
             try {
                 $entityManager->flush();
+                
+                // Log password change
+                $logger->log(
+                    $user,
+                    'UPDATE_PROFILE',
+                    'User changed password'
+                );
                 
                 return new JsonResponse([
                     'success' => true,
@@ -328,8 +367,17 @@ class HomeController extends AbstractController
             ]);
         }
         
-        $user->setUsername($username);
-        $user->setBio($bio);
+        // Check for username change
+        if ($user->getUsername() !== $username) {
+            $changes[] = 'username changed from "' . $user->getUsername() . '" to "' . $username . '"';
+            $user->setUsername($username);
+        }
+        
+        // Check for bio change
+        if ($user->getBio() !== $bio) {
+            $changes[] = 'bio updated';
+            $user->setBio($bio);
+        }
         
         if ($profileImageFile) {
             if ($profileImageFile->getSize() > 2 * 1024 * 1024) {
@@ -363,6 +411,7 @@ class HomeController extends AbstractController
                 }
                 
                 $user->setProfileImage($newFilename);
+                $changes[] = 'profile image updated';
             } catch (FileException $e) {
                 return new JsonResponse([
                     'success' => false,
@@ -371,8 +420,22 @@ class HomeController extends AbstractController
             }
         }
         
+        if (empty($changes)) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'No changes were made.'
+            ]);
+        }
+        
         try {
             $entityManager->flush();
+            
+            // Log profile update
+            $logger->log(
+                $user,
+                'UPDATE_PROFILE',
+                'User updated profile: ' . implode(', ', $changes)
+            );
             
             return new JsonResponse([
                 'success' => true,

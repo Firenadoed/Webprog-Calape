@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Collectible;
 use App\Entity\Listing;
+use App\Service\ActivityLogger;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,7 +16,12 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 final class ListingAddController extends AbstractController
 {
     #[Route('/add', name: 'listing_add', methods: ['POST'])]
-    public function add(Request $request, EntityManagerInterface $em, CsrfTokenManagerInterface $csrf): JsonResponse
+    public function add(
+        Request $request, 
+        EntityManagerInterface $em, 
+        CsrfTokenManagerInterface $csrf,
+        ActivityLogger $logger
+    ): JsonResponse
     {
         $collectibleId = $request->request->get('collectible_id');
         $grade = $request->request->get('grade');
@@ -78,6 +84,13 @@ final class ListingAddController extends AbstractController
         $em->persist($listing);
         $em->flush();
 
+        // Log the listing creation using ActivityLogger service
+        $logger->log(
+            $currentUser,
+            'CREATE_LISTING',
+            'Listing created: ' . $collectible->getName() . ' (Collectible ID: ' . $collectible->getId() . ') - Price: ₱' . $price . ' - Grade: ' . ($grade ?: 'N/A')
+        );
+
         $deleteToken = $csrf->getToken('delete' . $listing->getId())->getValue();
 
         return new JsonResponse([
@@ -89,7 +102,12 @@ final class ListingAddController extends AbstractController
     }
 
     #[Route('/delete/{id}', name: 'listing_remove', methods: ['POST'])]
-    public function delete(Request $request, int $id, EntityManagerInterface $em): JsonResponse
+    public function delete(
+        Request $request, 
+        int $id, 
+        EntityManagerInterface $em,
+        ActivityLogger $logger
+    ): JsonResponse
     {
         $listing = $em->getRepository(Listing::class)->find($id);
 
@@ -114,6 +132,18 @@ final class ListingAddController extends AbstractController
                 'message' => 'Invalid CSRF token.'
             ]);
         }
+
+        // Store info before deletion
+        $collectibleName = $listing->getCollectible()->getName();
+        $collectibleId = $listing->getCollectible()->getId();
+        $price = $listing->getPrice();
+
+        // Log before deletion
+        $logger->log(
+            $currentUser,
+            'DELETE_LISTING',
+            'Listing deleted: ' . $collectibleName . ' (Collectible ID: ' . $collectibleId . ') - Price: ₱' . $price
+        );
 
         $em->remove($listing);
         $em->flush();
