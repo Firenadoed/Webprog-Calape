@@ -49,6 +49,7 @@ security:
         - { path: ^/collection, roles: IS_AUTHENTICATED }
         - { path: ^/explore, roles: IS_AUTHENTICATED }
         - { path: ^/logout, roles: IS_AUTHENTICATED }
+
         
 when@test:
     security:

@@ -68,7 +68,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->collectibles = new ArrayCollection();
         $this->listings = new ArrayCollection();
-        $this->createdAt = new \DateTimeImmutable();
+        $this->createdAt = new \DateTimeImmutable('now', new \DateTimeZone('Asia/Manila'));
     }
 
     public function getId(): ?int

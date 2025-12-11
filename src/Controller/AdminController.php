@@ -23,9 +23,8 @@ final class AdminController extends AbstractController
         
         $totalStaff = $userRepo->createQueryBuilder('u')
             ->select('COUNT(u.id)')
-            ->where('u.roles LIKE :role_staff OR u.roles LIKE :role_admin')
+            ->where('u.roles LIKE :role_staff')
             ->setParameter('role_staff', '%ROLE_STAFF%')
-            ->setParameter('role_admin', '%ROLE_ADMIN%')
             ->getQuery()
             ->getSingleScalarResult();
         

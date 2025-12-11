@@ -40,7 +40,7 @@
         {# User is logged in - show Logout #}
         <div class="base-user-section">
           <span class="base-welcome-text">Welcome, {{ app.user.username }}</span>
-          <a href="{{ path('app_logout') }}" class="base-logout-button">
+          <a href="{{ path('app_logout') }}" class="base-logout-button" data-turbo="false">
             Log Out
           </a>
         </div>
