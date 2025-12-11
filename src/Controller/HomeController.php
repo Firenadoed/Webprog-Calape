@@ -3,10 +3,12 @@
 namespace App\Controller;
 
 use App\Entity\Collectible;
+use App\Entity\Order;
 use App\Entity\Listing;
 use App\Form\CollectibleType;
 use App\Form\AddCollectibleType;
 use App\Repository\CollectibleRepository;
+use App\Repository\OrderRepository;
 use App\Repository\ListingRepository;
 use App\Service\ActivityLogger;
 use Doctrine\ORM\EntityManagerInterface;
@@ -27,10 +29,11 @@ class HomeController extends AbstractController
         return $this->render('home/index.html.twig');
     }
 
-    #[Route('/collection', name: 'collection')]
+  #[Route('/collection', name: 'collection')]
     public function collection(
         CollectibleRepository $collectibleRepository,
-        ListingRepository $listingRepository
+        ListingRepository $listingRepository,
+        OrderRepository $orderRepository
     ): Response {
         $user = $this->getUser();
         if (!$user) {
@@ -38,6 +41,7 @@ class HomeController extends AbstractController
             $user = $userRepository->find(1);
         }
 
+        // Get user's collectibles grouped by category
         $userCollectibles = $collectibleRepository->findBy(['user' => $user]);
 
         $cards = array_filter($userCollectibles, fn($c) => strtolower($c->getCategory()) === 'cards');
@@ -48,11 +52,34 @@ class HomeController extends AbstractController
             !in_array(strtolower($c->getCategory()), ['cards', 'figures', 'games', 'artworks'])
         );
 
+        // Get listing map for collectibles
         $allListings = $listingRepository->findBy(['is_for_sale' => true]);
         $listingMap = [];
         foreach ($allListings as $listing) {
-            $listingMap[$listing->getCollectible()->getId()] = $listing->getId();
+            if ($listing->getCollectible()) {
+                $listingMap[$listing->getCollectible()->getId()] = $listing->getId();
+            }
         }
+
+        // Get user's active listings
+        $myListings = $listingRepository->findBy([
+            'user' => $user,
+            'is_for_sale' => true
+        ], ['id' => 'DESC']);
+
+        // Get incoming orders (orders for user's listings)
+        $incomingOrders = $orderRepository->createQueryBuilder('o')
+            ->join('o.listing', 'l')
+            ->where('l.user = :user')
+            ->setParameter('user', $user)
+            ->orderBy('o.orderedAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        // Get user's own orders (orders placed by user)
+        $myOrders = $orderRepository->findBy([
+            'buyer' => $user
+        ], ['orderedAt' => 'DESC']);
 
         return $this->render('home/collection.html.twig', [
             'cards' => $cards,
@@ -61,8 +88,12 @@ class HomeController extends AbstractController
             'artworks' => $artworks,
             'others' => $others,
             'listingMap' => $listingMap,
+            'my_listings' => $myListings,
+            'incoming_orders' => $incomingOrders,
+            'my_orders' => $myOrders,
         ]);
     }
+
 
     #[Route('/collection/add', name: 'collection_add')]
     public function add(
@@ -454,5 +485,44 @@ class HomeController extends AbstractController
             ]);
         }
     }
-   
+   // In HomeController.php
+#[Route('/my-listings', name: 'my_listings')]
+public function myListings(
+    ListingRepository $listingRepository,
+    OrderRepository $orderRepository
+): Response
+{
+    $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+    
+    $user = $this->getUser();
+    
+    // Get user's active listings
+    $myListings = $listingRepository->findBy([
+        'user' => $user,
+        'is_for_sale' => true
+    ], ['id' => 'DESC']);
+    
+    // Get incoming orders (orders for user's listings)
+    $incomingOrders = $orderRepository->createQueryBuilder('o')
+        ->join('o.listing', 'l')
+        ->where('l.user = :user')
+        ->setParameter('user', $user)
+        ->orderBy('o.orderedAt', 'DESC')
+        ->getQuery()
+        ->getResult();
+    
+    // Get user's purchases (orders where user is the buyer)
+    $myPurchases = $orderRepository->createQueryBuilder('o')
+        ->where('o.buyer = :user')
+        ->setParameter('user', $user)
+        ->orderBy('o.orderedAt', 'DESC')
+        ->getQuery()
+        ->getResult();
+    
+    return $this->render('home/my_listings.html.twig', [
+        'my_listings' => $myListings,
+        'incoming_orders' => $incomingOrders,
+        'my_purchases' => $myPurchases, // Add this line
+    ]);
+}
 }

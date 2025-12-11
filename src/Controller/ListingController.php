@@ -42,18 +42,18 @@ final class ListingController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $listing->setCreatedBy($this->getUser());
-            
-            $entityManager->persist($listing);
-            $entityManager->flush();
+    $listing->setCreatedBy($this->getUser());
+    
+    $entityManager->persist($listing);
+    $entityManager->flush();
 
-            $currentUser = $this->getUser();
-            $logger->log($currentUser, 'CREATE_LISTING',
-                'Created listing: ' . $listing->getTitle() . ' (ID: ' . $listing->getId() . ')'
-            );
+    $currentUser = $this->getUser();
+    $logger->log($currentUser, 'CREATE_LISTING',
+        'Created listing for: ' . $listing->getCollectible()->getName() . ' (ID: ' . $listing->getId() . ')'
+    );
 
-            return $this->redirectToRoute('app_listing_index', [], Response::HTTP_SEE_OTHER);
-        }
+    return $this->redirectToRoute('app_listing_index', [], Response::HTTP_SEE_OTHER);
+}
 
         return $this->render('listing/new.html.twig', [
             'listing' => $listing,
@@ -87,12 +87,12 @@ final class ListingController extends AbstractController
         $form = $this->createForm(ListingType::class, $listing);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
+            if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
 
             $currentUser = $this->getUser();
             $logger->log($currentUser, 'UPDATE_LISTING',
-                'Updated listing: ' . $listing->getTitle() . ' (ID: ' . $listing->getId() . ')'
+                'Updated listing for: ' . $listing->getCollectible()->getName() . ' (ID: ' . $listing->getId() . ')'
             );
 
             return $this->redirectToRoute('app_listing_index', [], Response::HTTP_SEE_OTHER);
@@ -104,44 +104,47 @@ final class ListingController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}', name: 'app_listing_delete', methods: ['POST'])]
-    public function delete(
-        Request $request, 
-        Listing $listing, 
-        EntityManagerInterface $entityManager,
-        ActivityLogger $logger
-    ): Response
-    {
-        if ($this->isGranted('ROLE_STAFF') && !$this->isGranted('ROLE_ADMIN')) {
-            if ($listing->getCreatedBy() !== $this->getUser()) {
-                $this->addFlash('error', 'You can only delete your own listings!');
-                $response = $this->redirectToRoute('app_listing_index', [], Response::HTTP_SEE_OTHER);
-                $response->headers->set('Turbo-Location', 'false');
-                return $response;
-            }
-        }
-
-        if ($listing->getCreatedBy() !== $this->getUser()) {
-            $this->addFlash('error', 'You can only delete your own listings!');
-            $response = $this->redirectToRoute('app_listing_index', [], Response::HTTP_SEE_OTHER);
-            $response->headers->set('Turbo-Location', 'false');
-            return $response;
-        }
-
-        if ($this->isCsrfTokenValid('delete'.$listing->getId(), $request->getPayload()->getString('_token'))) {
-            $currentUser = $this->getUser();
-            $logger->log($currentUser, 'DELETE_LISTING',
-                'Deleted listing: ' . $listing->getTitle() . ' (ID: ' . $listing->getId() . ')'
-            );
-            
-            $entityManager->remove($listing);
-            $entityManager->flush();
-            
-            $this->addFlash('success', 'Listing deleted successfully!');
-        }
-
+  #[Route('/{id}', name: 'app_listing_delete', methods: ['POST'])]
+public function delete(
+    Request $request, 
+    Listing $listing, 
+    EntityManagerInterface $entityManager,
+    ActivityLogger $logger
+): Response
+{
+    // Check if user has permission to delete
+    $canDelete = false;
+    
+    // Admin can delete any listing
+    if ($this->isGranted('ROLE_ADMIN')) {
+        $canDelete = true;
+    }
+    // Staff can only delete their own listings
+    elseif ($this->isGranted('ROLE_STAFF') && $listing->getCreatedBy() === $this->getUser()) {
+        $canDelete = true;
+    }
+    
+    if (!$canDelete) {
+        $this->addFlash('error', 'You do not have permission to delete this listing!');
         $response = $this->redirectToRoute('app_listing_index', [], Response::HTTP_SEE_OTHER);
         $response->headers->set('Turbo-Location', 'false');
         return $response;
     }
+
+if ($this->isCsrfTokenValid('delete'.$listing->getId(), $request->getPayload()->getString('_token'))) {
+    $currentUser = $this->getUser();
+    
+    $logger->log($currentUser, 'DELETE_LISTING',
+        'Deleted listing for: ' . $listing->getCollectible()->getName() . ' (ID: ' . $listing->getId() . ')'
+    );
+    
+    $entityManager->remove($listing);
+    $entityManager->flush();
+    
+    $this->addFlash('success', 'Listing deleted successfully!');
+}
+    $response = $this->redirectToRoute('app_listing_index', [], Response::HTTP_SEE_OTHER);
+    $response->headers->set('Turbo-Location', 'false');
+    return $response;
+}
 }

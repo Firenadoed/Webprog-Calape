@@ -15,6 +15,7 @@ import './styles/collection.css';
 import './styles/profile.css';
 import './styles/logs.css';
 import './styles/useractions.css';
+import './styles/listings.css';
 
 import './js/collectible.js';
 import './js/collection.js';

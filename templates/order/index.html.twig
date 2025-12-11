@@ -1,0 +1,116 @@
+{% extends 'sidebar.html.twig' %}
+
+{% block title %}Order Management{% endblock %}
+
+{% block body %}
+<div class="crud-page-container">
+<meta name="turbo-visit-control" content="reload">
+    <div class="crud-page-header">
+        <h1 class="crud-page-title">Order Management</h1>
+        
+        <div class="crud-page-actions">
+            <a href="{{ path('app_order_new') }}" class="crud-btn crud-btn-create">＋ New Order</a>
+        </div>
+    </div>
+
+    {# === Orders Table === #}
+    <div class="crud-table-wrapper">
+        <div class="crud-table-scroll">
+            <table id="orderManagementTable" class="crud-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Collectible</th>
+                        <th>Buyer</th>
+                        <th>Seller</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>{{ order.id }}</td>
+                        <td>
+                            <div class="collectible-info">
+                                <strong>{{ order.collectibleName }}</strong>
+                            </div>
+                        </td>
+                        <td>
+                            {% if order.buyer %}
+                                <strong>{{ order.buyer.username }}</strong>
+                                <small class="text-gray-400">(ID: {{ order.buyer.id }})</small>
+                            {% else %}
+                                <span class="text-gray-400">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if order.seller %}
+                                <strong>{{ order.seller.username }}</strong>
+                                <small class="text-gray-400">(ID: {{ order.seller.id }})</small>
+                            {% else %}
+                                <span class="text-gray-400">—</span>
+                            {% endif %}
+                        </td>
+                        <td>₱{{ order.purchasePrice|number_format(2) }}</td>
+                        <td>
+                            {% if order.status == 'pending' %}
+                                <span class="crud-badge crud-badge-warning">Pending</span>
+                            {% elseif order.status == 'confirmed' %}
+                                <span class="crud-badge crud-badge-info">Confirmed</span>
+                            {% elseif order.status == 'completed' %}
+                                <span class="crud-badge crud-badge-success">Completed</span>
+                            {% elseif order.status == 'cancelled' %}
+                                <span class="crud-badge crud-badge-danger">Cancelled</span>
+                            {% else %}
+                                <span class="crud-badge">{{ order.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="crud-btn-group">
+                                {# Check if staff can edit/delete this order #}
+                                {% set canEditDelete = is_granted('ROLE_ADMIN') or (is_granted('ROLE_STAFF') and order.createdBy and order.createdBy.id == app.user.id) %}
+                                
+                                {% if canEditDelete %}
+                                    {# Staff can edit/delete their own orders, Admin can edit/delete all #}
+                                    <a href="{{ path('app_order_edit', {'id': order.id}) }}"
+                                       class="crud-btn crud-btn-secondary crud-btn-small">
+                                        Edit
+                                    </a>
+                                    <form method="post" 
+                                          action="{{ path('app_order_delete', {'id': order.id}) }}" 
+                                          onsubmit="return confirm('Are you sure you want to delete this order? This action cannot be undone.');"
+                                          style="display: inline; margin: 0;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ order.id) }}">
+                                        <button type="submit" class="crud-btn crud-btn-danger crud-btn-small">Delete</button>
+                                    </form>
+                                {% else %}
+                                    {# Staff cannot edit/delete other staff's orders #}
+                                    <button class="crud-btn crud-btn-secondary crud-btn-small" disabled 
+                                            title="You can only edit orders created by you">
+                                        Edit
+                                    </button>
+                                    <button class="crud-btn crud-btn-danger crud-btn-small" disabled 
+                                            title="You can only delete orders created by you">
+                                        Delete
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center py-8 text-gray-400">
+                            No orders found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

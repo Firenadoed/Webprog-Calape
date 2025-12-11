@@ -3,7 +3,7 @@
 {% block title %}Listing Management{% endblock %}
 
 {% block body %}
-<div class="crud-page-container" >
+<div class="crud-page-container">
 <meta name="turbo-visit-control" content="reload">
     <div class="crud-page-header">
         <h1 class="crud-page-title">Listing Management</h1>
@@ -25,6 +25,7 @@
                         <th>Grade</th>
                         <th>Price</th>
                         <th>For Sale</th>
+                        <th>Created By</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -60,7 +61,7 @@
                                 <span class="text-gray-400">—</span>
                             {% endif %}
                         </td>
-                        <td>${{ listing.price|number_format(2) }}</td>
+                        <td>₱{{ listing.price|number_format(2) }}</td>
                         <td>
                             {% if listing.isForSale %}
                                 <span class="crud-badge crud-badge-active">Yes</span>
@@ -69,23 +70,59 @@
                             {% endif %}
                         </td>
                         <td>
+                            {% if listing.createdBy %}
+                                <strong>{{ listing.createdBy.username }}</strong>
+                                {% if 'ROLE_ADMIN' in listing.createdBy.roles %}
+                                    <small class="text-blue-400">(Admin)</small>
+                                {% elseif 'ROLE_STAFF' in listing.createdBy.roles %}
+                                    <small class="text-green-400">(Staff)</small>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-gray-400">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
                             <div class="crud-btn-group">
+                                {# View button - always enabled #}
                                 <a href="{{ path('app_listing_show', {'id': listing.id}) }}"
                                    class="crud-btn crud-btn-secondary crud-btn-small">
                                     View
                                 </a>
-                                <a href="{{ path('app_listing_edit', {'id': listing.id}) }}"
-                                   class="crud-btn crud-btn-secondary crud-btn-small">
-                                    Edit
-                                </a>
-                                <form method="post" 
-                                      action="{{ path('app_listing_delete', {'id': listing.id}) }}" 
-                                      onsubmit="return confirm('Are you sure you want to delete this listing? This action cannot be undone.');"
-                                      style="display: inline; margin: 0;">
-                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ listing.id) }}">
-                                    <button type="submit" class="crud-btn crud-btn-danger crud-btn-small">Delete</button>
-                                </form>
+                                
+                                {# Check if staff can edit/delete this listing #}
+                                {% set canEditDelete = is_granted('ROLE_ADMIN') or (is_granted('ROLE_STAFF') and listing.createdBy and listing.createdBy.id == app.user.id) %}
+                                
+                                {% if canEditDelete %}
+                                    {# Staff can edit/delete their own listings, Admin can edit/delete all #}
+                                    <a href="{{ path('app_listing_edit', {'id': listing.id}) }}"
+                                       class="crud-btn crud-btn-secondary crud-btn-small">
+                                        Edit
+                                    </a>
+                                    <form method="post" 
+                                          action="{{ path('app_listing_delete', {'id': listing.id}) }}" 
+                                          onsubmit="return confirm('Are you sure you want to delete this listing? This action cannot be undone.');"
+                                          style="display: inline; margin: 0;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ listing.id) }}">
+                                        <button type="submit" class="crud-btn crud-btn-danger crud-btn-small">Delete</button>
+                                    </form>
+                                {% else %}
+                                    {# Staff cannot edit/delete other staff's listings #}
+                                    <button class="crud-btn crud-btn-secondary crud-btn-small" disabled 
+                                            title="You can only edit listings created by you">
+                                        Edit
+                                    </button>
+                                    <button class="crud-btn crud-btn-danger crud-btn-small" disabled 
+                                            title="You can only delete listings created by you">
+                                        Delete
+                                    </button>
+                                {% endif %}
                             </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center py-8 text-gray-400">
+                            No listings found.
                         </td>
                     </tr>
                     {% endfor %}

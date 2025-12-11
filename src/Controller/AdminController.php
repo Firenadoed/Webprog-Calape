@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Repository\UserRepository;
 use App\Repository\CollectibleRepository;
 use App\Repository\ListingRepository;
+use App\Repository\OrderRepository;
 use App\Repository\ActivityLogRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,44 +14,63 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class AdminController extends AbstractController
 {
-    #[Route('/admin', name: 'admin_dashboard')]
+    #[Route('/dashboard', name: 'admin_dashboard')]
     public function index(
         UserRepository $userRepo,
         CollectibleRepository $collectibleRepo,
         ListingRepository $listingRepo,
+        OrderRepository $orderRepo
     ): Response {
+        // Check if user has access
+        if (!$this->isGranted('ROLE_STAFF') && !$this->isGranted('ROLE_ADMIN')) {
+            return $this->redirectToRoute('app_home');
+        }
+
+        // User statistics
         $totalUsers = $userRepo->count([]);
         
         $totalStaff = $userRepo->createQueryBuilder('u')
             ->select('COUNT(u.id)')
-            ->where('u.roles LIKE :role_staff')
+            ->where('u.roles LIKE :role_staff OR u.roles LIKE :role_admin')
             ->setParameter('role_staff', '%ROLE_STAFF%')
+            ->setParameter('role_admin', '%ROLE_ADMIN%')
             ->getQuery()
             ->getSingleScalarResult();
         
+        // Collectible and Listing statistics
         $totalCollectibles = $collectibleRepo->count([]);
         $totalListings = $listingRepo->count([]);
         
-        $totalValue = 0;
-        try {
-            $totalValue = $listingRepo->createQueryBuilder('l')
-                ->select('SUM(l.price)')
-                ->getQuery()
-                ->getSingleScalarResult() ?? 0;
-        } catch (\Exception $e) {
-        }
+        // Order statistics
+        $totalOrders = $orderRepo->count([]);
+        $pendingOrdersCount = $orderRepo->count([
+            'status' => ['pending', 'confirmed']
+        ]);
+        
+        // Get pending orders for the table (only pending and confirmed)
+        $pendingOrders = $orderRepo->createQueryBuilder('o')
+            ->leftJoin('o.buyer', 'b')
+            ->leftJoin('o.seller', 's')
+            ->leftJoin('o.createdBy', 'c')
+            ->where('o.status IN (:statuses)')
+            ->setParameter('statuses', ['pending', 'confirmed'])
+            ->orderBy('o.orderedAt', 'DESC')
+            ->setMaxResults(10)
+            ->getQuery()
+            ->getResult();
 
-        $recentListings = $listingRepo->findBy([], ['id' => 'DESC'], 5);
-        $recentUsers = $userRepo->findBy([], ['id' => 'DESC'], 10);
+        // Recent users (for admin only)
+        $recentUsers = $userRepo->findBy([], ['createdAt' => 'DESC'], 10);
 
-        return $this->render('admin/index.html.twig', [
+        return $this->render('dashboard.html.twig', [
             'title' => 'Admin Dashboard',
             'totalUsers' => $totalUsers,
             'totalStaff' => $totalStaff,
             'totalCollectibles' => $totalCollectibles,
             'totalListings' => $totalListings,
-            'totalValue' => $totalValue,
-            'recentListings' => $recentListings,
+            'totalOrders' => $totalOrders,
+            'pendingOrdersCount' => $pendingOrdersCount,
+            'pendingOrders' => $pendingOrders,
             'recentUsers' => $recentUsers,
         ]);
     }

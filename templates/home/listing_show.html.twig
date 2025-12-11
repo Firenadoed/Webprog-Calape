@@ -1,72 +1,94 @@
+{# templates/home/listing_show.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ listing.collectible.name }} — Collectiv{% endblock %}
+{% block title %}{{ listing.collectible.name }} - Collectiv{% endblock %}
 
 {% block body %}
-<section class="py-16 bg-[#1B1B1D] text-white">
-    <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10">
-        {# --- Product Image --- #}
-        <div>
+<div class="max-w-6xl mx-auto py-16 px-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Left Column: Image -->
+        <div class="bg-[#2b2b2d] rounded-xl overflow-hidden">
             <img src="{{ asset('uploads/collectibles/' ~ listing.collectible.image) }}" 
                  alt="{{ listing.collectible.name }}" 
-                 class="w-full h-auto rounded-lg shadow-lg object-cover">
+                 class="w-full h-auto object-cover rounded-xl">
         </div>
-
-        {# --- Product Details --- #}
-        <div class="flex flex-col justify-between">
-            <div>
-                <h1 class="text-4xl font-bold text-[#d4af37] mb-4">{{ listing.collectible.name }}</h1>
-                <p class="text-gray-300 mb-4">{{ listing.collectible.description }}</p>
-
-                <div class="text-2xl font-semibold text-[#d4af37] mb-6">
-                    ₱{{ listing.price }}
+        
+        <!-- Right Column: Details -->
+        <div class="text-white">
+            <h1 class="text-3xl font-bold text-[#d4af37] mb-2">{{ listing.collectible.name }}</h1>
+            <p class="text-gray-400 mb-4">{{ listing.collectible.category }} • {{ listing.collectible.franchise }}</p>
+            
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold mb-2">Description</h3>
+                <p class="text-gray-300">{{ listing.collectible.description }}</p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-[#1f1f21] p-4 rounded-lg">
+                    <p class="text-gray-400 text-sm">Price</p>
+                    <p class="text-2xl font-bold text-[#d4af37]">₱{{ listing.price|number_format(2) }}</p>
                 </div>
-
-                <div class="space-x-4">
-                    <button class="bg-[#d4af37] text-black font-semibold px-6 py-3 rounded-lg hover:bg-[#c19b2f] transition">
-                        Buy Now
-                    </button>
-                    <button class="border border-[#d4af37] text-[#d4af37] font-semibold px-6 py-3 rounded-lg hover:bg-[#d4af37] hover:text-black transition">
-                        Add to Cart
-                    </button>
+                <div class="bg-[#1f1f21] p-4 rounded-lg">
+                    <p class="text-gray-400 text-sm">Grade</p>
+                    <p class="text-xl font-semibold">{{ listing.grade }}</p>
                 </div>
-
-                {# Optional: Additional info like condition, category #}
-                <div class="mt-6 text-gray-400 space-y-2">
-                    <p><strong>Category:</strong> {{ listing.collectible.category }}</p>
-                    <p><strong>Franchise:</strong> {{ listing.collectible.franchise }}</p>
-                    <p><strong>Condition/Grade:</strong> {{ listing.grade ?: 'N/A' }}</p>
-                    <p><strong>Seller:</strong> {{ listing.user.username ?: 'Unknown' }}</p>
-                    <p><strong>Status:</strong> 
-                        <span class="{{ listing.isForSale ? 'text-green-400' : 'text-red-400' }}">
-                            {{ listing.isForSale ? 'For Sale' : 'Not for Sale' }}
-                        </span>
-                    </p>
+                <div class="bg-[#1f1f21] p-4 rounded-lg">
+                    <p class="text-gray-400 text-sm">Seller</p>
+                    <p class="text-lg font-semibold">{{ listing.user.username }}</p>
+                </div>
+                <div class="bg-[#1f1f21] p-4 rounded-lg">
+                    <p class="text-gray-400 text-sm">Status</p>
+                    <p class="text-lg font-semibold text-green-500">For Sale</p>
                 </div>
             </div>
-
-            {# Optional: Related products could go here #}
-            {% if relatedListings is defined and relatedListings|length > 0 %}
-                <div class="mt-10">
-                    <h3 class="text-xl font-bold text-[#d4af37] mb-4">Related Items</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        {% for related in relatedListings %}
-                            <a href="{{ path('listing_show', {'id': related.id}) }}" 
-                               class="bg-[#2b2b2d] rounded-lg overflow-hidden hover:shadow-xl transition-all">
-                                <img src="{{ asset('uploads/collectibles/' ~ related.collectible.image) }}" 
-                                     alt="{{ related.collectible.name }}" 
-                                     class="w-full h-32 object-cover">
-                                <div class="p-3">
-                                    <h4 class="font-semibold text-sm text-[#d4af37] truncate">{{ related.collectible.name }}</h4>
-                                    <p class="text-xs text-gray-400">{{ related.collectible.category }}</p>
-                                    <p class="text-sm font-bold mt-1">₱{{ related.price }}</p>
-                                </div>
-                            </a>
-                        {% endfor %}
-                    </div>
-                </div>
+            
+            <!-- Buy Now Button -->
+            {% if app.user %}
+                {% if listing.user.id == app.user.id %}
+                    <button class="w-full bg-gray-600 text-gray-300 font-semibold py-3 rounded-lg cursor-not-allowed" disabled>
+                        Your Listing
+                    </button>
+                {% else %}
+                    <form method="POST" action="{{ path('order_buy', {'id': listing.id}) }}" 
+                          onsubmit="return confirm('Are you sure you want to purchase {{ listing.collectible.name }} for ₱{{ listing.price|number_format(2) }}?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('buy' ~ listing.id) }}">
+                        <button type="submit" class="w-full bg-[#d4af37] text-black font-bold py-3 rounded-lg hover:bg-[#c19b2f] transition text-lg">
+                            Buy Now - ₱{{ listing.price|number_format(2) }}
+                        </button>
+                    </form>
+                {% endif %}
+            {% else %}
+                <a href="{{ path('app_login') }}" 
+                   class="block w-full text-center bg-[#d4af37] text-black font-bold py-3 rounded-lg hover:bg-[#c19b2f] transition text-lg">
+                    Login to Purchase
+                </a>
             {% endif %}
+            
+            <p class="text-gray-400 text-sm mt-4 text-center">
+                * Seller may take a while confirming this order.Please be patient.
+            </p>
         </div>
     </div>
-</section>
+    
+    <!-- Related Listings -->
+    {% if relatedListings is defined and relatedListings|length > 0 %}
+        <div class="mt-16">
+            <h2 class="text-2xl font-bold text-[#d4af37] mb-6">Related Listings</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {% for related in relatedListings %}
+                    <a href="{{ path('listing_show', {'id': related.id}) }}" 
+                       class="bg-[#2b2b2d] rounded-xl overflow-hidden shadow-md hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
+                        <img src="{{ asset('uploads/collectibles/' ~ related.collectible.image) }}" 
+                             alt="{{ related.collectible.name }}" 
+                             class="w-full h-40 object-cover">
+                        <div class="p-4">
+                            <h3 class="font-semibold text-[#d4af37] truncate">{{ related.collectible.name }}</h3>
+                            <p class="text-gray-300 text-sm mt-1">₱{{ related.price|number_format(2) }}</p>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>
 {% endblock %}

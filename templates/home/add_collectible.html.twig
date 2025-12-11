@@ -73,18 +73,9 @@
       {# 🔍 Link to internal Pokémon search page #}
       <p class="text-center mb-4">
         <a href="{{ path('pokesearch_trial') }}"
-          class="text-[#d4af37] text-sm hover:underline hover:text-[#f5d26a] transition">
+          class="text-[#d4af37] text-sm hover:underline hover:text-[#f5d26a] transition" data-t>
           🔍 Click here to search for your Pokémon Card ID
         </a>
-      </p>
-
-      <div class="flex items-center space-x-2 mb-4">
-        <input type="checkbox" id="include-price" class="accent-[#d4af37]" />
-        <label for="include-price" class="text-gray-300 text-sm">Include current market price</label>
-      </div>
-
-      <p class="text-yellow-400 text-xs mb-3 hidden" id="price-warning">
-        ⚠️ Fetching price data may take up to a minute or may not be available.
       </p>
 
       <button id="fetch-card-btn"

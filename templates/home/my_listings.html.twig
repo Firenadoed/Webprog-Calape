@@ -1,0 +1,271 @@
+{# templates/home/my_listings.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}My Listings — Collectiv{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<link rel="stylesheet" href="{{ asset('css/my-listings.css') }}">
+{% endblock %}
+
+{% block body %}
+<section class="my-listings-page">
+    <!-- Header -->
+    <div class="my-listings-header">
+        <div class="my-listings-title-container">
+            <h1 class="my-listings-title">My Listings & Purchases</h1>
+            <p class="my-listings-subtitle">Manage your listings, sales, and purchases</p>
+        </div>
+        <div class="my-listings-actions">
+            <a href="{{ path('collection') }}" class="my-listings-back-button">
+                ← Back to Collection
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="my-listings-stats">
+        <div class="my-listings-stat-card">
+            <h3 class="my-listings-stat-title">Active Listings</h3>
+            <p class="my-listings-stat-value">{{ my_listings|length }}</p>
+        </div>
+        <div class="my-listings-stat-card">
+            <h3 class="my-listings-stat-title">Pending Orders</h3>
+            <p class="my-listings-stat-value">
+                {{ incoming_orders|filter(order => order.status == 'pending')|length }}
+            </p>
+        </div>
+        <div class="my-listings-stat-card">
+            <h3 class="my-listings-stat-title">My Purchases</h3>
+            <p class="my-listings-stat-value">
+                {{ my_purchases|filter(order => order.status in ['pending', 'confirmed'])|length }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Active Listings -->
+    <div class="my-listings-section">
+        <h2 class="my-listings-section-title">Active Listings</h2>
+        
+        {% if my_listings|length > 0 %}
+            <div class="my-listings-grid">
+                {% for listing in my_listings %}
+                    <div class="my-listing-card">
+                        <div class="my-listing-image-container">
+                            <img src="{{ asset('uploads/collectibles/' ~ listing.collectible.image) }}" 
+                                 alt="{{ listing.collectible.name }}" 
+                                 class="my-listing-image">
+                            <div class="my-listing-status-badge">Active</div>
+                        </div>
+                        
+                        <div class="my-listing-content">
+                            <h3 class="my-listing-name">{{ listing.collectible.name }}</h3>
+                            <p class="my-listing-category">{{ listing.collectible.category }} • {{ listing.collectible.franchise }}</p>
+                            <p class="my-listing-description">{{ listing.collectible.description|slice(0, 100) }}{% if listing.collectible.description|length > 100 %}...{% endif %}</p>
+                            
+                            <div class="my-listing-details">
+                                <div class="my-listing-detail">
+                                    <span class="my-listing-detail-label">Price:</span>
+                                    <span class="my-listing-price">₱{{ listing.price|number_format(2) }}</span>
+                                </div>
+                                <div class="my-listing-detail">
+                                    <span class="my-listing-detail-label">Grade:</span>
+                                    <span class="my-listing-grade">{{ listing.grade }}</span>
+                                </div>
+                                <div class="my-listing-detail">
+                                    <span class="my-listing-detail-label">Listed:</span
+                                </div>
+                            </div>
+                            
+                            <div class="my-listing-actions">
+                                <form method="POST" action="{{ path('listing_remove', {'id': listing.id}) }}" 
+                                      onsubmit="return confirm('Are you sure you want to remove this listing?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ listing.id) }}">
+                                    <button type="submit" class="my-listing-cancel-button">
+                                        Cancel Listing
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="my-listings-empty">
+                <h3 class="my-listings-empty-title">No Active Listings</h3>
+                <p class="my-listings-empty-text">You haven't listed any collectibles for sale yet.</p>
+                <a href="{{ path('collection') }}" class="my-listings-empty-button">
+                    Browse Your Collection
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Pending Orders (Orders from buyers) -->
+    {% set pending_orders = incoming_orders|filter(order => order.status == 'pending') %}
+    {% if pending_orders|length > 0 %}
+    <div class="my-listings-section">
+        <h2 class="my-listings-section-title">Pending Orders (Incoming)</h2>
+        
+        <div class="my-listings-grid">
+            {% for order in pending_orders %}
+                <div class="my-listing-card">
+                    <div class="my-listing-image-container">
+                        <img src="{{ asset('uploads/profile/' ~ order.buyer.profileImage) }}" 
+                             alt="{{ order.buyer.username }}" 
+                             class="my-listing-image rounded-full">
+                        <div class="my-listing-order-badge my-listing-order-pending">
+                            Pending
+                        </div>
+                    </div>
+                    
+                    <div class="my-listing-content">
+                        <h3 class="my-listing-name">{{ order.collectibleName }}</h3>
+                        <p class="my-listing-category">Buyer: {{ order.buyer.username }}</p>
+                        <p class="my-listing-description">Order ID: #{{ order.id }}</p>
+                        
+                        <div class="my-listing-details">
+                            <div class="my-listing-detail">
+                                <span class="my-listing-detail-label">Sale Price:</span>
+                                <span class="my-listing-price">₱{{ order.purchasePrice|number_format(2) }}</span>
+                            </div>
+                            <div class="my-listing-detail">
+                                <span class="my-listing-detail-label">Order Date:</span>
+                                <span class="my-listing-date">{{ order.orderedAt|date('M d, Y') }}</span>
+                            </div>
+                            <div class="my-listing-detail">
+                                <span class="my-listing-detail-label">Created By:</span>
+                                <span class="my-listing-buyer">
+                                    {% if order.createdBy %}
+                                        {{ order.createdBy.username }}
+                                        {% if 'ROLE_ADMIN' in order.createdBy.roles %}
+                                            <span class="my-listing-role-badge">Admin</span>
+                                        {% elseif 'ROLE_STAFF' in order.createdBy.roles %}
+                                            <span class="my-listing-role-badge">Staff</span>
+                                        {% endif %}
+                                    {% else %}
+                                        {{ order.buyer.username }}
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="my-listing-actions">
+                            <form method="POST" action="{{ path('order_user_confirm', {'id': order.id}) }}" 
+                                  onsubmit="return confirm('Confirm this order? The buyer will be notified.');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('confirm' ~ order.id) }}">
+                                <button type="submit" class="my-listing-confirm-button">
+                                    Confirm Order
+                                </button>
+                            </form>
+                            
+                            <form method="POST" action="{{ path('order_user_cancel', {'id': order.id}) }}" 
+                                  onsubmit="return confirm('Cancel this order? The listing will be available again.');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('cancel' ~ order.id) }}">
+                                <button type="submit" class="my-listing-cancel-button">
+                                    Cancel Order
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+        <!-- Show empty state when no pending orders -->
+        {% if incoming_orders|length > 0 %}
+            <!-- This means there are orders but none are pending (they're all confirmed/completed/cancelled) -->
+            <div class="my-listings-empty">
+                <h3 class="my-listings-empty-title">No Pending Orders</h3>
+                <p class="my-listings-empty-text">You don't have any pending orders from buyers at the moment.</p>
+            </div>
+        {% endif %}
+    {% endif %}
+
+    <!-- My Purchases (Orders where I am the buyer) -->
+    {% set my_pending_purchases = my_purchases|filter(order => order.status in ['pending', 'confirmed']) %}
+    {% if my_pending_purchases|length > 0 %}
+    <div class="my-listings-section">
+        <h2 class="my-listings-section-title">My Purchases</h2>
+        
+        <div class="my-listings-grid">
+            {% for order in my_pending_purchases %}
+                <div class="my-listing-card">
+                    <div class="my-listing-image-container">
+                        <img src="{{ asset('uploads/profile/' ~ order.seller.profileImage) }}" 
+                             alt="{{ order.seller.username }}" 
+                             class="my-listing-image rounded-full">
+                        <div class="my-listing-order-badge 
+                            {% if order.status == 'pending' %}my-listing-order-pending
+                            {% elseif order.status == 'confirmed' %}my-listing-order-confirmed
+                            {% endif %}">
+                            {{ order.status|capitalize }}
+                        </div>
+                    </div>
+                    
+                    <div class="my-listing-content">
+                        <h3 class="my-listing-name">{{ order.collectibleName }}</h3>
+                        <p class="my-listing-category">Seller: {{ order.seller.username }}</p>
+                        <p class="my-listing-description">Order ID: #{{ order.id }}</p>
+                        
+                        <div class="my-listing-details">
+                            <div class="my-listing-detail">
+                                <span class="my-listing-detail-label">Purchase Price:</span>
+                                <span class="my-listing-price">₱{{ order.purchasePrice|number_format(2) }}</span>
+                            </div>
+                            <div class="my-listing-detail">
+                                <span class="my-listing-detail-label">Order Date:</span>
+                                <span class="my-listing-date">{{ order.orderedAt|date('M d, Y') }}</span>
+                            </div>
+                            <div class="my-listing-detail">
+                                <span class="my-listing-detail-label">Status:</span>
+                                <span class="my-listing-status 
+                                    {% if order.status == 'pending' %}my-listing-status-pending
+                                    {% elseif order.status == 'confirmed' %}my-listing-status-confirmed
+                                    {% endif %}">
+                                    {{ order.status|capitalize }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="my-listing-actions">
+                            {% if order.status == 'pending' %}
+                                <form method="POST" action="{{ path('order_user_cancel_purchase', {'id': order.id}) }}" 
+                                      onsubmit="return confirm('Cancel this purchase? The listing will be available again.');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('cancel_purchase' ~ order.id) }}">
+                                    <button type="submit" class="my-listing-cancel-button">
+                                        Cancel Purchase
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+        <!-- Show empty state when no purchases -->
+        {% if my_purchases|length > 0 %}
+            <!-- This means there are purchases but none are pending/confirmed (they're all completed/cancelled) -->
+            <div class="my-listings-empty">
+                <h3 class="my-listings-empty-title">No Active Purchases</h3>
+                <p class="my-listings-empty-text">You don't have any active purchases at the moment.</p>
+                <a href="{{ path('app_collectible_index') }}" class="my-listings-empty-button">
+                    Browse Collectibles
+                </a>
+            </div>
+        {% else %}
+            <!-- No purchases at all -->
+            <div class="my-listings-empty">
+                <h3 class="my-listings-empty-title">No Purchases Yet</h3>
+                <p class="my-listings-empty-text">You haven't made any purchases yet.</p>
+                <a href="{{ path('app_collectible_index') }}" class="my-listings-empty-button">
+                    Browse Collectibles
+                </a>
+            </div>
+        {% endif %}
+    {% endif %}
+</section>
+{% endblock %}

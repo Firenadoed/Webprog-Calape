@@ -1,0 +1,15 @@
+{% extends 'sidebar.html.twig' %}
+
+{% block title %}New Order{% endblock %}
+
+{% block body %}
+<div class="page-container">
+    <div class="form-container">
+        <h2 class="page-title">Create New Order</h2>
+
+        {{ include('order/_form.html.twig', {'button_label': 'Create Order'}) }}
+
+        <a href="{{ path('app_order_index') }}" class="back-link">Back to list</a>
+    </div>
+</div>
+{% endblock %}

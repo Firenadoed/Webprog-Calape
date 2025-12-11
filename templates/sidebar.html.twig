@@ -4,6 +4,9 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="turbo-cache-control" content="no-cache">
+    <meta name="turbo-visit-control" content="reload">
+
     <title>{% block title %}Admin Panel{% endblock %}</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
@@ -24,26 +27,29 @@
       </div>
 
       <nav class="admin-nav">
+         <a href="{{ path('admin_dashboard') }}" class="admin-nav-link" data-turbo="false">
+         Dashboard
+          </a>
         {# Admin-only links (ROLE_ADMIN) #}
         {% if is_granted('ROLE_ADMIN') %}
-          <a href="{{ path('admin_dashboard') }}" class="admin-nav-link" data-turbo="false">
-            <span>📊</span> Dashboard
-          </a>
           <a href="{{ path('app_user_index') }}" class="admin-nav-link" data-turbo="false">
-            <span>👥</span> Collectors (Admin)
+            Collectors
           </a>
           <a href="{{ path('admin_logs_index') }}" class="admin-nav-link" data-turbo="false">
-            <span>📝</span> Activity Log (Admin)
+             Activity Log
           </a>
         {% endif %}
 
         {# Admin & Staff links (ROLE_ADMIN or ROLE_STAFF) #}
         {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_STAFF') %}
           <a href="{{ path('app_collectible_index') }}" class="admin-nav-link" data-turbo="false">
-            <span>🏺</span> Collectibles
+             Collectibles
           </a>
           <a href="{{ path('app_listing_index') }}" class="admin-nav-link" data-turbo="false">
-            <span>📋</span> Listings
+             Listings
+          </a>
+               <a href="{{ path('app_order_index') }}" class="admin-nav-link" data-turbo="false">
+             Orders
           </a>
         {% endif %}
       </nav>
@@ -61,11 +67,8 @@
         </div>
 
         <div class="admin-bottom-links">
-          <a href="{{ path('collection') }}" class="admin-nav-link admin-collection-link">
+          <a href="{{ path('collection') }}" class="admin-nav-link admin-collection-link" data-turbo="false">
             Profile
-          </a>
-          <a href="{{ path('home') }}" class="admin-nav-link admin-home-link">
-            Back to Home
           </a>
           <a href="{{ path('app_logout') }}" class="admin-nav-link admin-logout-link" data-turbo="false">
             Logout

@@ -6,7 +6,7 @@ function initCollectionPage() {
   if (window.collectionPageInitialized) return;
   window.collectionPageInitialized = true;
 
-  // Get sections dynamically instead of relying on window.collectionData
+  // Get sections dynamically
   const sections = [];
   document.querySelectorAll('[id^="collectionCardContainer-"]').forEach(container => {
     const match = container.id.match(/collectionCardContainer-(.+)/);
@@ -32,7 +32,7 @@ function initCollectionPage() {
       if (index < 0) index = total - 1;
       if (index >= total) index = 0;
 
-      // Compute scroll distance but make sure it loops correctly
+      // Compute scroll distance
       const translateX = (index % total) * cardWidth;
       container.style.transition = "transform 0.5s ease-in-out";
       container.style.transform = `translateX(-${translateX}px)`;
@@ -98,6 +98,7 @@ function initCollectionModal() {
   const gradeWrapper = document.getElementById('collectionGradeWrapper');
   const priceWrapper = document.getElementById('collectionPriceWrapper');
   const priceInput = document.getElementById('collectionModalPriceInput');
+  const gradeSelect = document.getElementById('collectionModalGrade');
 
   // Add double-click event to cards
   document.querySelectorAll('.collection-collectible-card').forEach(card => {
@@ -119,7 +120,8 @@ function initCollectionModal() {
       
       if (modalCollectibleIdInput) modalCollectibleIdInput.value = card.dataset.id || '';
       
-      // Reset price input
+      // Reset form fields
+      if (gradeSelect) gradeSelect.value = '';
       if (priceInput) {
         priceInput.value = '';
       }
@@ -129,9 +131,9 @@ function initCollectionModal() {
         sellButton.textContent = isListed ? 'Take Out of Sale' : 'Put Up for Sale';
         
         // Get listing add path from data attribute or use default
-        const listingAddPath = card.dataset.listingAddPath || '/listing/add';
+        const listingAddPath = card.dataset.listingAddPath || 'my-collection/listing/add';
         sellButton.form.action = isListed
-          ? `/listing/delete/${card.dataset.listingId || ''}`
+          ? `my-collection/listing/delete/${card.dataset.listingId || ''}`
           : listingAddPath;
       }
       
@@ -146,61 +148,19 @@ function initCollectionModal() {
       
       if (editButton) {
         editButton.classList.toggle('collection-hidden', isListed);
-        editButton.href = `/collection/edit/${card.dataset.id || ''}`;
+        editButton.href = `/my-collection/edit/${card.dataset.id || ''}`;
       }
 
-      if (!isListed) {
-        if (deleteButton) {
-          deleteButton.classList.remove('collection-hidden');
-          if (modalToken) modalToken.value = card.dataset.deleteCollectibleToken || '';
-        }
-      } else {
-        if (deleteButton) deleteButton.classList.add('collection-hidden');
-        if (modalToken) modalToken.value = card.dataset.deleteListingToken || '';
+      // Set up tokens for delete
+      if (modalToken) {
+        modalToken.value = isListed 
+          ? (card.dataset.deleteListingToken || '')
+          : (card.dataset.deleteCollectibleToken || '');
       }
 
-      // Setup delete button handler
+      // Show/hide delete button
       if (deleteButton) {
-        deleteButton.onclick = () => {
-          const collectibleId = card.dataset.id;
-          const token = card.dataset.deleteCollectibleToken;
-          
-          if (!collectibleId || !token) {
-            alert("Missing data for deletion");
-            return;
-          }
-          
-          if (confirm("Are you sure you want to delete this collectible?")) {
-            fetch(`/collection/delete/${collectibleId}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-              body: new URLSearchParams({ _token: token })
-            })
-            .then(r => r.json())
-            .then(data => {
-              if (data.status === 'success') {
-                card.remove();
-                closeCollectionModal();
-                
-                // Show success message
-                const flashContainer = document.getElementById('collectionFlashContainer');
-                if (flashContainer) {
-                  const flash = document.createElement('div');
-                  flash.className = 'p-3 rounded-md mb-2 text-white bg-green-600';
-                  flash.textContent = data.message || 'Collectible deleted successfully';
-                  flashContainer.prepend(flash);
-                  setTimeout(() => flash.remove(), 4000);
-                }
-              } else {
-                alert(data.message || 'Error deleting collectible');
-              }
-            })
-            .catch(error => {
-              console.error('Delete error:', error);
-              alert('Network error. Please try again.');
-            });
-          }
-        };
+        deleteButton.classList.toggle('collection-hidden', isListed);
       }
     });
   });
@@ -217,7 +177,8 @@ function initCollectionModal() {
       if (modalPrice) modalPrice.textContent = '₱0.00';
       if (modalCollectibleIdInput) modalCollectibleIdInput.value = '';
       if (modalToken) modalToken.value = '';
-      if (priceInput) priceInput.value = ''; // Reset price input
+      if (priceInput) priceInput.value = '';
+      if (gradeSelect) gradeSelect.value = '';
     }, 200);
   }
 
@@ -230,6 +191,35 @@ function initCollectionModal() {
     if (e.key === 'Escape') closeCollectionModal();
   });
 
+  // Handle delete button
+  if (deleteButton) {
+    deleteButton.addEventListener('click', () => {
+      const collectibleId = modalCollectibleIdInput?.value;
+      const token = modalToken?.value;
+      
+      if (!collectibleId || !token) {
+        alert("Missing data for deletion");
+        return;
+      }
+      
+      if (confirm("Are you sure you want to delete this collectible?")) {
+        // Create form submission
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/my-collection/delete/${collectibleId}`;
+        
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = token;
+        
+        form.appendChild(csrfInput);
+        document.body.appendChild(form);
+        form.submit();
+      }
+    });
+  }
+
   // Handle sell form submission
   const sellForm = document.getElementById('collectionSellForm');
   if (sellForm && sellButton) {
@@ -237,8 +227,8 @@ function initCollectionModal() {
       e.preventDefault();
       const collectibleId = modalCollectibleIdInput?.value || '';
       const token = modalToken?.value || '';
-      const grade = document.getElementById('collectionModalGrade')?.value || '';
-      const price = priceInput?.value || ''; // Get price value
+      const grade = gradeSelect?.value || '';
+      const price = priceInput?.value || '';
       const actionUrl = sellButton.form.action;
       const isDeleteAction = actionUrl.includes('/delete/');
       
@@ -247,82 +237,61 @@ function initCollectionModal() {
         return;
       }
       
-      // Prepare request body based on action type
-      let requestBody;
+      // For delete action (take out of sale), just submit the form
       if (isDeleteAction) {
-        // For delete action, only send _token
-        requestBody = new URLSearchParams({
-          _token: token
-        });
-      } else {
-        // For add action, validate price and send all fields
-        if (!price || parseFloat(price) < 1) {
-          alert("Please enter a valid price (minimum ₱1.00)");
-          if (priceInput) priceInput.focus();
-          return;
-        }
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = actionUrl;
         
-        requestBody = new URLSearchParams({
-          collectible_id: collectibleId,
-          grade: grade,
-          price: price, // Include price
-          _token: token
-        });
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = token;
+        
+        form.appendChild(csrfInput);
+        document.body.appendChild(form);
+        form.submit();
+        return;
       }
-
-      fetch(actionUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: requestBody
-      })
-      .then(res => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! Status: ${res.status}`);
-        }
-        return res.json();
-      })
-      .then(data => {
-        const flashContainer = document.getElementById('collectionFlashContainer');
-        if (flashContainer) {
-          const flash = document.createElement('div');
-          flash.className = `p-3 rounded-md mb-2 text-white ${
-            data.status === 'success' ? 'bg-green-600' :
-            data.status === 'error' ? 'bg-red-600' : 'bg-yellow-500 text-black'
-          }`;
-          flash.textContent = data.message || (data.status === 'success' ? 'Operation successful' : 'Operation failed');
-          flashContainer.prepend(flash);
-          setTimeout(() => flash.remove(), 4000);
-        }
-
-        closeCollectionModal();
-
-        // Update card data attributes
-        const card = document.querySelector(`.collection-collectible-card[data-id='${collectibleId}']`);
-        if (card) {
-          if (!isDeleteAction && data.listingId) {
-            // Item was just listed
-            card.dataset.listed = '1';
-            card.dataset.listingId = data.listingId;
-            card.dataset.deleteListingToken = data.deleteToken || '';
-          } else if (isDeleteAction) {
-            // Listing was removed
-            card.dataset.listed = '0';
-            card.dataset.listingId = '';
-            card.dataset.deleteListingToken = '';
-          }
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        const flashContainer = document.getElementById('collectionFlashContainer');
-        if (flashContainer) {
-          const flash = document.createElement('div');
-          flash.className = 'p-3 rounded-md mb-2 text-white bg-red-600';
-          flash.textContent = `Network error: ${error.message}`;
-          flashContainer.prepend(flash);
-          setTimeout(() => flash.remove(), 4000);
-        }
-      });
+      
+      // For add action (put up for sale), validate and submit
+      if (!price || parseFloat(price) < 1) {
+        alert("Please enter a valid price (minimum ₱1.00)");
+        if (priceInput) priceInput.focus();
+        return;
+      }
+      
+      // Create form for listing creation
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = actionUrl;
+      
+      const collectibleIdInput = document.createElement('input');
+      collectibleIdInput.type = 'hidden';
+      collectibleIdInput.name = 'collectible_id';
+      collectibleIdInput.value = collectibleId;
+      
+      const gradeInput = document.createElement('input');
+      gradeInput.type = 'hidden';
+      gradeInput.name = 'grade';
+      gradeInput.value = grade;
+      
+      const priceFormInput = document.createElement('input');
+      priceFormInput.type = 'hidden';
+      priceFormInput.name = 'price';
+      priceFormInput.value = price;
+      
+      const csrfInput = document.createElement('input');
+      csrfInput.type = 'hidden';
+      csrfInput.name = '_token';
+      csrfInput.value = token;
+      
+      form.appendChild(collectibleIdInput);
+      form.appendChild(gradeInput);
+      form.appendChild(priceFormInput);
+      form.appendChild(csrfInput);
+      document.body.appendChild(form);
+      form.submit();
     });
   }
 }
@@ -346,28 +315,4 @@ if (typeof Turbo !== 'undefined') {
     window.collectionPageInitialized = false;
     initCollectionPage();
   });
-}
-
-// Flash message helper function
-function showFlashMessage(message, type = 'success') {
-  const container = document.getElementById('collectionFlashContainer');
-  if (!container) return;
-  
-  const messageDiv = document.createElement('div');
-  messageDiv.className = `p-3 rounded-md mb-2 text-white ${
-    type === 'success' ? 'bg-green-600' :
-    type === 'error' ? 'bg-red-600' : 'bg-yellow-500'
-  }`;
-  messageDiv.textContent = message;
-  
-  container.prepend(messageDiv);
-  
-  setTimeout(() => {
-    messageDiv.style.opacity = '0';
-    setTimeout(() => {
-      if (messageDiv.parentNode === container) {
-        container.removeChild(messageDiv);
-      }
-    }, 300);
-  }, 5000);
 }

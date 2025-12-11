@@ -1,0 +1,106 @@
+{{ form_start(form, {'attr': {'id': 'order-form'}}) }}
+
+<div class="form-group">
+    {{ form_label(form.buyer, 'Buyer:', {'label_attr': {'class': 'form-label'}}) }}
+    {{ form_widget(form.buyer, {'attr': {'class': 'form-control form-select'}}) }}
+    {{ form_errors(form.buyer) }}
+</div>
+
+{% if form.listing is defined %}
+    <div class="form-group">
+        {{ form_label(form.listing, 'Listing:', {'label_attr': {'class': 'form-label'}}) }}
+        {{ form_widget(form.listing, {'attr': {'class': 'form-control form-select'}}) }}
+        {{ form_errors(form.listing) }}
+    </div>
+{% else %}
+    {# Show listing info as read-only for editing #}
+    <div class="mb-3">
+        <label class="form-label">Listing Information</label>
+        <div class="form-control bg-light">
+            <strong>Collectible:</strong> {{ order.collectibleName }}<br>
+            <strong>Price:</strong> ${{ order.purchasePrice|number_format(2) }}<br>
+            <strong>Seller:</strong> {{ order.seller.username }}<br>
+            {% if order.listing %}
+                <strong>Listing ID:</strong> {{ order.listing.id }}
+            {% else %}
+                <em>Listing was deleted (order completed)</em>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+
+<div class="form-group">
+    {{ form_label(form.status, 'Order Status:', {'label_attr': {'class': 'form-label'}}) }}
+    {{ form_widget(form.status, {'attr': {'class': 'form-control form-select'}}) }}
+    {{ form_errors(form.status) }}
+</div>
+
+<div class="form-actions">
+    <button type="submit" class="btn btn-primary">{{ button_label|default('Save Order') }}</button>
+</div>
+
+{{ form_end(form) }}
+
+{% if form.listing is defined %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const buyerSelect = document.querySelector('#{{ form.buyer.vars.id }}');
+    const listingSelect = document.querySelector('#{{ form.listing.vars.id }}');
+    
+    if (buyerSelect && listingSelect) {
+        // Store all listing options in an array
+        const allOptions = Array.from(listingSelect.querySelectorAll('option'));
+        
+        buyerSelect.addEventListener('change', function() {
+            const selectedBuyerId = this.value;
+            
+            // Hide/show options instead of replacing them
+            allOptions.forEach(option => {
+                if (option.value === '') {
+                    // Keep the placeholder option
+                    option.style.display = '';
+                    option.disabled = false;
+                } else {
+                    const ownerId = option.dataset.ownerId;
+                    if (selectedBuyerId && ownerId === selectedBuyerId) {
+                        // Hide buyer's own listings
+                        option.style.display = 'none';
+                        option.disabled = true;
+                        option.selected = false;
+                    } else {
+                        // Show other listings
+                        option.style.display = '';
+                        option.disabled = false;
+                    }
+                }
+            });
+            
+            // Check if any options are visible
+            const visibleOptions = allOptions.filter(opt => 
+                opt.style.display !== 'none' && !opt.disabled && opt.value !== ''
+            );
+            
+            if (visibleOptions.length === 0) {
+                // Disable the select and show message
+                listingSelect.disabled = true;
+                const placeholder = listingSelect.querySelector('option[value=""]');
+                if (placeholder) {
+                    placeholder.textContent = 'No listings available for this buyer';
+                }
+            } else {
+                listingSelect.disabled = false;
+                const placeholder = listingSelect.querySelector('option[value=""]');
+                if (placeholder) {
+                    placeholder.textContent = 'Select a listing';
+                }
+            }
+        });
+        
+        // Trigger change event on page load
+        if (buyerSelect.value) {
+            buyerSelect.dispatchEvent(new Event('change'));
+        }
+    }
+});
+</script>
+{% endif %}

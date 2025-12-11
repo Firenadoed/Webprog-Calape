@@ -31,17 +31,26 @@ class ListingType extends AbstractType
         $builder
             ->add('grade', ChoiceType::class, [
                 'label' => 'PSA Grade',
-                'choices' => array_combine(
-                    array_map(fn($i) => "PSA $i", range(1, 10)),
-                    range(1, 10)
-                ),
+                'choices' => [
+                    'Unrated / Not Graded' => 'Unrated / Not Graded',
+                    '10 - Gem Mint (GEM-MT)' => '10 - GEM-MT',
+                    '9 - Mint' => '9 - MINT',
+                    '8 - Near Mint–Mint (NM-MT)' => '8 - NM-MT',
+                    '7 - Near Mint' => '7 - NM',
+                    '6 - Excellent–Mint (EX-MT)' => '6 - EX-MT',
+                    '5 - Excellent' => '5 - EX',
+                    '4 - Very Good–Excellent' => '4 - VG-EX',
+                    '3 - Very Good' => '3 - VG',
+                    '2 - Good' => '2 - GOOD',
+                    '1 - Poor' => '1 - POOR',
+                ],
                 'placeholder' => 'Select a grade',
                 'attr' => [
                     'class' => 'form-select',
                 ],
             ])
             ->add('price', NumberType::class, [
-                'label' => 'Price ($)',
+                'label' => 'Price (₱)',
                 'html5' => true,
                 'attr' => [
                     'class' => 'form-control',
@@ -73,8 +82,11 @@ class ListingType extends AbstractType
                 ],
             ]);
 
-        // Form modifier for collectible field
-        $formModifier = function (FormInterface $form, ?User $user = null) {
+        // Form modifier for collectible field - LOCKED when editing
+        $formModifier = function (FormInterface $form, ?User $user = null, ?Listing $listing = null) {
+            $isEditing = ($listing && $listing->getId() !== null);
+            $isDisabled = $isEditing; // Disable when editing
+            
             $form->add('collectible', EntityType::class, [
                 'class' => Collectible::class,
                 'choice_label' => function (Collectible $collectible) {
@@ -85,11 +97,21 @@ class ListingType extends AbstractType
                     : 'Select a user first',
                 'attr' => [
                     'class' => 'form-select collectible-select',
+                    'readonly' => $isDisabled,
+                    'disabled' => $isDisabled,
                 ],
-                'query_builder' => function (EntityRepository $er) use ($user) {
+                'query_builder' => function (EntityRepository $er) use ($user, $listing, $isEditing) {
                     $qb = $er->createQueryBuilder('c');
                     
+                    if ($isEditing && $listing && $listing->getCollectible()) {
+                        // When editing, only show the currently selected collectible
+                        return $qb
+                            ->where('c.id = :collectibleId')
+                            ->setParameter('collectibleId', $listing->getCollectible()->getId());
+                    }
+                    
                     if ($user) {
+                        // When creating, show all collectibles owned by the user
                         return $qb
                             ->where('c.user = :user')
                             ->setParameter('user', $user)
@@ -100,7 +122,7 @@ class ListingType extends AbstractType
                     return $qb->where('1 = 0');
                 },
                 'required' => true,
-                'disabled' => !$user, // Disable if no user selected
+                'disabled' => $isDisabled || !$user,
             ]);
         };
 
@@ -112,7 +134,7 @@ class ListingType extends AbstractType
                 $listing = $event->getData();
                 $user = $listing ? $listing->getUser() : null;
                 
-                $formModifier($event->getForm(), $user);
+                $formModifier($event->getForm(), $user, $listing);
             }
         );
 
@@ -121,6 +143,7 @@ class ListingType extends AbstractType
             FormEvents::PRE_SUBMIT,
             function (FormEvent $event) use ($formModifier) {
                 $data = $event->getData();
+                $listing = $event->getForm()->getData(); // Get existing listing
                 $user = null;
                 
                 if (!empty($data['user'])) {
@@ -129,7 +152,7 @@ class ListingType extends AbstractType
                         ->find($data['user']);
                 }
                 
-                $formModifier($event->getForm(), $user);
+                $formModifier($event->getForm(), $user, $listing);
             }
         );
     }

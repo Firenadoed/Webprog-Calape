@@ -204,6 +204,142 @@ document.addEventListener('DOMContentLoaded', function() {
         ]
     });
     
+        // Order Management Table - FIXED
+    initDataTable('#orderManagementTable', {
+        language: {
+            search: "_INPUT_",
+            searchPlaceholder: "Search orders...",
+            lengthMenu: "Show _MENU_ orders",
+            info: "Showing _START_ to _END_ of _TOTAL_ orders",
+            zeroRecords: "No matching orders found",
+            infoEmpty: "No orders available",
+            emptyTable: "<div class='datatable-empty-state'><div class='datatable-empty-icon'>📦</div><p>No orders found</p></div>",
+            infoFiltered: "(filtered from _MAX_ total orders)",
+            paginate: {
+                first: '«',
+                last: '»',
+                next: '›',
+                previous: '‹'
+            }
+        },
+        order: [[0, 'desc']], // Sort by ID descending (not column 6 which doesn't exist)
+        columnDefs: [
+            { 
+                targets: 0, // ID column
+                searchable: true,
+                orderable: true
+            },
+            { 
+                targets: 1, // Collectible column (NOT Buyer - check your HTML)
+                searchable: true,
+                orderable: true,
+                render: function(data, type, row) {
+                    if (type === 'sort' || type === 'filter') {
+                        // Extract collectible name from HTML
+                        if (typeof data === 'string') {
+                            var temp = document.createElement('div');
+                            temp.innerHTML = data;
+                            var name = $(temp).find('strong').text().trim();
+                            return name || data.replace(/<[^>]*>/g, '').trim();
+                        }
+                        return data;
+                    }
+                    return data;
+                }
+            },
+            { 
+                targets: 2, // Buyer column (NOT Collectible - check your HTML)
+                searchable: true,
+                orderable: true,
+                render: function(data, type, row) {
+                    if (type === 'sort' || type === 'filter') {
+                        // Extract username from HTML for sorting/filtering
+                        if (typeof data === 'string') {
+                            var temp = document.createElement('div');
+                            temp.innerHTML = data;
+                            var username = $(temp).find('strong').text().trim();
+                            return username || data.replace(/<[^>]*>/g, '').trim();
+                        }
+                        return data;
+                    }
+                    return data;
+                }
+            },
+            { 
+                targets: 3, // Seller column (NOT Grade - check your HTML)
+                searchable: true,
+                orderable: true,
+                render: function(data, type, row) {
+                    if (type === 'sort' || type === 'filter') {
+                        // Extract seller name from HTML
+                        if (typeof data === 'string') {
+                            var temp = document.createElement('div');
+                            temp.innerHTML = data;
+                            var seller = $(temp).find('strong').text().trim();
+                            return seller || data.replace(/<[^>]*>/g, '').trim();
+                        }
+                        return data;
+                    }
+                    return data;
+                }
+            },
+            { 
+                targets: 4, // Price column
+                searchable: false,
+                orderable: true,
+                type: 'num-fmt',
+                render: function(data, type, row) {
+                    if (type === 'sort' || type === 'filter') {
+                        // Extract price value for sorting
+                        if (typeof data === 'string') {
+                            // Remove $ sign and commas for sorting
+                            var priceNum = data.replace(/[$,]/g, '');
+                            return parseFloat(priceNum) || 0;
+                        }
+                        return data;
+                    }
+                    return data;
+                }
+            },
+            { 
+                targets: 5, // Status column
+                searchable: true,
+                orderable: true,
+                render: function(data, type, row) {
+                    if (type === 'sort' || type === 'filter') {
+                        // Extract status text from badge
+                        if (typeof data === 'string') {
+                            var temp = document.createElement('div');
+                            temp.innerHTML = data;
+                            var status = $(temp).text().trim();
+                            return status || data.replace(/<[^>]*>/g, '').trim();
+                        }
+                        return data;
+                    }
+                    return data;
+                }
+            },
+            { 
+                targets: 6, // Actions column (NOT Ordered At - check your HTML)
+                searchable: false,
+                orderable: false
+            }
+        ],
+        initComplete: function(settings, json) {
+            // Update order count
+            const api = this.api();
+            const totalOrders = api.rows().count();
+            
+            console.log('Total orders loaded:', totalOrders);
+            
+            // Update count on draw
+            api.on('draw', function() {
+                const filteredOrders = api.rows({search:'applied'}).count();
+                console.log('Currently showing:', filteredOrders, 'of', totalOrders, 'orders');
+            });
+        }
+    });
+    
     // Activity Logs Table - FIXED VERSION
     initDataTable('#activityLogsTable', {
         language: {

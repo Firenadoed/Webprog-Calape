@@ -8,11 +8,11 @@ function initDataTable(tableId, options = {}) {
     
     if ($(tableId).length) {
         $(tableId).DataTable({
-            pageLength: 5, // Show only 5 rows for dashboard tables
-            lengthChange: false, // Hide length change for dashboard
-            lengthMenu: false, // Disable length menu
-            ordering: true,
-            order: [[0, 'asc']], // Sort by ID descending (newest first)
+            pageLength: options.pageLength || 5,
+            lengthChange: options.lengthChange !== undefined ? options.lengthChange : false,
+            lengthMenu: options.lengthMenu || false,
+            ordering: options.ordering !== undefined ? options.ordering : true,
+            order: options.order || [[0, 'asc']],
             dom: "<'flex justify-between items-center mb-2'<'flex items-center'f>>rt<'flex justify-between items-center mt-2'<'flex items-center'i><'flex items-center'p>>",
             language: options.language || {
                 search: "_INPUT_",
@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
             pageLength: 10,
             lengthChange: true,
             lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            order: [[0, 'desc']],
             language: {
                 search: "_INPUT_",
                 searchPlaceholder: "Search users...",
@@ -87,6 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
             pageLength: 10,
             lengthChange: true,
             lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            order: [[0, 'desc']],
             language: {
                 search: "_INPUT_",
                 searchPlaceholder: "Search listings...",
@@ -119,6 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
             pageLength: 10,
             lengthChange: true,
             lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            order: [[0, 'desc']],
             language: {
                 search: "_INPUT_",
                 searchPlaceholder: "Search collectibles...",
@@ -150,15 +153,39 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Dashboard Tables (Recent Listings)
-    if ($('#recentListingsTable').length) {
-        initDataTable('#recentListingsTable', {
-            searchPlaceholder: "Search listings...",
-            emptyTable: "<div class='datatable-empty-state'><div class='datatable-empty-icon'>📭</div><p>No recent listings</p></div>",
+    // Dashboard Tables (Pending Orders)
+    if ($('#pendingOrdersTable').length) {
+        initDataTable('#pendingOrdersTable', {
+            pageLength: 5,
+            lengthChange: false,
+            lengthMenu: false,
+            order: [[0, 'desc']],
+            searchPlaceholder: "Search pending orders...",
+            emptyTable: "<div class='datatable-empty-state'><div class='datatable-empty-icon'>📭</div><p>No pending orders</p></div>",
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search pending orders...",
+                info: "Showing _START_ to _END_ of _TOTAL_ pending orders",
+                zeroRecords: "No matching pending orders found",
+                infoEmpty: "No pending orders available",
+                emptyTable: "<div class='datatable-empty-state'><div class='datatable-empty-icon'>📭</div><p>No pending orders</p></div>",
+                infoFiltered: "(filtered from _MAX_ total pending orders)",
+                paginate: {
+                    first: '«',
+                    last: '»',
+                    next: '›',
+                    previous: '‹'
+                }
+            },
             columnDefs: [
                 { 
-                    orderable: true,
-                    targets: '_all'
+                    targets: 7, // Actions column
+                    searchable: false,
+                    orderable: false
+                },
+                { 
+                    targets: [0, 4, 5, 6],
+                    orderable: true
                 }
             ]
         });
@@ -167,12 +194,76 @@ document.addEventListener('DOMContentLoaded', function() {
     // Dashboard Tables (Recent Users)
     if ($('#recentUsersTable').length) {
         initDataTable('#recentUsersTable', {
+            pageLength: 5,
+            lengthChange: false,
+            lengthMenu: false,
+            order: [[2, 'desc']],
             searchPlaceholder: "Search users...",
             emptyTable: "<div class='datatable-empty-state'><div class='datatable-empty-icon'>📭</div><p>No recent users</p></div>",
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search users...",
+                info: "Showing _START_ to _END_ of _TOTAL_ users",
+                zeroRecords: "No matching users found",
+                infoEmpty: "No users available",
+                emptyTable: "<div class='datatable-empty-state'><div class='datatable-empty-icon'>📭</div><p>No recent users</p></div>",
+                infoFiltered: "(filtered from _MAX_ total users)",
+                paginate: {
+                    first: '«',
+                    last: '»',
+                    next: '›',
+                    previous: '‹'
+                }
+            },
             columnDefs: [
                 { 
-                    orderable: true,
-                    targets: '_all'
+                    targets: 1,
+                    orderable: true
+                },
+                { 
+                    targets: 2,
+                    orderable: true
+                }
+            ]
+        });
+    }
+    
+    // Order Management Table (full orders page)
+    if ($('#orderManagementTable').length) {
+        initDataTable('#orderManagementTable', {
+            pageLength: 10,
+            lengthChange: true,
+            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            order: [[0, 'desc']],
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search orders...",
+                lengthMenu: "Show _MENU_ orders",
+                info: "Showing _START_ to _END_ of _TOTAL_ orders",
+                zeroRecords: "No matching orders found",
+                infoEmpty: "No orders available",
+                emptyTable: "<div class='datatable-empty-state'><div class='datatable-empty-icon'>📭</div><p>No orders found</p></div>",
+                infoFiltered: "(filtered from _MAX_ total orders)",
+                paginate: {
+                    first: '«',
+                    last: '»',
+                    next: '›',
+                    previous: '‹'
+                }
+            },
+            columnDefs: [
+                { 
+                    targets: 6, // Actions column
+                    searchable: false,
+                    orderable: false
+                },
+                { 
+                    targets: [4], // Price column
+                    orderable: true
+                },
+                { 
+                    targets: [5], // Status column
+                    orderable: true
                 }
             ]
         });

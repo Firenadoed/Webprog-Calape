@@ -833,3 +833,120 @@ table.dataTable tbody tr td.dataTables_empty {
     color: #a0a0a0;
     font-size: 0.9rem;
 }
+
+
+/* Add this to your main CSS file */
+.invalid-feedback {
+    display: block !important;
+    color: #dc3545 !important;
+    font-size: 0.875em !important;
+    margin-top: 0.25rem !important;
+}
+
+.is-invalid {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
+}
+
+/* Ensure text is visible against any background */
+.text-danger, .invalid-feedback {
+    color: #dc3545 !important;
+    text-shadow: 0 0 1px rgba(0,0,0,0.1);
+}
+
+/* Force display of form errors */
+.form-error {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+
+/* Add this to your CSS file */
+.crud-btn:disabled,
+.crud-btn[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #6b7280 !important; /* gray-500 */
+    border-color: #6b7280 !important;
+    color: #9ca3af !important; /* gray-400 */
+    z-index: 20;
+}
+
+.crud-btn-secondary:disabled,
+.crud-btn-secondary[disabled] {
+    background-color: #4b5563 !important; /* gray-600 */
+    border-color: #4b5563 !important;
+    color: #9ca3af !important;
+}
+
+.crud-btn-danger:disabled,
+.crud-btn-danger[disabled] {
+    background-color: #9f1239 !important; /* darker red */
+    border-color: #9f1239 !important;
+    color: #fca5a5 !important; /* lighter red */
+}
+
+/* Tooltip styles */
+button[title] {
+    position: relative;
+}
+
+button[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #374151; /* gray-700 */
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 10;
+    margin-bottom: 5px;
+}
+
+.show-btn:disabled,
+.show-btn[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #6b7280 !important; /* gray-500 */
+    border-color: #6b7280 !important;
+    color: #9ca3af !important; /* gray-400 */
+}
+
+.show-btn-edit:disabled,
+.show-btn-edit[disabled] {
+    background-color: #4b5563 !important; /* gray-600 */
+    border-color: #4b5563 !important;
+}
+
+.show-btn-delete:disabled,
+.show-btn-delete[disabled] {
+    background-color: #9f1239 !important; /* darker red */
+    border-color: #9f1239 !important;
+    color: #fca5a5 !important; /* lighter red */
+}
+
+/* Tooltip styles */
+button[title] {
+    position: relative;
+}
+
+button[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #374151; /* gray-700 */
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 10;
+    margin-bottom: 5px;
+}

@@ -1,0 +1,242 @@
+{% extends 'sidebar.html.twig' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block body %}
+<div class="admin-dashboard">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <meta name="turbo-visit-control" content="reload">
+         <meta name="turbo-cache-control" content="no-cache">
+        <h1 class="dashboard-title">
+            {% if is_granted('ROLE_ADMIN') %}
+                Admin Dashboard
+            {% elseif is_granted('ROLE_STAFF') %}
+                Staff Dashboard
+            {% endif %}
+        </h1>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="grid-stats">
+        {% if is_granted('ROLE_ADMIN') %}
+        <!-- Admin sees all stats -->
+        <div class="admin-stat-card">
+            <h2 class="admin-stat-title">Total Users</h2>
+            <p class="admin-stat-value">{{ totalUsers|default(0) }}</p>
+        </div>
+        
+        <div class="admin-stat-card">
+            <h2 class="admin-stat-title">Total Staff</h2>
+            <p class="admin-stat-value">{{ totalStaff|default(0) }}</p>
+        </div>
+        
+        <div class="admin-stat-card">
+            <h2 class="admin-stat-title">Total Collectibles</h2>
+            <p class="admin-stat-value">{{ totalCollectibles|default(0) }}</p>
+        </div>
+        
+        <div class="admin-stat-card">
+            <h2 class="admin-stat-title">Total Listings</h2>
+            <p class="admin-stat-value">{{ totalListings|default(0) }}</p>
+        </div>
+        
+        <div class="admin-stat-card">
+            <h2 class="admin-stat-title">Total Orders</h2>
+            <p class="admin-stat-value">{{ totalOrders|default(0) }}</p>
+        </div>
+        
+        <div class="admin-stat-card">
+            <h2 class="admin-stat-title">Pending Orders</h2>
+            <p class="admin-stat-value">{{ pendingOrdersCount|default(0) }}</p>
+        </div>
+        {% else %}
+        <!-- Staff sees only relevant stats -->
+        <div class="admin-stat-card">
+            <h2 class="admin-stat-title">Total Collectibles</h2>
+            <p class="admin-stat-value">{{ totalCollectibles|default(0) }}</p>
+        </div>
+        
+        <div class="admin-stat-card">
+            <h2 class="admin-stat-title">Total Listings</h2>
+            <p class="admin-stat-value">{{ totalListings|default(0) }}</p>
+        </div>
+        
+        <div class="admin-stat-card">
+            <h2 class="admin-stat-title">Total Orders</h2>
+            <p class="admin-stat-value">{{ totalOrders|default(0) }}</p>
+        </div>
+        
+        <div class="admin-stat-card">
+            <h2 class="admin-stat-title">Pending Orders</h2>
+            <p class="admin-stat-value">{{ pendingOrdersCount|default(0) }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Pending Orders Table - Visible to both Admin and Staff -->
+    <div class="admin-table-container">
+        <h2 class="admin-table-header">Pending Orders</h2>
+        <div class="crud-table-wrapper">
+            <div class="crud-table-scroll">
+                <table id="pendingOrdersTable" class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Collectible</th>
+                            <th>Buyer</th>
+                            <th>Seller</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th>Created By</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in pendingOrders %}
+                            <tr>
+                                <td>#{{ order.id }}</td>
+                                <td>{{ order.collectibleName|default('Unknown') }}</td>
+                                <td>{{ order.buyer.username|default('Unknown') }}</td>
+                                <td>{{ order.seller.username|default('Unknown') }}</td>
+                                <td class="price-value">₱{{ order.purchasePrice|number_format(2, '.', ',') }}</td>
+                                <td>
+                                    {% if order.status == 'pending' %}
+                                        <span class="badge-warning">Pending</span>
+                                    {% elseif order.status == 'confirmed' %}
+                                        <span class="badge-info">Confirmed</span>
+                                    {% else %}
+                                        <span class="badge-neutral">{{ order.status|capitalize }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if order.createdBy %}
+                                        {{ order.createdBy.username }}
+                                    {% else %}
+                                        <span class="text-gray-500">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="action-buttons">
+                                    <a href="{{ path('app_order_show', {'id': order.id}) }}" 
+                                       class="btn-action btn-view" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if order.status == 'pending' %}
+                                        <form action="{{ path('order_confirm', {'id': order.id}) }}" 
+                                              method="post" style="display: inline;">
+                                            <button type="submit" class="btn-action btn-confirm" 
+                                                    title="Confirm Order" 
+                                                    onclick="return confirm('Confirm this order?')">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                    <form action="{{ path('order_complete', {'id': order.id}) }}" 
+                                          method="post" style="display: inline;">
+                                        <button type="submit" class="btn-action btn-complete" 
+                                                title="Mark as Complete" 
+                                                onclick="return confirm('Mark this order as complete? This will transfer the collectible to the buyer and delete the listing.')">
+                                            <i class="fas fa-check-double"></i>
+                                        </button>
+                                    </form>
+                                    <form action="{{ path('order_cancel', {'id': order.id}) }}" 
+                                          method="post" style="display: inline;">
+                                        <button type="submit" class="btn-action btn-cancel" 
+                                                title="Cancel Order" 
+                                                onclick="return confirm('Cancel this order?')">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center text-gray-500 py-4">
+                                    No pending orders
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Users Table - Admin only -->
+    {% if is_granted('ROLE_ADMIN') %}
+    <div class="admin-table-container">
+        <h2 class="admin-table-header">Recent Users</h2>
+        <div class="crud-table-wrapper">
+            <div class="crud-table-scroll">
+                <table id="recentUsersTable" class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Role</th>
+                            <th>Join Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in recentUsers %}
+                            <tr>
+                                <td class="font-medium">{{ user.username }}</td>
+                                <td>
+                                    {% if 'ROLE_ADMIN' in user.roles %}
+                                        <span class="badge-admin">Admin</span>
+                                    {% elseif 'ROLE_STAFF' in user.roles %}
+                                        <span class="badge-staff">Staff</span>
+                                    {% else %}
+                                        <span class="badge-user">User</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ user.createdAt|date('M d, Y') }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Stats -->
+    <div class="admin-table-container">
+        <h2 class="admin-table-header">Quick Stats</h2>
+        <div class="quick-actions">
+            {% if is_granted('ROLE_ADMIN') %}
+            <!-- Admin sees all quick stats -->
+            <div class="admin-stat-card quick-action-card">
+                <h2 class="admin-stat-title">Users</h2>
+                <p class="admin-stat-value">{{ totalUsers|default(0) }}</p>
+            </div>
+            
+            <div class="admin-stat-card quick-action-card">
+                <h2 class="admin-stat-title">Listings</h2>
+                <p class="admin-stat-value">{{ totalListings|default(0) }}</p>
+            </div>
+            
+            <div class="admin-stat-card quick-action-card">
+                <h2 class="admin-stat-title">Pending Orders</h2>
+                <p class="admin-stat-value">{{ pendingOrdersCount|default(0) }}</p>
+            </div>
+            {% else %}
+            <!-- Staff sees only relevant quick stats -->
+            <div class="admin-stat-card quick-action-card">
+                <h2 class="admin-stat-title">Listings</h2>
+                <p class="admin-stat-value">{{ totalListings|default(0) }}</p>
+            </div>
+            
+            <div class="admin-stat-card quick-action-card">
+                <h2 class="admin-stat-title">Pending Orders</h2>
+                <p class="admin-stat-value">{{ pendingOrdersCount|default(0) }}</p>
+            </div>
+            
+            <div class="admin-stat-card quick-action-card">
+                <h2 class="admin-stat-title">Total Orders</h2>
+                <p class="admin-stat-value">{{ totalOrders|default(0) }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
