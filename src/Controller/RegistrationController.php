@@ -42,7 +42,7 @@ class RegistrationController extends AbstractController
             
             // Explicitly set ROLE_USER for new registrations
             $user->setRoles(['ROLE_USER']);
-
+            $user->setProfileImage('default.jfif');
             $entityManager->persist($user);
             $entityManager->flush();
 

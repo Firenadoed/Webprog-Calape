@@ -44,13 +44,14 @@ security:
         - { path: ^/user, roles: ROLE_ADMIN }
         
         - { path: ^/collectible, roles: [ROLE_ADMIN, ROLE_STAFF] }
-        - { path: ^/listing, roles: [ROLE_ADMIN, ROLE_STAFF] }
+        # - { path: ^/listing, roles: [ROLE_ADMIN, ROLE_STAFF] }
         - { path: ^/order, roles: [ROLE_ADMIN, ROLE_STAFF] }
         - { path: ^/dashboard, roles: [ROLE_ADMIN, ROLE_STAFF] }
 
         - { path: ^/collection, roles: IS_AUTHENTICATED }
         - { path: ^/explore, roles: IS_AUTHENTICATED }
         - { path: ^/my-collection, roles: IS_AUTHENTICATED }
+        - { path: ^/my-listings, roles: IS_AUTHENTICATED }
         - { path: ^/logout, roles: IS_AUTHENTICATED }
 
         

@@ -32,7 +32,7 @@
         
         {# Staff Dashboard Link #}
         {% if is_granted('ROLE_STAFF') %}
-          <li><a href="{{ path('app_collectible_index') }}" class="base-staff-dashboard-link">Staff Dashboard</a></li>
+          <li><a href="{{ path('admin_dashboard') }}" class="base-staff-dashboard-link">Staff Dashboard</a></li>
         {% endif %}
       </ul>
       

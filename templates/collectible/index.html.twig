@@ -4,9 +4,9 @@
 
 {% block body %}
 <div class="crud-page-container">
-<meta name="turbo-visit-control" content="reload">
- <meta name="turbo-visit-control" content="reload">
+    <meta name="turbo-visit-control" content="reload">
     <meta name="turbo-cache-control" content="no-cache">
+    
     <div class="crud-page-header">
         <h1 class="crud-page-title">Collectible Management</h1>
         
@@ -27,7 +27,7 @@
                         <th style="width: 100px;">Owner</th>
                         <th style="width: 100px;">Category</th>
                         <th style="width: 100px;">Franchise</th>
-                        <th style="width: 240px;">Actions</th> <!-- Fixed width for actions -->
+                        <th style="width: 240px;">Actions</th>
                     </tr>
                 </thead>
 
@@ -80,13 +80,33 @@
                                     View
                                 </a>
                                 
-                                {# Check if staff can edit/delete this collectible #}
-                                {% set canEditDelete = is_granted('ROLE_ADMIN') or (is_granted('ROLE_STAFF') and collectible.createdBy and collectible.createdBy.id == app.user.id) %}
+                                {# Check permissions for edit/delete #}
+                                {% set isAdmin = is_granted('ROLE_ADMIN') %}
+                                {% set isStaff = is_granted('ROLE_STAFF') %}
+                                {% set isCreator = collectible.createdBy and collectible.createdBy.id == app.user.id %}
+                                {% set createdByUser = collectible.createdBy %}
+                                {% set isCreatedByStaff = createdByUser and 'ROLE_STAFF' in createdByUser.roles %}
+                                
+                                {# Staff can edit if created by ANY staff (not just themselves) #}
+                                {% set canEditDelete = isAdmin or 
+                                    (isStaff and isCreatedByStaff) or 
+                                    (not isStaff and isCreator) %}
+                                
+                                {# Tooltip message #}
+                                {% set editTooltip = '' %}
+                                {% if not canEditDelete %}
+                                    {% if isStaff %}
+                                        {% set editTooltip = 'Staff can only edit collectibles created by staff members' %}
+                                    {% else %}
+                                        {% set editTooltip = 'You can only edit your own collectibles' %}
+                                    {% endif %}
+                                {% endif %}
                                 
                                 {% if canEditDelete %}
-                                    {# Staff can edit/delete their own collectibles, Admin can edit/delete all #}
+                                    {# Can edit/delete #}
                                     <a href="{{ path('app_collectible_edit', {'id': collectible.id}) }}"
-                                       class="crud-btn crud-btn-secondary crud-btn-small">
+                                       class="crud-btn crud-btn-secondary crud-btn-small"
+                                       title="Edit">
                                         Edit
                                     </a>
                                     <form method="post" 
@@ -94,16 +114,21 @@
                                           onsubmit="return confirm('Are you sure you want to delete this collectible? This action cannot be undone.');"
                                           style="display: inline-block; margin: 0; flex-shrink: 0;">
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ collectible.id) }}">
-                                        <button type="submit" class="crud-btn crud-btn-danger crud-btn-small" style="padding: 4px 10px; font-size: 12px;">Delete</button>
+                                        <button type="submit" 
+                                                class="crud-btn crud-btn-danger crud-btn-small" 
+                                                style="padding: 4px 10px; font-size: 12px;"
+                                                title="Delete">
+                                            Delete
+                                        </button>
                                     </form>
                                 {% else %}
-                                    {# Staff cannot edit/delete other staff's collectibles #}
+                                    {# Cannot edit/delete #}
                                     <button class="crud-btn crud-btn-secondary crud-btn-small" disabled 
-                                            title="You can only edit collectibles created by you">
+                                            title="{{ editTooltip }}">
                                         Edit
                                     </button>
                                     <button class="crud-btn crud-btn-danger crud-btn-small" disabled 
-                                            title="You can only delete collectibles created by you" 
+                                            title="{{ editTooltip }}" 
                                             style="padding: 4px 10px; font-size: 12px;">
                                         Delete
                                     </button>
@@ -113,7 +138,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="8" class="text-center py-8 text-gray-400">
+                        <td colspan="7" class="text-center py-8 text-gray-400">
                             No collectibles found.
                         </td>
                     </tr>

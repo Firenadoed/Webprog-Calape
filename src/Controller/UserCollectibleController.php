@@ -377,4 +377,88 @@ final class UserCollectibleController extends AbstractController
         $this->addFlash('warning', 'Purchase cancelled. Listing is available again.');
         return $this->redirectToRoute('my_listings');
     }
+
+    #[Route('/purchase/{id}/complete', name: 'order_user_complete_purchase', methods: ['POST'])]
+public function completePurchase(
+    Order $order, 
+    Request $request, 
+    EntityManagerInterface $entityManager, 
+    ActivityLogger $logger
+): Response
+{
+    $currentUser = $this->getUser();
+    
+    // Check if current user is the buyer
+    if ($order->getBuyer() !== $currentUser) {
+        $this->addFlash('error', 'You can only complete your own purchases!');
+        return $this->redirectToRoute('my_listings');
+    }
+    
+    // Check if order is in confirmed status
+    if ($order->getStatus() !== 'confirmed') {
+        $this->addFlash('error', 'Only confirmed orders can be marked as completed!');
+        return $this->redirectToRoute('my_listings');
+    }
+    
+    // Validate CSRF token
+    if (!$this->isCsrfTokenValid('complete_purchase' . $order->getId(), $request->request->get('_token'))) {
+        $this->addFlash('error', 'Invalid security token.');
+        return $this->redirectToRoute('my_listings');
+    }
+    
+    // Get the listing and collectible
+    $listing = $order->getListing();
+    
+    if (!$listing) {
+        $this->addFlash('error', 'Listing not found for this order!');
+        return $this->redirectToRoute('my_listings');
+    }
+    
+    $collectible = $listing->getCollectible();
+    
+    if (!$collectible) {
+        $this->addFlash('error', 'Collectible not found for this listing!');
+        return $this->redirectToRoute('my_listings');
+    }
+    
+    try {
+        // 1. Transfer collectible ownership to buyer (current user)
+        $collectible->setUser($currentUser);
+        
+        // 2. Set listing to null to break the foreign key relationship
+        $order->setListing(null);
+        
+        // 3. Flush to persist the null relationship
+        $entityManager->flush();
+        
+        // 4. Delete the listing (foreign key constraint is broken)
+        $entityManager->remove($listing);
+        
+        // 5. Update order status and completion time
+        $order->setStatus('completed');
+        $order->setCompletedAt(new \DateTimeImmutable('now', new \DateTimeZone('Asia/Manila')));
+        
+        $entityManager->flush();
+        
+        // Log the activity
+        $logger->log(
+            $currentUser,
+            'ORDER_UPDATE',
+            'Buyer marked purchase as completed: ' . $order->getCollectibleName() . 
+            ' (Order ID: ' . $order->getId() . ') - ' .
+            'Collectible transferred from ' . $order->getSeller()->getUsername() . 
+            ' to ' . $currentUser->getUsername() . 
+            ' | Price: ₱' . number_format($order->getPurchasePrice(), 2)
+        );
+        
+        $this->addFlash('success', 'Purchase marked as completed! Collectible has been transferred to your collection.');
+        
+    } catch (\Exception $e) {
+        $this->addFlash('error', 'Failed to complete purchase. Please try again.');
+        // Optional: log the error
+        // $logger->log($currentUser, 'ERROR', 'Failed to complete purchase: ' . $e->getMessage());
+    }
+    
+    return $this->redirectToRoute('my_listings');
+}
 }

@@ -71,9 +71,6 @@
                         <td>
                             <div class="crud-btn-group">
                                 {# Check if staff can edit/delete this order #}
-                                {% set canEditDelete = is_granted('ROLE_ADMIN') or (is_granted('ROLE_STAFF') and order.createdBy and order.createdBy.id == app.user.id) %}
-                                
-                                {% if canEditDelete %}
                                     {# Staff can edit/delete their own orders, Admin can edit/delete all #}
                                     <a href="{{ path('app_order_edit', {'id': order.id}) }}"
                                        class="crud-btn crud-btn-secondary crud-btn-small">
@@ -86,17 +83,6 @@
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ order.id) }}">
                                         <button type="submit" class="crud-btn crud-btn-danger crud-btn-small">Delete</button>
                                     </form>
-                                {% else %}
-                                    {# Staff cannot edit/delete other staff's orders #}
-                                    <button class="crud-btn crud-btn-secondary crud-btn-small" disabled 
-                                            title="You can only edit orders created by you">
-                                        Edit
-                                    </button>
-                                    <button class="crud-btn crud-btn-danger crud-btn-small" disabled 
-                                            title="You can only delete orders created by you">
-                                        Delete
-                                    </button>
-                                {% endif %}
                             </div>
                         </td>
                     </tr>

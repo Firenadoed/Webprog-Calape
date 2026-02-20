@@ -12,14 +12,14 @@ class Listing
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
-
-    #[ORM\Column(length: 255)]
+        
+  #[ORM\Column(length: 50, nullable: true)]
     private ?string $grade = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)] // ADD nullable: true
     private ?float $price = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)] // ADD nullable: true
     private ?bool $is_for_sale = null;
 
     #[ORM\ManyToOne(inversedBy: 'listings')]

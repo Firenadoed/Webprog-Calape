@@ -97,7 +97,22 @@ final class CollectibleController extends AbstractController
         ActivityLogger $logger
     ): Response
     {
-        if ($this->isGranted('ROLE_STAFF') && !$this->isGranted('ROLE_ADMIN')) {
+        // ADMIN: Full access
+        if ($this->isGranted('ROLE_ADMIN')) {
+            // Admin can edit everything - no restrictions
+        } 
+        // STAFF: Can edit any staff-created collectibles (not just their own)
+        elseif ($this->isGranted('ROLE_STAFF')) {
+            $createdBy = $collectible->getCreatedBy();
+            
+            // If created by a non-staff user, staff cannot edit it
+            if ($createdBy && !in_array('ROLE_STAFF', $createdBy->getRoles())) {
+                $this->addFlash('error', 'Staff can only edit collectibles created by staff members!');
+                return $this->redirectToRoute('app_collectible_index', [], Response::HTTP_SEE_OTHER);
+            }
+        }
+        // REGULAR USERS: Can only edit their own collectibles
+        else {
             if ($collectible->getCreatedBy() !== $this->getUser()) {
                 $this->addFlash('error', 'You can only edit your own collectibles!');
                 return $this->redirectToRoute('app_collectible_index', [], Response::HTTP_SEE_OTHER);
@@ -159,17 +174,26 @@ final class CollectibleController extends AbstractController
         ActivityLogger $logger
     ): Response
     {
-        if ($this->isGranted('ROLE_STAFF') && !$this->isGranted('ROLE_ADMIN')) {
-            if ($collectible->getCreatedBy() !== $this->getUser()) {
-                $this->addFlash('error', 'You can only delete your own collectibles!');
-                return $this->redirectToRoute('app_collectible_index', [], Response::HTTP_SEE_OTHER)
-                ->headers->set('Turbo-Location', 'false');
+        // ADMIN: Full access
+        if ($this->isGranted('ROLE_ADMIN')) {
+            // Admin can delete everything - no restrictions
+        } 
+        // STAFF: Can delete any staff-created collectibles (not just their own)
+        elseif ($this->isGranted('ROLE_STAFF')) {
+            $createdBy = $collectible->getCreatedBy();
+            
+            // If created by a non-staff user, staff cannot delete it
+            if ($createdBy && !in_array('ROLE_STAFF', $createdBy->getRoles())) {
+                $this->addFlash('error', 'Staff can only delete collectibles created by staff members!');
+                return $this->redirectToRoute('app_collectible_index', [], Response::HTTP_SEE_OTHER);
             }
         }
-
-        if ($collectible->getCreatedBy() !== $this->getUser()) {
-            $this->addFlash('error', 'You can only delete your own collectibles!');
-            return $this->redirectToRoute('app_collectible_index', [], Response::HTTP_SEE_OTHER);
+        // REGULAR USERS: Can only delete their own collectibles
+        else {
+            if ($collectible->getCreatedBy() !== $this->getUser()) {
+                $this->addFlash('error', 'You can only delete your own collectibles!');
+                return $this->redirectToRoute('app_collectible_index', [], Response::HTTP_SEE_OTHER);
+            }
         }
 
         if ($this->isCsrfTokenValid('delete'.$collectible->getId(), $request->getPayload()->getString('_token'))) {

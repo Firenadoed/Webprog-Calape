@@ -25,7 +25,6 @@
                         <th>Grade</th>
                         <th>Price</th>
                         <th>For Sale</th>
-                        <th>Created By</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -70,24 +69,8 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if listing.createdBy %}
-                                <strong>{{ listing.createdBy.username }}</strong>
-                                {% if 'ROLE_ADMIN' in listing.createdBy.roles %}
-                                    <small class="text-blue-400">(Admin)</small>
-                                {% elseif 'ROLE_STAFF' in listing.createdBy.roles %}
-                                    <small class="text-green-400">(Staff)</small>
-                                {% endif %}
-                            {% else %}
-                                <span class="text-gray-400">—</span>
-                            {% endif %}
-                        </td>
-                        <td>
                             <div class="crud-btn-group">
-                                {# View button - always enabled #}
-                                <a href="{{ path('app_listing_show', {'id': listing.id}) }}"
-                                   class="crud-btn crud-btn-secondary crud-btn-small">
-                                    View
-                                </a>
+                                {# View button - always enabled #
                                 
                                 {# Check if staff can edit/delete this listing #}
                                 {% set canEditDelete = is_granted('ROLE_ADMIN') or (is_granted('ROLE_STAFF') and listing.createdBy and listing.createdBy.id == app.user.id) %}

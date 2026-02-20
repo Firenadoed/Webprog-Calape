@@ -26,48 +26,50 @@ final class ListingController extends AbstractController
     }
 
     #[Route('/new', name: 'app_listing_new', methods: ['GET', 'POST'])]
-    public function new(
-        Request $request, 
-        EntityManagerInterface $entityManager,
-        ActivityLogger $logger
-    ): Response
-    {
-        if (!$this->isGranted('ROLE_STAFF') && !$this->isGranted('ROLE_ADMIN')) {
-            $this->addFlash('error', 'You need staff or admin privileges to create listings!');
-            return $this->redirectToRoute('app_listing_index', [], Response::HTTP_SEE_OTHER);
+   public function new(
+    Request $request, 
+    EntityManagerInterface $entityManager,
+    ActivityLogger $logger
+): Response
+{
+    if (!$this->isGranted('ROLE_STAFF') && !$this->isGranted('ROLE_ADMIN')) {
+        $this->addFlash('error', 'You need staff or admin privileges to create listings!');
+        return $this->redirectToRoute('app_listing_index', [], Response::HTTP_SEE_OTHER);
+    }
+
+    $listing = new Listing();
+    $form = $this->createForm(ListingType::class, $listing);
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+        // CRITICAL: Check if collectible is set BEFORE trying to save
+        if (!$listing->getCollectible()) {
+            return $this->render('listing/new.html.twig', [
+                'listing' => $listing,
+                'form' => $form->createView(),
+            ]);
         }
+        
+        $listing->setCreatedBy($this->getUser());
+        
+        $entityManager->persist($listing);
+        $entityManager->flush();
 
-        $listing = new Listing();
-        $form = $this->createForm(ListingType::class, $listing);
-        $form->handleRequest($request);
+        // Now it's safe to call getName() since we validated collectible exists
+        $currentUser = $this->getUser();
+        $logger->log($currentUser, 'CREATE_LISTING',
+            'Created listing for: ' . $listing->getCollectible()->getName() . ' (ID: ' . $listing->getId() . ')'
+        );
 
-        if ($form->isSubmitted() && $form->isValid()) {
-    $listing->setCreatedBy($this->getUser());
-    
-    $entityManager->persist($listing);
-    $entityManager->flush();
+        $this->addFlash('success', 'Listing created successfully!');
+        return $this->redirectToRoute('app_listing_index', [], Response::HTTP_SEE_OTHER);
+    }
 
-    $currentUser = $this->getUser();
-    $logger->log($currentUser, 'CREATE_LISTING',
-        'Created listing for: ' . $listing->getCollectible()->getName() . ' (ID: ' . $listing->getId() . ')'
-    );
-
-    return $this->redirectToRoute('app_listing_index', [], Response::HTTP_SEE_OTHER);
+    return $this->render('listing/new.html.twig', [
+        'listing' => $listing,
+        'form' => $form->createView(),
+    ]);
 }
-
-        return $this->render('listing/new.html.twig', [
-            'listing' => $listing,
-            'form' => $form,
-        ]);
-    }
-
-    #[Route('/{id}', name: 'app_listing_show', methods: ['GET'])]
-    public function show(Listing $listing): Response
-    {
-        return $this->render('listing/show.html.twig', [
-            'listing' => $listing,
-        ]);
-    }
 
     #[Route('/{id}/edit', name: 'app_listing_edit', methods: ['GET', 'POST'])]
     public function edit(

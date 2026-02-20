@@ -53,7 +53,7 @@ final class AdminController extends AbstractController
             ->leftJoin('o.seller', 's')
             ->leftJoin('o.createdBy', 'c')
             ->where('o.status IN (:statuses)')
-            ->setParameter('statuses', ['pending', 'confirmed'])
+            ->setParameter('statuses', ['pending'])
             ->orderBy('o.orderedAt', 'DESC')
             ->setMaxResults(10)
             ->getQuery()

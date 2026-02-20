@@ -127,17 +127,34 @@ class ListingType extends AbstractType
         };
 
         // PRE_SET_DATA: When loading existing listing
-        $builder->addEventListener(
-            FormEvents::PRE_SET_DATA,
-            function (FormEvent $event) use ($formModifier) {
-                /** @var Listing $listing */
-                $listing = $event->getData();
-                $user = $listing ? $listing->getUser() : null;
-                
-                $formModifier($event->getForm(), $user, $listing);
-            }
-        );
-
+     // In PRE_SET_DATA event
+$builder->addEventListener(
+    FormEvents::PRE_SET_DATA,
+    function (FormEvent $event) use ($formModifier) {
+        /** @var Listing $listing */
+        $listing = $event->getData();
+        $user = $listing ? $listing->getUser() : null;
+        
+        $isEditing = ($listing && $listing->getId() !== null);
+        
+        // Only add user field when NOT editing
+        if (!$isEditing) {
+            $event->getForm()->add('user', EntityType::class, [
+                'class' => User::class,
+                'choice_label' => function (User $user) {
+                    $displayName = $user->getUsername() ?: $user->getEmail();
+                    return sprintf('%s (ID: %d)', $displayName, $user->getId());
+                },
+                'placeholder' => 'Select a user',
+                'attr' => [
+                    'class' => 'form-select user-select',
+                ],
+            ]);
+        }
+        
+        $formModifier($event->getForm(), $user, $listing);
+    }
+);
         // PRE_SUBMIT: When form is submitted (handles AJAX updates)
         $builder->addEventListener(
             FormEvents::PRE_SUBMIT,

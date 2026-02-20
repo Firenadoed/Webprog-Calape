@@ -487,67 +487,48 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
-
 document.addEventListener('DOMContentLoaded', function() {
     const userSelect = document.querySelector('#listing_user');
-    const collectibleSelect = document.querySelector('#listing_collectible');
+    const form = document.getElementById('listing-form');
     
-    if (userSelect && collectibleSelect) {
+    if (userSelect && form) {
+        // Store initial state
+        let hasSelectedCollectible = false;
+        
+        // Check if collectible already has a value (from previous submission)
+        const collectibleSelect = document.querySelector('#listing_collectible');
+        if (collectibleSelect && collectibleSelect.value !== '') {
+            hasSelectedCollectible = true;
+        }
+        
         userSelect.addEventListener('change', function() {
-            const userId = this.value;
-            const form = this.closest('form');
-            
-            if (!userId) {
-                // Clear collectibles if no user selected
-                collectibleSelect.innerHTML = '<option value="">Select a user first</option>';
-                collectibleSelect.disabled = true;
-                return;
+            // Always remove disabled attribute before submitting
+            if (collectibleSelect) {
+                collectibleSelect.removeAttribute('disabled');
             }
             
-            // Show loading state
-            collectibleSelect.innerHTML = '<option value="">Loading collectibles...</option>';
-            collectibleSelect.disabled = true;
-            
-            // Submit form via AJAX
-            const formData = new FormData(form);
-            formData.append('ajax_request', '1');
-            
-            fetch(form.action || window.location.href, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-            })
-            .then(response => response.text())
-            .then(html => {
-                // Parse the HTML response
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                
-                // Find the updated collectible select
-                const newCollectibleSelect = doc.querySelector('#listing_collectible');
-                if (newCollectibleSelect) {
-                    collectibleSelect.innerHTML = newCollectibleSelect.innerHTML;
-                    collectibleSelect.disabled = newCollectibleSelect.disabled;
-                    
-                    // Update help text if it exists
-                    const helpText = document.querySelector('#collectible-help');
-                    if (helpText && this.selectedOptions[0]) {
-                        const userName = this.selectedOptions[0].text.split(' (ID:')[0];
-                        helpText.textContent = 'Showing collectibles owned by ' + userName;
-                    }
+            // Check if we should submit
+            if (!hasSelectedCollectible) {
+                // This is the first user selection, submit to load collectible options
+                form.submit();
+            } else {
+                // User is changing the user AFTER selecting a collectible
+                // This might be intentional, so we should still submit
+                // But first, clear the collectible selection
+                if (collectibleSelect) {
+                    collectibleSelect.value = '';
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                collectibleSelect.innerHTML = '<option value="">Error loading collectibles</option>';
-            });
+                form.submit();
+            }
         });
         
-        // Initialize collectible field based on current user selection
-        if (userSelect.value) {
-            userSelect.dispatchEvent(new Event('change'));
+        // Also monitor collectible selection to track state
+        if (collectibleSelect) {
+            collectibleSelect.addEventListener('change', function() {
+                if (this.value !== '') {
+                    hasSelectedCollectible = true;
+                }
+            });
         }
     }
 });

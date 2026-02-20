@@ -132,14 +132,6 @@ final class OrderController extends AbstractController
             return $this->redirectToRoute('app_order_index', [], Response::HTTP_SEE_OTHER);
         }
 
-        // Staff can only edit their own created orders (unless admin)
-        if ($this->isGranted('ROLE_STAFF') && !$this->isGranted('ROLE_ADMIN')) {
-            if ($order->getCreatedBy() !== $this->getUser()) {
-                $this->addFlash('error', 'You can only edit your own created orders!');
-                return $this->redirectToRoute('app_order_index', [], Response::HTTP_SEE_OTHER);
-            }
-        }
-
         // Store original status to detect changes
         $originalStatus = $order->getStatus();
         
@@ -214,16 +206,6 @@ final class OrderController extends AbstractController
             return $response;
         }
 
-        // Staff can only delete their own created orders (unless admin)
-        if ($this->isGranted('ROLE_STAFF') && !$this->isGranted('ROLE_ADMIN')) {
-            if ($order->getCreatedBy() !== $this->getUser()) {
-                $this->addFlash('error', 'You can only delete your own created orders!');
-                $response = $this->redirectToRoute('app_order_index', [], Response::HTTP_SEE_OTHER);
-                $response->headers->set('Turbo-Location', 'false');
-                return $response;
-            }
-        }
-
         if ($this->isCsrfTokenValid('delete'.$order->getId(), $request->getPayload()->getString('_token'))) {
             // Make listing available again when order is deleted (if listing exists and order wasn't completed)
             if ($order->getListing() && $order->getStatus() !== 'completed') {
@@ -269,58 +251,59 @@ final class OrderController extends AbstractController
         return $this->redirectToRoute('app_order_index');
     }
 
-   #[Route('/{id}/complete', name: 'order_complete', methods: ['POST'])]
-public function complete(Order $order, EntityManagerInterface $entityManager, ActivityLogger $logger): Response
-{
-    if (!$this->isGranted('ROLE_STAFF') && !$this->isGranted('ROLE_ADMIN')) {
-        $this->addFlash('error', 'Access denied!');
+    #[Route('/{id}/complete', name: 'order_complete', methods: ['POST'])]
+    public function complete(Order $order, EntityManagerInterface $entityManager, ActivityLogger $logger): Response
+    {
+        if (!$this->isGranted('ROLE_STAFF') && !$this->isGranted('ROLE_ADMIN')) {
+            $this->addFlash('error', 'Access denied!');
+            return $this->redirectToRoute('app_order_index');
+        }
+
+        // Get the listing and collectible
+        $listing = $order->getListing();
+        
+        if (!$listing) {
+            $this->addFlash('error', 'Listing not found for this order!');
+            return $this->redirectToRoute('app_order_index');
+        }
+        
+        $collectible = $listing->getCollectible();
+        
+        if (!$collectible) {
+            $this->addFlash('error', 'Collectible not found for this listing!');
+            return $this->redirectToRoute('app_order_index');
+        }
+        
+        // 1. Transfer collectible ownership to buyer
+        $collectible->setUser($order->getBuyer());
+        
+        // 2. FIRST set listing to null (break the foreign key relationship)
+        $order->setListing(null);
+        
+        // 3. Flush to persist the null relationship
+        $entityManager->flush();
+        
+        // 4. NOW delete the listing (foreign key constraint is broken)
+        $entityManager->remove($listing);
+        
+        // 5. Update order status
+        $order->setStatus('completed');
+        
+        $entityManager->flush();
+
+        // Log the activity
+        $currentUser = $this->getUser();
+        $logger->log($currentUser, 'COMPLETE_ORDER',
+            'Completed order: ' . $order->getCollectibleName() . 
+            ' (ID: ' . $order->getId() . '). ' .
+            'Transferred to buyer: ' . $order->getBuyer()->getUsername() .
+            ' and deleted listing ID: ' . $listing->getId()
+        );
+
+        $this->addFlash('success', 'Order completed! Collectible transferred to buyer and listing removed.');
         return $this->redirectToRoute('app_order_index');
     }
-
-    // Get the listing and collectible
-    $listing = $order->getListing();
     
-    if (!$listing) {
-        $this->addFlash('error', 'Listing not found for this order!');
-        return $this->redirectToRoute('app_order_index');
-    }
-    
-    $collectible = $listing->getCollectible();
-    
-    if (!$collectible) {
-        $this->addFlash('error', 'Collectible not found for this listing!');
-        return $this->redirectToRoute('app_order_index');
-    }
-    
-    // 1. Transfer collectible ownership to buyer
-    $collectible->setUser($order->getBuyer());
-    
-    // 2. FIRST set listing to null (break the foreign key relationship)
-    $order->setListing(null);
-    
-    // 3. Flush to persist the null relationship
-    $entityManager->flush();
-    
-    // 4. NOW delete the listing (foreign key constraint is broken)
-    $entityManager->remove($listing);
-    
-    // 5. Update order status
-    $order->setStatus('completed');
-    
-    $entityManager->flush();
-
-    // Log the activity
-    $currentUser = $this->getUser();
-    $logger->log($currentUser, 'COMPLETE_ORDER',
-        'Completed order: ' . $order->getCollectibleName() . 
-        ' (ID: ' . $order->getId() . '). ' .
-        'Transferred to buyer: ' . $order->getBuyer()->getUsername() .
-        ' and deleted listing ID: ' . $listing->getId()
-    );
-
-    $this->addFlash('success', 'Order completed! Collectible transferred to buyer and listing removed.');
-    return $this->redirectToRoute('app_order_index');
-}
     #[Route('/{id}/cancel', name: 'order_cancel', methods: ['POST'])]
     public function cancel(Order $order, EntityManagerInterface $entityManager, ActivityLogger $logger): Response
     {

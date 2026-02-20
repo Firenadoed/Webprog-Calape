@@ -72,10 +72,6 @@
                                     <span class="my-listing-detail-label">Grade:</span>
                                     <span class="my-listing-grade">{{ listing.grade }}</span>
                                 </div>
-                                <div class="my-listing-detail">
-                                    <span class="my-listing-detail-label">Listed:</span
-                                </div>
-                            </div>
                             
                             <div class="my-listing-actions">
                                 <form method="POST" action="{{ path('listing_remove', {'id': listing.id}) }}" 
@@ -199,6 +195,7 @@
                         <div class="my-listing-order-badge 
                             {% if order.status == 'pending' %}my-listing-order-pending
                             {% elseif order.status == 'confirmed' %}my-listing-order-confirmed
+                            {% elseif order.status == 'completed' %}my-listing-order-completed
                             {% endif %}">
                             {{ order.status|capitalize }}
                         </div>
@@ -223,6 +220,7 @@
                                 <span class="my-listing-status 
                                     {% if order.status == 'pending' %}my-listing-status-pending
                                     {% elseif order.status == 'confirmed' %}my-listing-status-confirmed
+                                    {% elseif order.status == 'completed' %}my-listing-status-completed
                                     {% endif %}">
                                     {{ order.status|capitalize }}
                                 </span>
@@ -236,6 +234,14 @@
                                     <input type="hidden" name="_token" value="{{ csrf_token('cancel_purchase' ~ order.id) }}">
                                     <button type="submit" class="my-listing-cancel-button">
                                         Cancel Purchase
+                                    </button>
+                                </form>
+                            {% elseif order.status == 'confirmed' %}
+                                <form method="POST" action="{{ path('order_user_complete_purchase', {'id': order.id}) }}" 
+                                      onsubmit="return confirm('Mark this purchase as completed? This will finalize the transaction.');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('complete_purchase' ~ order.id) }}">
+                                    <button type="submit" class="my-listing-receive-button">
+                                        ✓ Mark as Received
                                     </button>
                                 </form>
                             {% endif %}

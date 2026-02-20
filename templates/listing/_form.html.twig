@@ -1,36 +1,36 @@
 {{ form_start(form, {'attr': {'id': 'listing-form', 'enctype': 'multipart/form-data'}}) }}
 
-<div>
+<div class="mb-3">
     {{ form_label(form.user, 'User:', {'label_attr': {'class': 'form-label'}}) }}
     {{ form_widget(form.user, {'attr': {'class': 'form-control user-select'}}) }}
     {{ form_errors(form.user) }}
 </div>
 
-{# Collectible container for AJAX updates - will be replaced #}
-<div id="collectible-container">
+{# Collectible container for AJAX updates #}
+<div id="collectible-container" class="mb-3">
     {{ form_label(form.collectible, 'Collectible:', {'label_attr': {'class': 'form-label'}}) }}
     {{ form_widget(form.collectible, {'attr': {'class': 'form-control collectible-select'}}) }}
     {{ form_errors(form.collectible) }}
 </div>
 
-<div>
+<div class="mb-3">
     {{ form_label(form.grade, 'Grade:', {'label_attr': {'class': 'form-label'}}) }}
     {{ form_widget(form.grade, {'attr': {'class': 'form-control', 'placeholder': 'Enter Grade'}}) }}
     {{ form_errors(form.grade) }}
 </div>
 
-<div>
+<div class="mb-3">
     {{ form_label(form.price, 'Price:', {'label_attr': {'class': 'form-label'}}) }}
     {{ form_widget(form.price, {'attr': {'class': 'form-control', 'placeholder': 'Enter Price'}}) }}
     {{ form_errors(form.price) }}
 </div>
 
-<div>
+<div class="mb-3">
     {{ form_label(form.is_for_sale, 'Status:', {'label_attr': {'class': 'form-label'}}) }}
     {{ form_widget(form.is_for_sale, {'attr': {'class': 'form-control'}}) }}
     {{ form_errors(form.is_for_sale) }}
 </div>
 
-<button class="btn">{{ button_label|default('Save') }}</button>
+<button type="submit" class="btn btn-primary">{{ button_label|default('Save') }}</button>
 
-{{ form_end(form) }}
+{{ form_end(form) }} {# This automatically includes CSRF token - DO NOT add form_row(form._token) #}

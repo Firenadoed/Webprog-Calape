@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20251209002407 extends AbstractMigration
+final class Version20251212064424 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -20,14 +20,12 @@ final class Version20251209002407 extends AbstractMigration
     public function up(Schema $schema): void
     {
         // this up() migration is auto-generated, please modify it to your needs
-        $this->addSql('ALTER TABLE collectible ADD CONSTRAINT FK_1D1F976EB03A8386 FOREIGN KEY (created_by_id) REFERENCES user (id)');
-        $this->addSql('CREATE INDEX IDX_1D1F976EB03A8386 ON collectible (created_by_id)');
+        $this->addSql('ALTER TABLE listing CHANGE grade grade VARCHAR(50) DEFAULT NULL');
     }
 
     public function down(Schema $schema): void
     {
         // this down() migration is auto-generated, please modify it to your needs
-        $this->addSql('ALTER TABLE collectible DROP FOREIGN KEY FK_1D1F976EB03A8386');
-        $this->addSql('DROP INDEX IDX_1D1F976EB03A8386 ON collectible');
+        $this->addSql('ALTER TABLE listing CHANGE grade grade VARCHAR(255) NOT NULL');
     }
 }
